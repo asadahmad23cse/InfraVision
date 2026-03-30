@@ -45,39 +45,43 @@ export default function SustainabilityLayout({
   const pathname = usePathname();
 
   return (
-    <div className="min-h-screen bg-slate-900 text-gray-100 flex">
-      {/* Sidebar */}
-      <aside className="w-64 bg-slate-800 border-r border-slate-700 flex flex-col fixed left-0 top-16 bottom-0 z-30">
-        <div className="p-4 border-b border-slate-700">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <span className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-              <TreePine className="w-4 h-4 text-emerald-400" />
+    <div className="min-h-screen bg-[#0B1220] text-gray-100 flex selection:bg-cyan-500/30">
+      {/* Sidebar - Glassmorphism */}
+      <aside className="w-64 bg-white/5 backdrop-blur-3xl border-r border-white/10 flex flex-col fixed left-0 top-16 bottom-0 z-30 shadow-2xl shadow-black/50">
+        <div className="p-5 border-b border-white/10">
+          <h2 className="text-lg font-bold text-white flex items-center gap-3">
+            <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+              <TreePine className="w-5 h-5 text-white" />
             </span>
-            Sustainability Intel
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+              InfraVision
+            </span>
           </h2>
         </div>
-        <nav className="flex-1 overflow-y-auto p-2">
+        <nav className="flex-1 overflow-y-auto p-3 custom-scrollbar">
           {navItems.map(({ href, icon: Icon, label }) => {
             const isActive = pathname === href;
             return (
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 transition-colors ${
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1.5 transition-all duration-300 group ${
                   isActive
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                    : 'text-gray-400 hover:bg-slate-700/50 hover:text-gray-200'
+                    ? 'bg-gradient-to-r from-emerald-500/20 to-cyan-500/5 text-emerald-400 border border-emerald-500/20 shadow-md shadow-emerald-500/5'
+                    : 'text-gray-400 hover:bg-white/5 hover:text-gray-100 border border-transparent'
                 }`}
               >
-                <Icon className="w-5 h-5 flex-shrink-0" />
-                <span className="text-sm font-medium">{label}</span>
+                <Icon className={`w-5 h-5 flex-shrink-0 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                <span className="text-sm font-medium tracking-wide">{label}</span>
               </Link>
             );
           })}
 
           {/* AI Engine Section */}
-          <div className="mt-3 mb-2 px-3">
-            <p className="text-xs font-semibold text-violet-400 uppercase tracking-wider">AI Engine</p>
+          <div className="mt-5 mb-3 px-4 flex items-center gap-3">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-violet-500/50 to-transparent"></div>
+            <p className="text-[10px] font-bold text-violet-400 uppercase tracking-widest">AI Engine</p>
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-violet-500/50 to-transparent"></div>
           </div>
           {aiNavItems.map(({ href, icon: Icon, label }) => {
             const isActive = pathname === href || pathname.startsWith(href);
@@ -85,26 +89,33 @@ export default function SustainabilityLayout({
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg mb-1 transition-colors ${
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1.5 transition-all duration-300 group ${
                   isActive
-                    ? 'bg-violet-500/20 text-violet-400 border border-violet-500/30'
-                    : 'text-gray-400 hover:bg-slate-700/50 hover:text-gray-200'
+                    ? 'bg-gradient-to-r from-violet-500/20 to-fuchsia-500/5 text-violet-400 border border-violet-500/20 shadow-md shadow-violet-500/5'
+                    : 'text-gray-400 hover:bg-white/5 hover:text-gray-100 border border-transparent'
                 }`}
               >
-                <Icon className="w-5 h-5 flex-shrink-0" />
-                <span className="text-sm font-medium">{label}</span>
+                <Icon className={`w-5 h-5 flex-shrink-0 transition-transform duration-300 ${isActive ? 'scale-110 drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]' : 'group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]'}`} />
+                <span className="text-sm font-medium tracking-wide">{label}</span>
               </Link>
             );
           })}
         </nav>
-        <div className="p-4 border-t border-slate-700 text-xs text-gray-500">
-          Delhi Smart City
+        <div className="p-4 border-t border-white/10 text-xs text-gray-500 bg-black/20 flex justify-between items-center backdrop-blur-md">
+          <span>Delhi Smart City</span>
+          <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold tracking-wider ring-1 ring-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.2)]">PRO</span>
         </div>
       </aside>
 
-      {/* Main content */}
-      <main className="flex-1 ml-64 min-h-screen">
-        {children}
+      {/* Main content - added framer-motion ready wrapper styling */}
+      <main className="flex-1 ml-64 min-h-screen relative overflow-hidden">
+        {/* Subtle background noise/grid */}
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-900/20 via-[#0B1220] to-[#0B1220] pointer-events-none"></div>
+        
+        <div className="relative z-10 w-full h-full">
+          {children}
+        </div>
       </main>
     </div>
   );

@@ -33,7 +33,7 @@ def _get_latest_zone_data() -> list[dict]:
 def _build_initial_states(zone_data: list[dict]) -> dict[str, dict]:
     return {row["zone"]: {k: (float(v) if isinstance(v, (int, float)) else v)
                           for k, v in row.items()
-                          if v is not None and not pd.isna(v) if isinstance(v, float) else True}
+                          if v is not None and (not pd.isna(v) if isinstance(v, float) else True)}
             for row in zone_data}
 
 

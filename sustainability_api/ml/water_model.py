@@ -19,7 +19,7 @@ def _make_training_df(zone_df: pd.DataFrame) -> pd.DataFrame:
     """Prepare Prophet-format dataframe (ds, y) with regressors."""
     df = zone_df.copy()
     df["ds"] = pd.to_datetime(df["year"].astype(str) + "-06-01")
-    df["y"] = df["water_demand_mgd"].fillna(method="ffill")
+    df["y"] = df["water_demand_mgd"].ffill()
     df["temperature"] = df.get("temperature_celsius", pd.Series([28.0] * len(df)))
     df["population_scaled"] = df["population"] / 1e6
     return df[["ds", "y", "temperature", "population_scaled"]].dropna()

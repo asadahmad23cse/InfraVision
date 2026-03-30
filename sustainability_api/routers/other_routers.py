@@ -30,6 +30,30 @@ def solve_optimization(req: OptimizationRequest):
     )
 
 
+@opt_router.post("/optimize")
+def optimize_for_ui(req: OptimizationRequest):
+    """
+    Returns exact flat JSON required by the premium UI dashboard:
+    { solar, waste, ev, score, cost, ghg_reduction }
+    """
+    from optimization.lp_solver import optimize_policy
+    res = optimize_policy(
+        budget_cr=req.budget_cr,
+        target_ghg_reduction=req.target_ghg_reduction,
+        min_score_lift=req.min_score_lift,
+    )
+    mix = res.get("optimal_mix", {})
+    impact = res.get("projected_impact", {})
+    return {
+        "solar": mix.get("solar_increase", 0),
+        "waste": mix.get("waste_improvement", 0),
+        "ev": mix.get("ev_adoption", 0),
+        "score": impact.get("score_lift_points", 0),
+        "cost": impact.get("total_cost_cr", 0),
+        "ghg_reduction": impact.get("ghg_reduction_mtco2", 0)
+    }
+
+
 @opt_router.get("/pareto")
 def pareto_frontier(budget_cr: float = Query(1500), steps: int = Query(6)):
     """

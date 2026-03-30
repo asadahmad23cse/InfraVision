@@ -21,7 +21,7 @@ def _build_features(df: pd.DataFrame) -> pd.DataFrame:
     df["solar_pct"] = df["solar_capacity_mw"] / df["energy_consumption_mu"].replace(0, 1) * 100
     df["temp"] = df.get("temperature_celsius", pd.Series([28.0] * len(df)))
     df["renewable_pct"] = df["renewable_share_percent"].fillna(1.5)
-    df["lag_demand"] = df.groupby("zone")["energy_consumption_mu"].shift(1).fillna(method="bfill")
+    df["lag_demand"] = df.groupby("zone")["energy_consumption_mu"].shift(1).bfill()
     return df
 
 

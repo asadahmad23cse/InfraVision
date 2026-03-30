@@ -23,7 +23,7 @@ def _build_features(df: pd.DataFrame) -> pd.DataFrame:
     df["area"] = df["zone"].map(ZONE_AREA_SQKM).fillna(65)
     df["population_density"] = df["population"] / df["area"]
     df["year_norm"] = (df["year"] - 2015) / 15.0
-    df["waste_processed_lag"] = df.groupby("zone")["waste_processed_tpd"].shift(1).fillna(method="bfill")
+    df["waste_processed_lag"] = df.groupby("zone")["waste_processed_tpd"].shift(1).bfill()
     df["built_up_density_percent"] = df.get("built_up_density_percent", pd.Series([65.0] * len(df)))
     return df
 
