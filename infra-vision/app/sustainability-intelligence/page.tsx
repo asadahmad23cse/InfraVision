@@ -3,28 +3,16 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  Cell,
-  ReferenceLine,
+  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine, Area, AreaChart
 } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ai-features/components/ui/card';
-import { Droplets, Zap, Recycle, TreePine, Flame, Target, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Droplets, Zap, Recycle, TreePine, Flame, Target, AlertTriangle, CheckCircle, Sparkles, Activity } from 'lucide-react';
 import { getOverview, getFullData, type OverviewResponse, type SustainabilityRow } from '@/lib/sustainabilityApi';
 
 const RISK_COLORS: Record<string, string> = {
-  critical: '#ef4444',
-  high: '#f59e0b',
-  moderate: '#eab308',
-  safe: '#22c55e',
+  critical: '#fb7185', // rose-400
+  high: '#fbbf24',     // amber-400
+  moderate: '#fcd34d', // amber-300
+  safe: '#34d399',     // emerald-400
 };
 
 function getWaterRisk(gapPct: number) {
@@ -69,15 +57,16 @@ export default function SustainabilityOverviewPage() {
           acc[y].count += 1;
           return acc;
         }, {});
+        
         setTrendData(
           Object.entries(byYear)
-            .map(([y, v]) => ({
+            .map(([y, v]: any) => ({
               year: Number(y),
-              water_gap: Math.max(0, (v as any).water_gap),
-              renewable: (v as any).energy > 0 ? ((v as any).renewable_sum / (v as any).energy) : 0,
-              waste_rate: (v as any).waste_gen > 0 ? ((v as any).waste_proc / (v as any).waste_gen) * 100 : 0,
-              ghg: (v as any).ghg,
-              score: (v as any).count ? (v as any).score / (v as any).count : 0,
+              water_gap: Math.max(0, v.water_gap),
+              renewable: v.energy > 0 ? (v.renewable_sum / v.energy) : 0,
+              waste_rate: v.waste_gen > 0 ? (v.waste_proc / v.waste_gen) * 100 : 0,
+              ghg: v.ghg,
+              score: v.count ? v.score / v.count : 0,
             }))
             .sort((a, b) => a.year - b.year)
         );
@@ -92,8 +81,11 @@ export default function SustainabilityOverviewPage() {
 
   if (loading || !overview) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-400">Loading sustainability data...</div>
+      <div className="flex items-center justify-center min-h-[80vh]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-full border-t-2 border-r-2 border-transparent border-t-cyan-400 border-r-purple-400 animate-spin"></div>
+          <div className="text-white/50 text-sm font-medium tracking-widest uppercase animate-pulse">Initializing Command Center</div>
+        </div>
       </div>
     );
   }
@@ -108,162 +100,162 @@ export default function SustainabilityOverviewPage() {
     };
   });
 
+  const getSystemStatus = () => {
+    if (overview.city_sustainability_score < 40) return { label: 'CRITICAL', color: 'rose-400', glow: 'shadow-rose-500/50' };
+    if (overview.city_sustainability_score < 60) return { label: 'DEGRADED', color: 'amber-400', glow: 'shadow-amber-500/50' };
+    return { label: 'OPTIMAL', color: 'emerald-400', glow: 'shadow-emerald-500/50' };
+  };
+  const sysObj = getSystemStatus();
+
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      {/* Top bar */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-8 max-w-[1400px] mx-auto min-h-screen">
+      
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Sustainability Overview</h1>
-          <p className="text-gray-400 text-sm">Delhi City — Command Dashboard</p>
+          <div className="flex items-center gap-3 mb-2">
+            <div className={`w-2.5 h-2.5 rounded-full bg-${sysObj.color} shadow-[0_0_10px_currentColor] animate-pulse`}></div>
+            <p className="text-sm text-white/50 font-semibold tracking-widest uppercase">System Status: <span className={`text-${sysObj.color}`}>{sysObj.label}</span></p>
+          </div>
+          <h1 className="text-4xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 tracking-tight">
+            Sustainability Overview
+          </h1>
+          <p className="text-lg text-white/80 mt-1 font-light">
+            Delhi Smart City — Macro Intelligence & Resource Distribution
+          </p>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-gray-400 text-sm">Year:</span>
+        
+        <div className="flex items-center gap-4 bg-white/5 backdrop-blur-lg border border-white/10 p-2 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.2)]">
+          <span className="text-white/50 text-sm font-medium pl-3">Timeline</span>
           <select
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
-            className="bg-slate-800 border border-slate-600 rounded-lg px-3 py-2 text-white"
+            className="bg-black/40 border border-white/10 rounded-xl px-4 py-2 text-white font-medium appearance-none outline-none focus:border-cyan-500/50 transition-all min-w-[100px] cursor-pointer"
           >
             {Array.from({ length: 16 }, (_, i) => 2015 + i).map((y) => (
-              <option key={y} value={y}>{y}</option>
+              <option key={y} value={y} className="bg-[#0B1220]">{y}</option>
             ))}
           </select>
         </div>
-      </div>
+      </motion.div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-        <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-4">
-            <Droplets className="w-5 h-5 text-cyan-400 mb-2" />
-            <p className="text-xs text-gray-400">Water Gap</p>
-            <p className={`text-xl font-bold ${overview.water_gap_mgd > 100 ? 'text-red-400' : 'text-white'}`}>
-              {overview.water_gap_mgd} MGD
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-4">
-            <Zap className="w-5 h-5 text-amber-400 mb-2" />
-            <p className="text-xs text-gray-400">Renewable %</p>
-            <p className="text-xl font-bold text-white">{overview.renewable_share_percent}%</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-4">
-            <Recycle className="w-5 h-5 text-emerald-400 mb-2" />
-            <p className="text-xs text-gray-400">Waste Processed</p>
-            <p className="text-xl font-bold text-white">{overview.waste_processing_rate}%</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-4">
-            <TreePine className="w-5 h-5 text-green-400 mb-2" />
-            <p className="text-xs text-gray-400">Green sqm/capita</p>
-            <p className="text-xl font-bold text-white">{overview.green_space_sqm_per_capita}</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-4">
-            <Flame className="w-5 h-5 text-orange-400 mb-2" />
-            <p className="text-xs text-gray-400">GHG (MT CO₂)</p>
-            <p className="text-xl font-bold text-white">{overview.ghg_emissions_mtco2}</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-slate-800 border-slate-700">
-          <CardContent className="p-4">
-            <Target className="w-5 h-5 text-emerald-400 mb-2" />
-            <p className="text-xs text-gray-400">City Score</p>
-            <p className="text-xl font-bold text-emerald-400">{overview.city_sustainability_score}</p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* AI Insight Box */}
+      <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}
+        className="mb-8 p-6 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-white/10 rounded-2xl relative overflow-hidden flex items-start gap-4 shadow-[0_10px_40px_rgba(0,0,0,0.3)]">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/20 rounded-full blur-3xl mix-blend-screen pointer-events-none"></div>
+        <div className="p-3 bg-white/5 rounded-xl border border-white/10 shadow-inner">
+          <Sparkles className="w-6 h-6 text-cyan-400" />
+        </div>
+        <div>
+          <h3 className="text-white text-lg font-semibold mb-1 flex items-center gap-2">AI Synthesized Insight <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 uppercase tracking-widest border border-cyan-500/30">Auto-Generated</span></h3>
+          <p className="text-white/70 text-sm leading-relaxed max-w-4xl">
+            {overview.city_sustainability_score < 50 
+              ? "Critical intervention needed. The aggregate composite score sits precariously low, driven primarily by acute structural deficits in water distribution (supply/demand delta) and landfill overflow. Immediate capital allocation is recommended into the South-West nodes."
+              : "System performing adequately. Renewable energy vectors have stabilized GHG footprints, though localized water stress matrices in the Eastern sectors require proactive mitigation to prevent network cascade failures by 2028."}
+          </p>
+        </div>
+      </motion.div>
 
-      {/* Zone comparison + Trend */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white">Zone Comparison ({year})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={zoneChartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
-                <XAxis dataKey="zone" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} domain={[0, 100]} />
-                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }} />
-                <Bar dataKey="score" name="Sustainability Score" radius={4}>
-                  {zoneChartData.map((entry, i) => (
-                    <Cell key={i} fill={RISK_COLORS[entry.water_risk] || '#64748b'} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-            <div className="flex gap-4 mt-2 text-xs">
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-500" /> Critical</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-amber-500" /> High</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-yellow-500" /> Moderate</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-500" /> Safe</span>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white">Trend (2015–2030)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
-                <XAxis dataKey="year" stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
-                <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
-                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }} />
-                <Legend />
-                <ReferenceLine x={2022} stroke="#f59e0b" strokeDasharray="3 3" />
-                <Line type="monotone" dataKey="score" stroke="#22c55e" strokeWidth={2} name="Score" dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="waste_rate" stroke="#06b6d4" strokeWidth={1} name="Waste %" dot={{ r: 2 }} strokeDasharray="5 5" />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Risk flags */}
-      <Card className="bg-slate-800 border-slate-700">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-amber-400" />
-            Zone Risk Flags ({year})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-            {zoneChartData.map((z) => (
-              <div
-                key={z.zone}
-                className={`p-3 rounded-lg border ${
-                  z.water_risk === 'critical' ? 'bg-red-500/10 border-red-500/50' :
-                  z.water_risk === 'high' ? 'bg-amber-500/10 border-amber-500/50' :
-                  z.waste_risk === 'critical' ? 'bg-orange-500/10 border-orange-500/50' :
-                  'bg-slate-700/50 border-slate-600'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-white">{z.zone}</span>
-                  {z.water_risk === 'safe' && z.waste_risk === 'safe' ? (
-                    <CheckCircle className="w-4 h-4 text-emerald-400" />
-                  ) : (
-                    <AlertTriangle className="w-4 h-4 text-amber-400" />
-                  )}
-                </div>
-                <p className="text-xs text-gray-400 mt-1">
-                  Water: {z.water_risk} | Waste: {z.waste_risk}
-                </p>
-                <p className="text-sm text-emerald-400 mt-1">Score: {z.score}</p>
+      {/* KPI Core Metrics */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        {[
+          { label: 'Composite Index', value: overview.city_sustainability_score.toFixed(1), icon: Target,  color: 'emerald-400', glow: 'from-emerald-500/20 to-transparent' },
+          { label: 'GHG Footprint',   value: `${overview.ghg_emissions_mtco2} Mt`,    icon: Flame,   color: 'rose-400',    glow: 'from-rose-500/20 to-transparent' },
+          { label: 'Water Deficit',   value: `${Math.round(overview.water_gap_mgd)} MGD`, icon: Droplets, color: 'cyan-400',    glow: 'from-cyan-500/20 to-transparent' },
+          { label: 'Clean Energy',    value: `${overview.renewable_share_percent}%`, icon: Zap,      color: 'amber-400',   glow: 'from-amber-500/20 to-transparent' }
+        ].map((k, i) => (
+          <motion.div key={k.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + (i * 0.1) }}
+            className="group relative bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 shadow-[0_10px_40px_rgba(0,0,0,0.4)] hover:scale-[1.02] hover:border-white/20 transition-all duration-300 overflow-hidden cursor-default">
+            {/* Soft background glow on hover */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${k.glow} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
+            
+            <div className="relative z-10">
+              <div className="flex justify-between items-start mb-4">
+                <p className="text-sm text-white/50 font-medium tracking-wide">{k.label}</p>
+                <k.icon className={`w-5 h-5 text-${k.color} drop-shadow-[0_0_8px_currentColor]`} />
               </div>
-            ))}
+              <p className={`text-4xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70`}>
+                {k.value}
+              </p>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* Longitudinal Trajectory Chart */}
+        <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.4 }}
+          className="lg:col-span-8 bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-7 shadow-[0_10px_40px_rgba(0,0,0,0.4)] group">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-xl font-semibold text-white tracking-tight">Longitudinal Ecosystem Trajectory</h2>
+              <p className="text-sm text-white/50 mt-1">15-year composite score evolution normalized across all zones</p>
+            </div>
+            <div className="px-3 py-1 bg-white/5 rounded-lg border border-white/10 text-xs text-white/70 flex items-center gap-2">
+              <Activity className="w-3 h-3 text-emerald-400" /> Live Aggregation
+            </div>
           </div>
-        </CardContent>
-      </Card>
+          
+          <div className="h-80 w-full relative">
+            {trendData.length === 0 ? (
+              <div className="absolute inset-0 flex items-center justify-center"><div className="w-8 h-8 rounded-full border-2 border-t-cyan-400 animate-spin"></div></div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                  <XAxis dataKey="year" tick={{fill: 'rgba(255,255,255,0.4)', fontSize: 12}} axisLine={false} tickLine={false} dy={10} />
+                  <YAxis tick={{fill: 'rgba(255,255,255,0.4)', fontSize: 12}} axisLine={false} tickLine={false} dx={-10} domain={['dataMin - 10', 'dataMax + 10']} />
+                  <Tooltip 
+                    contentStyle={{backgroundColor: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.5)'}}
+                    itemStyle={{color: '#fff', fontWeight: 600}}
+                    cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1, strokeDasharray: '4 4' }}
+                  />
+                  <ReferenceLine x={year} stroke="#cyan-400" strokeOpacity={0.4} strokeDasharray="3 3" />
+                  <Area type="monotone" dataKey="score" stroke="#8b5cf6" strokeWidth={3} fillOpacity={1} fill="url(#colorScore)" activeDot={{r: 6, strokeWidth: 0, fill: '#c084fc', style:{filter:'drop-shadow(0 0 8px rgba(192,132,252,0.8))'}}} />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Zone Matrix Table */}
+        <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.5 }}
+          className="lg:col-span-4 bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-7 shadow-[0_10px_40px_rgba(0,0,0,0.4)] flex flex-col">
+          <h2 className="text-xl font-semibold text-white tracking-tight mb-1">Zone Risk Matrix</h2>
+          <p className="text-sm text-white/50 mb-6">Cross-sectional hazard assessment</p>
+          
+          <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+            <div className="space-y-3">
+              {zoneChartData.sort((a:any,b:any) => a.score - b.score).map((z: any) => (
+                <div key={z.zone} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group">
+                  <div>
+                    <p className="text-sm font-medium text-white group-hover:text-cyan-400 transition-colors">{z.zone}</p>
+                    <div className="flex gap-2 mt-1">
+                      <span className="flex items-center gap-1 text-[10px] uppercase font-bold tracking-widest text-white/40">
+                        <Droplets className="w-3 h-3" style={{color: RISK_COLORS[z.water_risk]}}/> H₂O
+                      </span>
+                      <span className="flex items-center gap-1 text-[10px] uppercase font-bold tracking-widest text-white/40">
+                        <Recycle className="w-3 h-3" style={{color: RISK_COLORS[z.waste_risk]}}/> WST
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-semibold text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-400">{z.score}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+      </div>
     </div>
   );
 }

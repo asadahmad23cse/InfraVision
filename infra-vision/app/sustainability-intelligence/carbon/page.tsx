@@ -1,25 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import {
-  BarChart,
-  Bar,
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  Cell,
-  AreaChart,
-  Area,
-  ComposedChart,
-  ReferenceLine,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area, ReferenceLine,
 } from 'recharts';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ai-features/components/ui/card';
-import { Flame, Target, TrendingDown } from 'lucide-react';
+import { Flame, Target, TrendingDown, Leaf, Goal, ArrowRight } from 'lucide-react';
 import { getFullData, getZones } from '@/lib/sustainabilityApi';
 
 const BASELINE_YEAR = 2015;
@@ -65,90 +51,168 @@ export default function CarbonPage() {
 
   const baselineEmissions = yearlyTotal.find((d) => d.year === BASELINE_YEAR)?.total || 55;
   const reductionNeededPerYear = baselineEmissions / (NET_ZERO_YEAR - BASELINE_YEAR);
+  const currentEmissions = yearlyTotal[yearlyTotal.length - 1]?.total || baselineEmissions;
+  const progressPercent = Math.min(100, Math.max(0, ((baselineEmissions - currentEmissions) / baselineEmissions) * 100));
 
   const scenarioData = yearlyTotal.map((d) => ({
     ...d,
     baseline: d.total,
-    moderate: d.total * Math.pow(0.97, d.year - 2022),
-    aggressive: d.total * Math.pow(0.95, d.year - 2022),
+    moderate: d.total * Math.pow(0.97, Math.max(0, d.year - 2022)),
+    aggressive: d.total * Math.pow(0.95, Math.max(0, d.year - 2022)),
   })).filter((d) => d.year <= 2030);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-400">Loading carbon data...</div>
+      <div className="flex items-center justify-center min-h-[80vh]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-full border-t-2 border-r-2 border-transparent border-t-emerald-400 border-r-teal-700 animate-spin"></div>
+          <div className="text-white/50 text-sm font-medium tracking-widest uppercase animate-pulse">Running Climate Models</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold text-white mb-2">Carbon Footprint Analyzer</h1>
-      <p className="text-gray-400 text-sm mb-6">Delhi must align with India's 2070 net-zero goal. Track zone-wise emissions, run reduction scenarios.</p>
+    <div className="p-8 max-w-[1400px] mx-auto min-h-screen">
+      
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399] animate-pulse"></div>
+          <p className="text-sm text-emerald-400/80 font-semibold tracking-widest uppercase">Climate Transition Domain</p>
+        </div>
+        <h1 className="text-4xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 tracking-tight">
+          Carbon Abatement Intelligence
+        </h1>
+        <p className="text-lg text-white/80 mt-1 font-light max-w-3xl">
+          Aligning Delhi's infrastructure footprint with India's aggressive 2070 Net-Zero mandate. Monitor structural emissions and visualize decarbonization pathways.
+        </p>
+      </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white">Emissions Breakdown by Zone</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={emissionsByZone} layout="vertical" margin={{ left: 60 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
-                <XAxis type="number" stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
-                <YAxis type="category" dataKey="zone" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 10 }} width={55} />
-                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }} />
-                <Legend />
-                <Bar dataKey="energy" stackId="a" name="Energy" fill="#f59e0b" />
-                <Bar dataKey="transport" stackId="a" name="Transport" fill="#06b6d4" />
-                <Bar dataKey="waste" stackId="a" name="Waste" fill="#8b5cf6" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+        
+        {/* Step 1: Breakdown Matrix */}
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
+          className="lg:col-span-8 bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-7 shadow-[0_10px_40px_rgba(0,0,0,0.4)] flex flex-col">
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-1">01 / Scope Analysis</p>
+              <h2 className="text-xl font-semibold text-white tracking-tight">Zone-wise Structural Emissions (MT CO₂e)</h2>
+            </div>
+            <Leaf className="w-5 h-5 text-emerald-400 opacity-80" />
+          </div>
+
+          <div className="flex-1 h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={emissionsByZone} layout="vertical" margin={{ left: 20, right: 10, top: 10, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
+                <XAxis type="number" stroke="#94a3b8" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} />
+                <YAxis type="category" dataKey="zone" stroke="#94a3b8" tick={{ fill: 'white', fontSize: 11, fontWeight: 500 }} width={80} axisLine={false} tickLine={false} />
+                <Tooltip 
+                  contentStyle={{backgroundColor: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.5)'}}
+                  itemStyle={{color: '#fff', fontWeight: 600}}
+                  cursor={{ fill: 'rgba(255,255,255,0.02)' }}
+                />
+                <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }}/>
+                <Bar dataKey="energy" stackId="a" name="Grid Power" fill="#fbbf24" radius={[0, 0, 0, 0]} barSize={20} />
+                <Bar dataKey="transport" stackId="a" name="Transport Vectors" fill="#38bdf8" radius={[0, 0, 0, 0]} barSize={20} />
+                <Bar dataKey="waste" stackId="a" name="Landfill Degassing" fill="#a78bfa" radius={[0, 4, 4, 0]} barSize={20} />
               </BarChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
+          </div>
+        </motion.div>
 
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white">Net-Zero Progress Tracker</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <p className="text-gray-400 text-sm">Baseline (2015): {baselineEmissions.toFixed(1)} MT CO₂e</p>
-                <p className="text-gray-400 text-sm">Reduction needed per year to 2070: {reductionNeededPerYear.toFixed(2)} MT CO₂e</p>
+        {/* Step 2: Net Zero Tracker */}
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}
+          className="lg:col-span-4 bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-7 shadow-[0_10px_40px_rgba(0,0,0,0.4)] relative group overflow-hidden flex flex-col justify-center">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl mix-blend-screen pointer-events-none transition-colors"></div>
+          
+          <div className="flex justify-between items-start mb-6 relative z-10">
+            <div>
+              <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-1">02 / Macrostates</p>
+              <h2 className="text-xl font-semibold text-white tracking-tight flex items-center gap-2"><Goal className="w-5 h-5 text-emerald-400"/> Net-Zero 2070 Vector</h2>
+            </div>
+          </div>
+
+          <div className="space-y-6 relative z-10">
+            <div className="p-5 bg-gradient-to-br from-emerald-500/10 to-transparent border border-emerald-500/20 rounded-xl">
+              <p className="text-emerald-400 text-xs font-bold uppercase tracking-widest mb-1">Baseline Footprint (2015)</p>
+              <p className="text-3xl font-black text-white">{baselineEmissions.toFixed(1)} <span className="text-sm font-normal text-white/50">MT CO₂e</span></p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-end">
+                <span className="text-white/60 text-sm font-medium">Trajectory Progress</span>
+                <span className="text-emerald-400 font-mono font-bold text-lg">{progressPercent.toFixed(1)}%</span>
               </div>
-              <div className="h-4 bg-slate-700 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-emerald-500 rounded-full"
-                  style={{ width: `${Math.min(100, ((baselineEmissions - (yearlyTotal[yearlyTotal.length - 1]?.total || baselineEmissions)) / baselineEmissions) * 100)}%` }}
+              <div className="w-full h-3 bg-black/40 rounded-full border border-white/5 overflow-hidden shadow-inner relative">
+                <div 
+                  className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full shadow-[0_0_10px_#34d399]"
+                  style={{ width: `${progressPercent}%` }}
                 />
               </div>
-              <p className="text-sm text-gray-400">Progress toward trajectory</p>
             </div>
-          </CardContent>
-        </Card>
+
+            <div className="pt-4 border-t border-white/10 flex justify-between items-center">
+              <div>
+                <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-1">Required Annual Delta</p>
+                <p className="text-white font-mono text-lg font-bold">-{reductionNeededPerYear.toFixed(2)} <span className="text-xs text-white/50">MT/yr</span></p>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                <TrendingDown className="w-4 h-4 text-emerald-400" />
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
-      <Card className="bg-slate-800 border-slate-700 mt-6">
-        <CardHeader>
-          <CardTitle className="text-white">Policy Scenario Projections (2015–2030)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={350}>
-            <AreaChart data={scenarioData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
-              <XAxis dataKey="year" stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
-              <YAxis stroke="#94a3b8" tick={{ fill: '#94a3b8' }} />
-              <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '8px' }} />
-              <Legend />
-              <ReferenceLine x={2022} stroke="#f59e0b" strokeDasharray="3 3" />
-              <Area type="monotone" dataKey="baseline" name="Baseline" stroke="#94a3b8" fill="#94a3b840" />
-              <Area type="monotone" dataKey="moderate" name="Moderate (3%/yr)" stroke="#22c55e" fill="#22c55e40" />
-              <Area type="monotone" dataKey="aggressive" name="Aggressive (5%/yr)" stroke="#06b6d4" fill="#06b6d440" />
+      {/* Step 3: Trajectory Modeler */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+        className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-7 shadow-[0_10px_40px_rgba(0,0,0,0.4)]">
+        <div className="flex justify-between items-start mb-8">
+          <div>
+            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-1">03 / Simulation Envelope</p>
+            <h2 className="text-xl font-semibold text-white tracking-tight">Aggressive Deflation Geometries (2015–2030)</h2>
+            <p className="text-sm text-white/50 mt-1">Comparing moderate vs extreme policy implementation trajectories.</p>
+          </div>
+        </div>
+
+        <div className="h-80 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={scenarioData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="baseLineGlow" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#fb7185" stopOpacity={0.2}/>
+                  <stop offset="95%" stopColor="#fb7185" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="modLineGlow" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#fcd34d" stopOpacity={0.2}/>
+                  <stop offset="95%" stopColor="#fcd34d" stopOpacity={0}/>
+                </linearGradient>
+                <linearGradient id="aggLineGlow" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#34d399" stopOpacity={0.4}/>
+                  <stop offset="95%" stopColor="#34d399" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+              <XAxis dataKey="year" tick={{fill: 'rgba(255,255,255,0.4)', fontSize: 11}} axisLine={false} tickLine={false} dy={10} />
+              <YAxis tick={{fill: 'rgba(255,255,255,0.4)', fontSize: 11}} axisLine={false} tickLine={false} dx={-10} domain={['auto', 'auto']} />
+              <Tooltip 
+                contentStyle={{backgroundColor: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.5)'}}
+                itemStyle={{fontWeight: 600}}
+                cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1, strokeDasharray: '4 4' }}
+              />
+              <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }}/>
+              
+              <ReferenceLine x={2022} stroke="rgba(255,255,255,0.3)" strokeDasharray="3 3" label={{value:'Now', fill:'rgba(255,255,255,0.5)', fontSize:10, position: 'top'}} />
+              
+              <Area type="monotone" dataKey="baseline" name="Inaction Baseline" stroke="#fb7185" strokeWidth={2} fill="url(#baseLineGlow)" activeDot={{r: 6}} />
+              <Area type="monotone" dataKey="moderate" name="Moderate Cap (-3%/yr)" stroke="#fbbf24" strokeWidth={2} fill="url(#modLineGlow)" activeDot={{r: 6}} />
+              <Area type="monotone" dataKey="aggressive" name="Aggressive Phasedown (-5%/yr)" stroke="#34d399" strokeWidth={3} fill="url(#aggLineGlow)" style={{filter: 'drop-shadow(0 4px 6px rgba(52,211,153,0.3))'}} activeDot={{r: 6, strokeWidth: 0}} />
             </AreaChart>
           </ResponsiveContainer>
-        </CardContent>
-      </Card>
+        </div>
+      </motion.div>
     </div>
   );
 }

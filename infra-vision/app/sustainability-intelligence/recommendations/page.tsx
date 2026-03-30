@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ai-features/components/ui/card';
-import { Lightbulb, AlertCircle, ChevronRight } from 'lucide-react';
+import { motion } from 'motion/react';
+import { Lightbulb, AlertCircle, ChevronRight, CheckCircle2, Target, ArrowRight } from 'lucide-react';
 import { getZoneRecommendations, getZones, type ZoneRecommendations } from '@/lib/sustainabilityApi';
 
 export default function RecommendationsPage() {
@@ -27,100 +27,154 @@ export default function RecommendationsPage() {
       .finally(() => setLoading(false));
   }, [selectedZone]);
 
-  const urgencyColors: Record<string, string> = {
-    Critical: 'bg-red-500/20 border-red-500/50 text-red-400',
-    High: 'bg-amber-500/20 border-amber-500/50 text-amber-400',
-    Medium: 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400',
-    Low: 'bg-slate-700/50 border-slate-600 text-gray-400',
+  const urgencyColors: Record<string, { bg: string, text: string, ring: string, glow: string }> = {
+    Critical: { bg: 'from-rose-500/20 to-rose-600/5', text: 'text-rose-400', ring: 'border-rose-500/30', glow: 'shadow-[0_0_20px_rgba(244,63,94,0.15)]' },
+    High: { bg: 'from-amber-500/20 to-amber-600/5', text: 'text-amber-400', ring: 'border-amber-500/30', glow: 'shadow-[0_0_20px_rgba(245,158,11,0.15)]' },
+    Medium: { bg: 'from-yellow-500/20 to-yellow-600/5', text: 'text-yellow-400', ring: 'border-yellow-500/30', glow: 'shadow-[0_0_20px_rgba(234,179,8,0.15)]' },
+    Low: { bg: 'from-emerald-500/20 to-emerald-600/5', text: 'text-emerald-400', ring: 'border-emerald-500/30', glow: 'shadow-[0_0_20px_rgba(16,185,129,0.15)]' },
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold text-white mb-2">AI Recommendation Engine</h1>
-      <p className="text-gray-400 text-sm mb-6">Zone-specific action plans with ranked interventions.</p>
+    <div className="p-8 max-w-[1400px] mx-auto min-h-screen">
+      
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_10px_#22d3ee] animate-pulse"></div>
+          <p className="text-sm text-cyan-400/80 font-semibold tracking-widest uppercase">Action Engine</p>
+        </div>
+        <h1 className="text-4xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 tracking-tight">
+          AI CapEx Recommendations
+        </h1>
+        <p className="text-lg text-white/80 mt-1 font-light max-w-3xl">
+          Algorithmic extraction of high-leverage interventions. Generate zone-specific, mathematically optimized project lists ranked by impact and ROI.
+        </p>
+      </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="bg-slate-800 border-slate-700">
-          <CardHeader>
-            <CardTitle className="text-white">Select Zone</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {zones.map((z) => (
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* Step 1: Zone Selection */}
+        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
+          className="lg:col-span-4 bg-white/5 backdrop-blur-lg border border-white/10 rounded-3xl p-7 shadow-[0_10px_40px_rgba(0,0,0,0.4)] flex flex-col">
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-1">Step 01 / Targeting</p>
+              <h2 className="text-xl font-semibold text-white tracking-tight">Select Node</h2>
+            </div>
+          </div>
+          <div className="flex-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar">
+            {zones.map((z) => {
+              const isActive = selectedZone === z;
+              return (
                 <button
                   key={z}
                   onClick={() => setSelectedZone(z)}
-                  className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
-                    selectedZone === z
-                      ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-400'
-                      : 'bg-slate-700/50 border-slate-600 text-gray-300 hover:border-slate-500'
+                  className={`w-full text-left px-5 py-4 rounded-2xl border transition-all duration-300 relative overflow-hidden group hover:scale-[1.02] ${
+                    isActive
+                      ? 'bg-cyan-500/10 border-cyan-500/30 shadow-[0_0_20px_rgba(34,211,238,0.15)]'
+                      : 'bg-black/20 border-white/5 hover:border-white/10'
                   }`}
                 >
-                  {z}
+                  {isActive && <div className="absolute top-0 right-0 w-16 h-16 bg-cyan-400/20 blur-xl rounded-full"></div>}
+                  <span className={`font-semibold relative z-10 ${isActive ? 'text-cyan-400' : 'text-white'}`}>{z}</span>
+                  {isActive && <ChevronRight className="w-5 h-5 text-cyan-400 absolute right-4 top-1/2 -translate-y-1/2 opacity-50" />}
                 </button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              )
+            })}
+          </div>
+        </motion.div>
 
-        <Card className="bg-slate-800 border-slate-700 lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Lightbulb className="w-5 h-5 text-amber-400" />
-              Zone Health Report Card
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        {/* Step 2: AI Report Card */}
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
+          className="lg:col-span-8 bg-white/5 backdrop-blur-lg border border-white/10 rounded-3xl p-8 shadow-[0_10px_40px_rgba(0,0,0,0.4)] relative overflow-hidden flex flex-col">
+          
+          <div className="flex justify-between items-start mb-8 relative z-10">
+            <div>
+              <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-1">Step 02 / Strategic Brief</p>
+              <h2 className="text-xl font-semibold text-white tracking-tight flex items-center gap-2"><Lightbulb className="w-5 h-5 text-cyan-400"/> Generative Action Plan</h2>
+            </div>
+            {selectedZone && <span className="px-3 py-1 bg-cyan-500/10 rounded-lg border border-cyan-500/20 text-cyan-400 text-xs font-bold uppercase tracking-widest">{selectedZone} Array</span>}
+          </div>
+
+          <div className="flex-1 relative z-10 flex flex-col justify-center">
             {loading ? (
-              <div className="text-gray-400">Loading...</div>
+              <div className="flex flex-col items-center gap-4 text-cyan-400/50">
+                <div className="w-10 h-10 border-2 border-transparent border-t-cyan-500 rounded-full animate-spin"></div>
+                <span className="text-xs font-bold uppercase tracking-widest animate-pulse">Compiling neural recommendations...</span>
+              </div>
             ) : recommendations ? (
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className={`p-4 rounded-xl border ${urgencyColors[recommendations.urgency] || 'bg-slate-700'}`}>
-                    <p className="text-sm text-gray-400">Biggest Risk</p>
-                    <p className="text-xl font-bold">{recommendations.biggest_risk}</p>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+                
+                {/* Meta Summary Blocks */}
+                <div className="grid grid-cols-2 gap-5">
+                  <div className={`p-5 rounded-2xl bg-gradient-to-br border ${urgencyColors[recommendations.urgency]?.bg || 'bg-slate-700/50'} ${urgencyColors[recommendations.urgency]?.ring || 'border-slate-600'} ${urgencyColors[recommendations.urgency]?.glow || ''}`}>
+                    <p className="text-white/50 text-[10px] uppercase font-bold tracking-widest mb-2 flex items-center gap-1"><AlertCircle className={`w-3 h-3 ${urgencyColors[recommendations.urgency]?.text || 'text-white'}`}/> Primary Network Risk</p>
+                    <p className={`text-2xl font-black ${urgencyColors[recommendations.urgency]?.text || 'text-white'}`}>{recommendations.biggest_risk}</p>
                   </div>
-                  <div className={`p-4 rounded-xl border ${urgencyColors[recommendations.urgency] || 'bg-slate-700'}`}>
-                    <p className="text-sm text-gray-400">Urgency</p>
-                    <p className="text-xl font-bold">{recommendations.urgency}</p>
+                  <div className={`p-5 rounded-2xl bg-gradient-to-br border ${urgencyColors[recommendations.urgency]?.bg || 'bg-slate-700/50'} ${urgencyColors[recommendations.urgency]?.ring || 'border-slate-600'} ${urgencyColors[recommendations.urgency]?.glow || ''}`}>
+                    <p className="text-white/50 text-[10px] uppercase font-bold tracking-widest mb-2 flex items-center gap-1"><Target className={`w-3 h-3 ${urgencyColors[recommendations.urgency]?.text || 'text-white'}`}/> Required Velocity</p>
+                    <p className={`text-2xl font-black ${urgencyColors[recommendations.urgency]?.text || 'text-white'}`}>{recommendations.urgency.toUpperCase()}</p>
                   </div>
                 </div>
+
+                {/* Score Projection */}
+                <div className="flex items-center justify-between p-6 bg-black/30 rounded-2xl border border-white/5 shadow-inner">
+                  <div className="text-center">
+                    <p className="text-white/40 text-[10px] uppercase font-bold tracking-widest mb-1">Current State</p>
+                    <p className="text-3xl font-black text-white/50">{recommendations.current_score}</p>
+                  </div>
+                  <div className="flex-1 flex items-center justify-center px-6">
+                    <div className="w-full h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent relative flex items-center justify-center">
+                      <div className="bg-[#0B1220] px-2 text-cyan-400 text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 border border-cyan-500/20 rounded-full py-0.5"><ArrowRight className="w-3 h-3"/> Delta</div>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-white/40 text-[10px] uppercase font-bold tracking-widest mb-1">Optimized Execution</p>
+                    <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-lime-300">{recommendations.projected_score_if_actions_taken}</p>
+                  </div>
+                </div>
+
+                {/* Top Interventions List */}
                 <div>
-                  <p className="text-gray-400 text-sm mb-3">Top 3 Interventions</p>
-                  <div className="space-y-3">
+                  <p className="text-white/50 text-xs font-bold uppercase tracking-widest mb-4">Ranked Capital Interventions</p>
+                  <div className="space-y-4">
                     {recommendations.top_interventions.map((int, i) => (
-                      <div key={i} className="p-4 bg-slate-700/50 rounded-xl border border-slate-600">
-                        <div className="flex items-start gap-2">
-                          <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <p className="font-medium text-white">{int.action}</p>
-                            <p className="text-sm text-gray-400 mt-1">{int.impact}</p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              Cost: ₹{int.cost_cr} Cr | Timeline: {int.timeline_years} years
-                            </p>
+                      <div key={i} className="p-5 bg-white/5 backdrop-blur-md rounded-2xl border border-white/10 hover:border-white/20 hover:bg-white/10 transition-all group">
+                        <div className="flex items-start gap-4">
+                          <div className="w-8 h-8 rounded-full bg-black/40 border border-white/10 flex items-center justify-center font-bold text-cyan-400 flex-shrink-0 group-hover:bg-cyan-500/20 group-hover:border-cyan-500/30 transition-colors">
+                            {i+1}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-semibold text-white text-lg mb-1 group-hover:text-cyan-100 transition-colors">{int.action}</p>
+                            <p className="text-sm text-white/60 mb-3">{int.impact}</p>
+                            
+                            <div className="flex items-center gap-4 border-t border-white/5 pt-3">
+                              <span className="flex items-center gap-1.5 text-xs font-bold font-mono text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded border border-cyan-500/20">
+                                EST. COST: ₹{int.cost_cr} Cr
+                              </span>
+                              <span className="flex items-center gap-1.5 text-xs font-bold font-mono text-white/60 bg-black/40 px-2 py-1 rounded border border-white/5">
+                                ROI WINDOW: {int.timeline_years} YRS
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="flex gap-4 pt-4 border-t border-slate-700">
-                  <div>
-                    <p className="text-gray-400 text-sm">Current Score</p>
-                    <p className="text-2xl font-bold text-white">{recommendations.current_score}</p>
-                  </div>
-                  <ChevronRight className="w-8 h-8 text-gray-500 self-center" />
-                  <div>
-                    <p className="text-gray-400 text-sm">Projected Score (if actions taken)</p>
-                    <p className="text-2xl font-bold text-emerald-400">{recommendations.projected_score_if_actions_taken}</p>
-                  </div>
-                </div>
-              </div>
+
+              </motion.div>
             ) : (
-              <p className="text-gray-500">Select a zone to view recommendations</p>
+              <div className="flex-1 flex flex-col items-center justify-center text-center opacity-60">
+                <div className="w-16 h-16 rounded-full bg-black/40 border border-white/10 flex items-center justify-center mb-4">
+                  <Lightbulb className="w-6 h-6 text-cyan-400/50" />
+                </div>
+                <p className="text-sm text-white/80 font-medium tracking-wide">Awaiting Node Input</p>
+                <p className="text-xs text-white/40 mt-1 max-w-[250px]">Select a region from the targeting panel to synthesize prioritized capital interventions.</p>
+              </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

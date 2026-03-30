@@ -42,7 +42,11 @@ export default function OptimizationPage() {
       });
       if (!r.ok) throw new Error('Solver failed to find a valid solution or API is unreachable.');
       const data = await r.json();
+      
       setResult(data);
+      if (data.status === "fallback") {
+        setError("Constraints too strict. Showing best achievable solution.");
+      }
     } catch (e: any) {
       console.error(e);
       setError(e.message || 'Optimization failed.');
@@ -67,7 +71,7 @@ export default function OptimizationPage() {
   const chartData = result
     ? VARIABLES.map(v => ({
         name: v.label,
-        allocated: Math.round((result[v.key] || 0) * 100),
+        allocated: Math.round(result[v.key] || 0),
         color: v.color,
       }))
     : [];

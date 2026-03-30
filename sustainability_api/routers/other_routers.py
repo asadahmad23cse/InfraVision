@@ -50,7 +50,8 @@ def optimize_for_ui(req: OptimizationRequest):
         "ev": mix.get("ev_adoption", 0),
         "score": impact.get("score_lift_points", 0),
         "cost": impact.get("total_cost_cr", 0),
-        "ghg_reduction": impact.get("ghg_reduction_mtco2", 0)
+        "ghg_reduction": impact.get("ghg_reduction_mtco2", 0),
+        "status": res.get("status", "optimal")
     }
 
 
