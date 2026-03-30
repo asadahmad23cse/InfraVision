@@ -20,6 +20,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 <Link href="/ai-features" className="text-gray-700 hover:text-[#00A8E8] font-medium transition-colors">
                   AI Features
                 </Link>
+                <Link href="/sustainability-intelligence" className="text-gray-700 hover:text-[#22c55e] font-medium transition-colors">
+                  Sustainability Intel
+                </Link>
                 <Link href="/login" className="text-gray-700 hover:text-[#00A8E8] font-medium transition-colors">
                   Login
                 </Link>

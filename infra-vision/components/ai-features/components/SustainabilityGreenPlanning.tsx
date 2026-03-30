@@ -1,8 +1,9 @@
 'use client';
 
 import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'motion/react';
-import { ArrowLeft, Leaf, Target, TreePine, Recycle, Activity, BarChart4, MapPin, Zap, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Leaf, Target, TreePine, Recycle, Activity, BarChart4, MapPin, Zap, ArrowRight, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ai-features/components/ui/button';
+import Link from 'next/link';
 import { useState, useEffect } from 'react';
 
 interface SustainabilityGreenPlanningProps {
@@ -204,6 +205,19 @@ export function SustainabilityGreenPlanning({ onBack }: SustainabilityGreenPlann
           <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-white/10"></div>
           
           <div className="relative max-w-7xl mx-auto px-4 py-8">
+            {/* Sustainability Intelligence CTA */}
+            <Link href="/sustainability-intelligence">
+              <div className="mb-6 p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 hover:bg-white/20 transition-all cursor-pointer flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <LayoutDashboard className="w-8 h-8 text-emerald-400" />
+                  <div>
+                    <p className="font-bold text-white">Sustainability Intelligence System</p>
+                    <p className="text-sm text-white/80">Full decision-support dashboard for Delhi planners — Water, Energy, Waste, Green Space, Carbon, Policy Simulator</p>
+                  </div>
+                </div>
+                <ArrowRight className="w-6 h-6 text-white/80" />
+              </div>
+            </Link>
             {/* Back Navigation */}
             <Button
               variant="ghost"

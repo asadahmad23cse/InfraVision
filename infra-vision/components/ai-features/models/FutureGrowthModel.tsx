@@ -522,7 +522,7 @@ export function FutureGrowthModel() {
                           <p className="text-gray-500 text-xs">{getZoneRegion(zone)}</p>
                         </div>
                         {!hasData && (
-                          <AlertCircle className="w-4 h-4 text-yellow-400" title="Limited data - using estimates" />
+                          <AlertCircle className="w-4 h-4 text-yellow-400" />
                         )}
                       </div>
                       

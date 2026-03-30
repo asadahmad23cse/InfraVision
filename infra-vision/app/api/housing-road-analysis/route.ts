@@ -45,11 +45,11 @@ export async function GET() {
     );
 
     // Calculate summary statistics
-    const avgDensity = data.reduce((sum, d) => sum + (d.Avg_Density || 0), 0) / data.length;
-    const avgInfraScore = data.reduce((sum, d) => sum + (d.Infrastructure_Score || 0), 0) / data.length;
-    const avgCongestion = data.reduce((sum, d) => sum + (d.Congestion_Level || 0), 0) / data.length;
-    const totalHousing = data.reduce((sum, d) => sum + (d.Total_Housing_Units || 0), 0);
-    const totalRoadLength = data.reduce((sum, d) => sum + (d.Total_Road_Length_KM || 0), 0);
+    const avgDensity = data.reduce((sum, d) => sum + Number((d as any).Avg_Density || 0), 0) / data.length;
+    const avgInfraScore = data.reduce((sum, d) => sum + Number((d as any).Infrastructure_Score || 0), 0) / data.length;
+    const avgCongestion = data.reduce((sum, d) => sum + Number((d as any).Congestion_Level || 0), 0) / data.length;
+    const totalHousing = data.reduce((sum, d) => sum + Number((d as any).Total_Housing_Units || 0), 0);
+    const totalRoadLength = data.reduce((sum, d) => sum + Number((d as any).Total_Road_Length_KM || 0), 0);
 
     // Get model metrics from first row (they should be the same)
     const modelMetrics = {

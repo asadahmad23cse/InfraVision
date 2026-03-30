@@ -109,7 +109,7 @@ export function HousingDensityAnalysis() {
             area: 0, // Not available in API data
             infrastructureScore: parseFloat(row.Infrastructure_Score) || 0,
             roadNetworkEfficiency: parseFloat(row.Road_Network_Efficiency) / 100 || 0
-          })).filter(d => d.housingDensity > 0 && d.district);
+          })).filter((d: HousingData) => d.housingDensity > 0 && d.district);
           
           console.log(`Loaded ${data.length} districts`);
           setRawData(data);
