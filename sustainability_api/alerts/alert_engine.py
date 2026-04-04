@@ -92,6 +92,7 @@ def _threshold_alerts_from_zone_metrics() -> list[dict]:
 
         if water_stress > 0.8 and _maybe_emit_threshold_alert("WATER_STRESS_CRITICAL", zone):
             alerts.append({
+                "is_anomaly": False,
                 "alert_type": "WATER_STRESS_CRITICAL",
                 "zone": zone,
                 "severity": 9,
@@ -103,6 +104,7 @@ def _threshold_alerts_from_zone_metrics() -> list[dict]:
 
         if waste_overflow > 0.75 and _maybe_emit_threshold_alert("WASTE_OVERFLOW_CRITICAL", zone):
             alerts.append({
+                "is_anomaly": False,
                 "alert_type": "WASTE_OVERFLOW_CRITICAL",
                 "zone": zone,
                 "severity": 8,
@@ -114,6 +116,7 @@ def _threshold_alerts_from_zone_metrics() -> list[dict]:
 
         if heat_risk > 0.85 and _maybe_emit_threshold_alert("HEAT_ISLAND_CRITICAL", zone):
             alerts.append({
+                "is_anomaly": False,
                 "alert_type": "HEAT_ISLAND_CRITICAL",
                 "zone": zone,
                 "severity": 7,
@@ -132,6 +135,7 @@ async def process_iot_batch(readings: list[dict]):
     for anomaly in anomalies + threshold_alerts:
         alert = {
             **anomaly,
+            "is_anomaly": bool(anomaly.get("is_anomaly", False)),
             "id": f"ALT-{int(datetime.utcnow().timestamp()*1000)}",
             "timestamp": datetime.utcnow().isoformat(),
             "is_resolved": False,
@@ -195,6 +199,7 @@ def inject_test_alert(zone: str = "North-East", alert_type: str = "WATER_ANOMALY
     """Inject a test alert for demo purposes."""
     alert = {
         "id": f"TEST-{int(datetime.utcnow().timestamp()*1000)}",
+        "is_anomaly": True,
         "alert_type": alert_type,
         "zone": zone,
         "severity": 8,

@@ -93,6 +93,7 @@ def detect_anomalies(readings: list[dict]) -> list[dict]:
             alert_type = ANOMALY_LABELS.get(sensor, "ANOMALY")
             severity = _severity(sensor, value, thresh)
             anomalies.append({
+                "is_anomaly": True,
                 "alert_type": alert_type,
                 "zone": zone,
                 "severity": severity,
