@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Line, Area, ComposedChart } from 'recharts';
 import { Sparkles, Sun } from 'lucide-react';
-import { getFullData, forecastEnergy, getZones } from '@/lib/sustainabilityApi';
+import { getFullData, forecastEnergy, getForecastSeries, getZones } from '@/lib/sustainabilityApi';
 
 function toNum(value: unknown, fallback = 0) {
   const parsed = Number(value);
@@ -17,6 +17,7 @@ export default function EnergyPage() {
   const [targetZone, setTargetZone] = useState('Central');
   const [renewableTarget, setRenewableTarget] = useState(25);
   const [forecastResult, setForecastResult] = useState<any>(null);
+  const [energyForecastSeries, setEnergyForecastSeries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,10 +44,17 @@ export default function EnergyPage() {
 
   useEffect(() => {
     if (!targetZone) return;
-    forecastEnergy(targetZone, renewableTarget)
-      .then(setForecastResult)
+    Promise.all([
+      forecastEnergy(targetZone, renewableTarget),
+      getForecastSeries('energy', targetZone, 2025, 2030),
+    ])
+      .then(([summary, series]) => {
+        setForecastResult(summary);
+        setEnergyForecastSeries(series.predictions || []);
+      })
       .catch((e) => {
         setForecastResult(null);
+        setEnergyForecastSeries([]);
         setError(e instanceof Error ? e.message : 'Unable to load energy forecast');
       });
   }, [targetZone, renewableTarget]);
@@ -71,6 +79,17 @@ export default function EnergyPage() {
       solar_score: zone.energy > 0 ? (zone.solar / zone.energy) * 1000 : 0,
     }))
     .sort((a, b) => b.solar_score - a.solar_score);
+
+  const energyForecastBandData = energyForecastSeries.map((row: any) => {
+    const lower = toNum(row.lower);
+    const upper = toNum(row.upper);
+    return {
+      year: toNum(row.year),
+      forecast: toNum(row.energy_forecast_mu),
+      interval_base: lower,
+      interval_range: Math.max(0, upper - lower),
+    };
+  });
 
   if (loading) {
     return (
@@ -214,12 +233,60 @@ export default function EnergyPage() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+        className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-7 shadow-[0_10px_40px_rgba(0,0,0,0.4)] mb-8"
+      >
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-1">03 / Forecast Curve</p>
+            <h2 className="text-xl font-semibold text-white tracking-tight">Energy Forecast with Confidence Band</h2>
+          </div>
+          {targetZone && <span className="px-3 py-1 bg-amber-500/10 text-amber-400 rounded-lg border border-amber-500/20 text-xs font-bold tracking-widest uppercase">{targetZone}</span>}
+        </div>
+        <div className="h-72 w-full">
+          {energyForecastBandData.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={energyForecastBandData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="energyBand" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.06} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis dataKey="year" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
+                <YAxis tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} dx={-10} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    backdropFilter: 'blur(16px)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '12px',
+                  }}
+                />
+                <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }} />
+                <Area type="monotone" dataKey="interval_base" stackId="ci" stroke="none" fill="transparent" legendType="none" />
+                <Area type="monotone" dataKey="interval_range" stackId="ci" stroke="none" fill="url(#energyBand)" name="Confidence Interval" />
+                <Line type="monotone" dataKey="forecast" stroke="#f59e0b" strokeWidth={3} name="Forecast Energy (MU)" dot={false} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="h-full flex items-center justify-center border-2 border-dashed border-white/10 rounded-2xl">
+              <p className="text-white/40 text-sm">Forecast series unavailable for selected zone</p>
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
         className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-7 shadow-[0_10px_40px_rgba(0,0,0,0.4)]"
       >
         <div className="flex justify-between items-start mb-8">
           <div>
-            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-1">03 / Strategic Execution</p>
+            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-1">04 / Strategic Execution</p>
             <h2 className="text-xl font-semibold text-white tracking-tight">Deployment Priority Index</h2>
           </div>
         </div>

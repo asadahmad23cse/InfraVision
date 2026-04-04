@@ -6,7 +6,7 @@ import {
   BarChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, ComposedChart, ReferenceLine,
 } from 'recharts';
 import { AlertTriangle, AlertCircle, Sparkles } from 'lucide-react';
-import { getFullData, forecastWater, getZones, type WaterForecast } from '@/lib/sustainabilityApi';
+import { getFullData, forecastWater, getForecastSeries, getZones, type WaterForecast } from '@/lib/sustainabilityApi';
 
 const STRESS_COLORS: Record<string, string> = {
   critical: '#fb7185', // rose-400
@@ -21,6 +21,7 @@ export default function WaterStressPage() {
   const [zoneData, setZoneData] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<string[]>([]);
   const [zones, setZones] = useState<string[]>([]);
+  const [waterForecastSeries, setWaterForecastSeries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,12 +56,20 @@ export default function WaterStressPage() {
   useEffect(() => {
     if (!selectedZone) {
       setWaterForecast(null);
+      setWaterForecastSeries([]);
       return;
     }
-    forecastWater(selectedZone, 2030)
-      .then(setWaterForecast)
+    Promise.all([
+      forecastWater(selectedZone, 2030),
+      getForecastSeries('water', selectedZone, 2025, 2030),
+    ])
+      .then(([summary, series]) => {
+        setWaterForecast(summary);
+        setWaterForecastSeries(series.predictions || []);
+      })
       .catch((e) => {
         setWaterForecast(null);
+        setWaterForecastSeries([]);
         setError(e instanceof Error ? e.message : 'Unable to load water forecast');
       });
   }, [selectedZone]);
@@ -99,6 +108,21 @@ export default function WaterStressPage() {
     const rech = toNum(latest.groundwater_recharge_mgd);
     return { zone: z, extraction: ext, recharge: rech, ratio: rech > 0 ? ext / rech : 0 };
   });
+
+  const forecastBandData = selectedZone
+    ? waterForecastSeries.map((row: any) => {
+        const lower = toNum(row.yhat_lower ?? row.lower);
+        const upper = toNum(row.yhat_upper ?? row.upper);
+        return {
+          year: toNum(row.year),
+          forecast: toNum(row.demand_forecast),
+          yhat_lower: lower,
+          yhat_upper: upper,
+          interval_base: lower,
+          interval_range: Math.max(0, upper - lower),
+        };
+      })
+    : [];
 
   if (loading) {
     return (
@@ -270,25 +294,29 @@ export default function WaterStressPage() {
           </div>
         </motion.div>
 
-        {/* Step 4: Demand Trend Deep Dive */}
+        {/* Step 4: Demand Trend + Forecast Confidence */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
           className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-7 shadow-[0_10px_40px_rgba(0,0,0,0.4)]">
           <div className="flex justify-between items-start mb-6">
             <div>
               <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-1">04 / Historical Context</p>
-              <h2 className="text-xl font-semibold text-white tracking-tight">Supply/Demand Delta History</h2>
+              <h2 className="text-xl font-semibold text-white tracking-tight">Demand Forecast with Confidence Band</h2>
             </div>
             {selectedZone && <span className="px-3 py-1 bg-cyan-500/10 text-cyan-400 rounded-lg border border-cyan-500/20 text-xs font-bold tracking-widest uppercase">{selectedZone}</span>}
           </div>
           
           <div className="h-72 w-full">
-            {selectedZone && demandTrendByZone(selectedZone).length > 0 ? (
+            {selectedZone && (demandTrendByZone(selectedZone).length > 0 || forecastBandData.length > 0) ? (
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={demandTrendByZone(selectedZone)} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <ComposedChart data={forecastBandData.length > 0 ? forecastBandData : demandTrendByZone(selectedZone)} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="gapGlow" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#fb7185" stopOpacity={0.3}/>
                       <stop offset="95%" stopColor="#fb7185" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="forecastBand" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.35}/>
+                      <stop offset="95%" stopColor="#22d3ee" stopOpacity={0.05}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
@@ -303,14 +331,24 @@ export default function WaterStressPage() {
                   
                   <ReferenceLine x={2022} stroke="rgba(255,255,255,0.3)" strokeDasharray="3 3" label={{value:'Now', fill:'rgba(255,255,255,0.5)', fontSize:10, position: 'top'}} />
                   
-                  <Area type="monotone" dataKey="gap" fill="url(#gapGlow)" stroke="none" name="Structural Deficit" />
-                  <Line type="monotone" dataKey="demand" stroke="#fb7185" strokeWidth={3} name="Total Demand" dot={false} activeDot={{r: 6, strokeWidth: 0}} style={{filter: 'drop-shadow(0 4px 6px rgba(251,113,133,0.4))'}} />
-                  <Line type="monotone" dataKey="supply" stroke="#34d399" strokeWidth={3} name="Total Supply" dot={false} activeDot={{r: 6, strokeWidth: 0}} style={{filter: 'drop-shadow(0 4px 6px rgba(52,211,153,0.4))'}} />
+                  {forecastBandData.length > 0 ? (
+                    <>
+                      <Area type="monotone" dataKey="interval_base" stackId="ci" stroke="none" fill="transparent" legendType="none" />
+                      <Area type="monotone" dataKey="interval_range" stackId="ci" stroke="none" fill="url(#forecastBand)" name="Confidence Interval" />
+                      <Line type="monotone" dataKey="forecast" stroke="#22d3ee" strokeWidth={3} name="Forecast Demand" dot={false} activeDot={{r: 6, strokeWidth: 0}} style={{filter: 'drop-shadow(0 4px 6px rgba(34,211,238,0.4))'}} />
+                    </>
+                  ) : (
+                    <>
+                      <Area type="monotone" dataKey="gap" fill="url(#gapGlow)" stroke="none" name="Structural Deficit" />
+                      <Line type="monotone" dataKey="demand" stroke="#fb7185" strokeWidth={3} name="Total Demand" dot={false} activeDot={{r: 6, strokeWidth: 0}} style={{filter: 'drop-shadow(0 4px 6px rgba(251,113,133,0.4))'}} />
+                      <Line type="monotone" dataKey="supply" stroke="#34d399" strokeWidth={3} name="Total Supply" dot={false} activeDot={{r: 6, strokeWidth: 0}} style={{filter: 'drop-shadow(0 4px 6px rgba(52,211,153,0.4))'}} />
+                    </>
+                  )}
                 </ComposedChart>
               </ResponsiveContainer>
             ) : (
               <div className="flex h-full items-center justify-center border-2 border-dashed border-white/5 rounded-2xl">
-                <p className="text-white/40 text-sm">Select a zone above to view historical delta graphs</p>
+                <p className="text-white/40 text-sm">Select a zone above to view forecast confidence band</p>
               </div>
             )}
           </div>

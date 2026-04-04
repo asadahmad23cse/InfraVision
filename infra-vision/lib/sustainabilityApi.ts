@@ -43,6 +43,17 @@ export async function forecastWaste(zone: string, recyclingIncrease = 20) {
   return fetchApi<WasteForecast>(`/forecast/waste?zone=${encodeURIComponent(zone)}&recycling_increase=${recyclingIncrease}`);
 }
 
+export async function getForecastSeries(
+  category: 'water' | 'energy' | 'waste' | 'carbon',
+  zone: string,
+  startYear = 2025,
+  endYear = 2030,
+) {
+  return fetchApi<ForecastSeriesResponse>(
+    `/forecast/series/${category}?zone=${encodeURIComponent(zone)}&start_year=${startYear}&end_year=${endYear}`,
+  );
+}
+
 export async function getZoneRecommendations(zone: string) {
   return fetchApi<ZoneRecommendations>(`/recommend?zone=${encodeURIComponent(zone)}`);
 }
@@ -247,4 +258,11 @@ export interface ScenarioCompareResponse {
     avg_score: number;
     total_ghg: number;
   }>;
+}
+
+export interface ForecastSeriesResponse {
+  zone: string;
+  model: string;
+  predictions: Array<Record<string, number | string>>;
+  feature_importance?: Record<string, number>;
 }
