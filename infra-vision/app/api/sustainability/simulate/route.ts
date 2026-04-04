@@ -1,48 +1,111 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { fetchBackendJson, toNumber } from '@/lib/sustainabilityBackend';
 
-function loadData() {
-  const p = path.join(process.cwd(), 'public', 'data', 'expanded_sustainability_delhi.csv');
-  if (!fs.existsSync(p)) return [];
-  const csv = fs.readFileSync(p, 'utf-8');
-  const lines = csv.trim().split('\n');
-  const headers = lines[0].split(',');
-  return lines.slice(1).map((line) => {
-    const v = line.split(',');
-    const row: Record<string, number | string> = {};
-    headers.forEach((h, i) => { row[h] = isNaN(Number(v[i])) ? v[i] : Number(v[i]); });
-    return row;
-  });
+interface ScenarioCompareResponse {
+  scenarios?: ScenarioResult[];
+  city_timeseries?: Array<{
+    label?: string;
+    year?: number;
+    avg_score?: number;
+    total_ghg?: number;
+  }>;
+}
+
+interface ScenarioResult {
+  label?: string;
+  simulation?: Record<string, Record<string, {
+    water_stress_index?: number;
+    waste_processed_pct?: number;
+  }>>;
+}
+
+function clampPercent(value: unknown) {
+  return Math.min(1, Math.max(0, toNumber(value) / 100));
+}
+
+function pickCityPoint(rows: Array<{ label?: string; year?: number; avg_score?: number; total_ghg?: number }>, label: string) {
+  const candidates = rows.filter((row) => row.label === label).sort((a, b) => toNumber(a.year) - toNumber(b.year));
+  return candidates[candidates.length - 1];
+}
+
+function scenarioAverages(scenario?: ScenarioResult) {
+  if (!scenario?.simulation) {
+    return { waterStress: 0, wasteProcessed: 0 };
+  }
+  const years = Object.keys(scenario.simulation).sort((a, b) => Number(a) - Number(b));
+  const lastYear = years[years.length - 1];
+  if (!lastYear) {
+    return { waterStress: 0, wasteProcessed: 0 };
+  }
+  const zoneMap = scenario.simulation[lastYear] || {};
+  const zoneRows = Object.values(zoneMap);
+  if (!zoneRows.length) {
+    return { waterStress: 0, wasteProcessed: 0 };
+  }
+  const waterStress = zoneRows.reduce((sum, row) => sum + toNumber(row.water_stress_index), 0) / zoneRows.length;
+  const wasteProcessed = zoneRows.reduce((sum, row) => sum + toNumber(row.waste_processed_pct), 0) / zoneRows.length;
+  return { waterStress, wasteProcessed };
 }
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
+  const body = await req.json().catch(() => ({}));
   const p = {
-    solar_increase: Number(body.solar_increase ?? 0) / 100,
-    waste_improvement: Number(body.waste_improvement ?? 0) / 100,
-    green_expansion: Number(body.green_expansion ?? 0) / 100,
-    water_conservation: Number(body.water_conservation ?? 0) / 100,
-    ev_adoption: Number(body.ev_adoption ?? 0) / 100,
-    public_transport: Number(body.public_transport ?? 0) / 100,
+    solar_increase: clampPercent(body.solar_increase),
+    waste_improvement: clampPercent(body.waste_improvement),
+    green_expansion: clampPercent(body.green_expansion),
+    water_conservation: clampPercent(body.water_conservation),
+    ev_adoption: clampPercent(body.ev_adoption),
+    public_transport: clampPercent(body.public_transport),
   };
-  const data = loadData();
-  const base = data.filter((r: any) => r.year === 2022);
-  if (!base.length) return NextResponse.json({ error: 'No data' }, { status: 404 });
-  const tot_ghg = base.reduce((s: number, r: any) => s + (r.ghg_emissions_mtco2 || 0), 0);
-  const tot_demand = base.reduce((s: number, r: any) => s + (r.water_demand_mgd || 0), 0);
-  const tot_landfill = base.reduce((s: number, r: any) => s + (r.waste_generated_tpd || 0) * ((r.landfill_dependency_percent || 0) / 100), 0);
-  const ghg_reduction = tot_ghg * (p.solar_increase * 0.15 + p.waste_improvement * 0.1 + p.ev_adoption * 0.25 + p.public_transport * 0.2);
-  const water_savings = tot_demand * (p.water_conservation * 0.25);
-  const waste_diverted = tot_landfill * (p.waste_improvement * 0.5);
-  const cost_cr = p.solar_increase * 500 + p.waste_improvement * 300 + p.green_expansion * 200 + p.water_conservation * 150 + p.ev_adoption * 400 + p.public_transport * 250;
-  const score_delta = tot_ghg > 0 ? (ghg_reduction / tot_ghg * 15 + water_savings / tot_demand * 10 + (tot_landfill ? waste_diverted / tot_landfill * 10 : 0)) : 0;
+
+  const compareRes = await fetchBackendJson<ScenarioCompareResponse>('/api/simulation/compare', {
+    method: 'POST',
+    body: {
+      scenarios: [{ label: 'Policy Mix', interventions: p }],
+      start_year: 2025,
+      end_year: 2030,
+    },
+  });
+  if (!compareRes.ok || !compareRes.data) {
+    return NextResponse.json(
+      { error: compareRes.error || 'Unable to simulate policy impact' },
+      { status: compareRes.status || 502 },
+    );
+  }
+
+  const citySeries = compareRes.data.city_timeseries || [];
+  const baselinePoint = pickCityPoint(citySeries, 'Baseline');
+  const policyPoint = pickCityPoint(citySeries, 'Policy Mix');
+
+  const scenarios = compareRes.data.scenarios || [];
+  const baselineScenario = scenarios.find((s) => s.label === 'Baseline');
+  const policyScenario = scenarios.find((s) => s.label === 'Policy Mix');
+  const baselineAvg = scenarioAverages(baselineScenario);
+  const policyAvg = scenarioAverages(policyScenario);
+
+  const ghgReduction = Math.max(0, toNumber(baselinePoint?.total_ghg) - toNumber(policyPoint?.total_ghg));
+  const scoreDelta = Math.max(0, toNumber(policyPoint?.avg_score) - toNumber(baselinePoint?.avg_score));
+  const waterSavings = Math.max(0, (baselineAvg.waterStress - policyAvg.waterStress) * 600);
+  const wasteDiverted = Math.max(0, (policyAvg.wasteProcessed - baselineAvg.wasteProcessed) * 180);
+
+  const costCr =
+    p.solar_increase * 900 +
+    p.waste_improvement * 520 +
+    p.green_expansion * 380 +
+    p.water_conservation * 300 +
+    p.ev_adoption * 740 +
+    p.public_transport * 560;
+
+  const roiScore =
+    (ghgReduction * 1.8 + waterSavings * 0.9 + wasteDiverted * 0.08 + scoreDelta * 10) /
+    Math.max(1, costCr);
+
   return NextResponse.json({
-    ghg_reduction_mtco2: Math.round(ghg_reduction * 10) / 10,
-    water_savings_mgd: Math.round(water_savings * 10) / 10,
-    waste_diverted_tpd: Math.round(waste_diverted * 10) / 10,
-    sustainability_score_delta: Math.round(Math.min(25, score_delta) * 10) / 10,
-    cost_estimate_cr: Math.round(cost_cr),
-    roi_score: Math.round((ghg_reduction + water_savings * 2 + waste_diverted) / Math.max(1, cost_cr) * 100) / 100,
+    ghg_reduction_mtco2: Math.round(ghgReduction * 10) / 10,
+    water_savings_mgd: Math.round(waterSavings * 10) / 10,
+    waste_diverted_tpd: Math.round(wasteDiverted * 10) / 10,
+    sustainability_score_delta: Math.round(scoreDelta * 10) / 10,
+    cost_estimate_cr: Math.round(costCr * 10) / 10,
+    roi_score: Math.round(roiScore * 100) / 100,
   });
 }

@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
-  BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, Area, AreaChart, ComposedChart, ReferenceLine,
+  BarChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, ComposedChart, ReferenceLine,
 } from 'recharts';
-import { AlertTriangle, Droplets, AlertCircle, Sparkles, Filter, Droplet } from 'lucide-react';
+import { AlertTriangle, AlertCircle, Sparkles } from 'lucide-react';
 import { getFullData, forecastWater, getZones, type WaterForecast } from '@/lib/sustainabilityApi';
 
 const STRESS_COLORS: Record<string, string> = {
@@ -22,10 +22,17 @@ export default function WaterStressPage() {
   const [alerts, setAlerts] = useState<string[]>([]);
   const [zones, setZones] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const toNum = (value: unknown, fallback = 0) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
+      setError(null);
       try {
         const [full, zonesRes] = await Promise.all([getFullData(), getZones()]);
         setZones(zonesRes.zones || []);
@@ -37,7 +44,7 @@ export default function WaterStressPage() {
         }
         setAlerts(alertsList);
       } catch (e) {
-        console.error(e);
+        setError(e instanceof Error ? e.message : 'Unable to load water intelligence data');
       } finally {
         setLoading(false);
       }
@@ -50,15 +57,22 @@ export default function WaterStressPage() {
       setWaterForecast(null);
       return;
     }
-    forecastWater(selectedZone, 2030).then(setWaterForecast);
+    forecastWater(selectedZone, 2030)
+      .then(setWaterForecast)
+      .catch((e) => {
+        setWaterForecast(null);
+        setError(e instanceof Error ? e.message : 'Unable to load water forecast');
+      });
   }, [selectedZone]);
 
   const zoneMapData = zones.map((z) => {
-    const d = zoneData.filter((r: any) => r.zone === z);
-    const latest = d.find((r: any) => r.year === Math.max(...d.map((x: any) => x.year)));
+    const d = zoneData.filter((r: any) => r.zone === z).sort((a: any, b: any) => toNum(a.year) - toNum(b.year));
+    const latest = d[d.length - 1];
     if (!latest) return { zone: z, gap_pct: 0, stress: 'safe' as const };
-    const gap = latest.water_demand_mgd > 0
-      ? ((latest.water_demand_mgd - latest.water_supply_mgd) / latest.water_demand_mgd) * 100
+    const demand = toNum(latest.water_demand_mgd);
+    const supply = toNum(latest.water_supply_mgd);
+    const gap = demand > 0
+      ? ((demand - supply) / demand) * 100
       : 0;
     let stress: keyof typeof STRESS_COLORS = 'safe';
     if (gap >= 30) stress = 'critical';
@@ -71,18 +85,18 @@ export default function WaterStressPage() {
     const d = zoneData.filter((r: any) => r.zone === zone).sort((a: any, b: any) => a.year - b.year);
     return d.map((r: any) => ({
       year: r.year,
-      demand: r.water_demand_mgd,
-      supply: r.water_supply_mgd,
-      gap: Math.max(0, (r.water_demand_mgd || 0) - (r.water_supply_mgd || 0)),
+      demand: toNum(r.water_demand_mgd),
+      supply: toNum(r.water_supply_mgd),
+      gap: Math.max(0, toNum(r.water_demand_mgd) - toNum(r.water_supply_mgd)),
     }));
   };
 
   const groundwaterData = zones.map((z) => {
-    const d = zoneData.filter((r: any) => r.zone === z);
-    const latest = d.find((r: any) => r.year === Math.max(...d.map((x: any) => x.year)));
+    const d = zoneData.filter((r: any) => r.zone === z).sort((a: any, b: any) => toNum(a.year) - toNum(b.year));
+    const latest = d[d.length - 1];
     if (!latest) return { zone: z, extraction: 0, recharge: 0, ratio: 0 };
-    const ext = latest.groundwater_extraction_mgd || 0;
-    const rech = latest.groundwater_recharge_mgd || 0;
+    const ext = toNum(latest.groundwater_extraction_mgd);
+    const rech = toNum(latest.groundwater_recharge_mgd);
     return { zone: z, extraction: ext, recharge: rech, ratio: rech > 0 ? ext / rech : 0 };
   });
 
@@ -99,6 +113,11 @@ export default function WaterStressPage() {
 
   return (
     <div className="p-8 max-w-[1400px] mx-auto min-h-screen">
+      {error && (
+        <div className="mb-6 bg-rose-500/10 border border-rose-500/30 rounded-xl px-4 py-3 text-rose-300 text-sm">
+          {error}
+        </div>
+      )}
       
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">

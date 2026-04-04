@@ -1,13 +1,21 @@
 /**
  * Sustainability Intelligence API Client
- * Calls Python FastAPI backend when running, falls back to Next.js API routes
+ * Frontend calls Next.js API routes, which proxy to the FastAPI backend.
  */
-const API_BASE = process.env.NEXT_PUBLIC_SUSTAINABILITY_API || '';
+const APP_BASE = process.env.NEXT_PUBLIC_APP_BASE_URL || '';
+
+function buildApiUrl(path: string) {
+  const base = APP_BASE.replace(/\/+$/, '');
+  return `${base}/api/sustainability${path}`;
+}
 
 export async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
-  const url = API_BASE ? `${API_BASE}/api/sustainability${path}` : `/api/sustainability${path}`;
+  const url = buildApiUrl(path);
   const res = await fetch(url, { ...options, cache: 'no-store' });
-  if (!res.ok) throw new Error(await res.text());
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err || `Request failed: ${res.status}`);
+  }
   return res.json();
 }
 
@@ -48,6 +56,30 @@ export async function getFullData(zone?: string, year?: number) {
 
 export async function getZones() {
   return fetchApi<{ zones: string[] }>('/zones');
+}
+
+export async function getDigitalTwinGraph() {
+  return fetchApi<TwinGraphResponse>('/simulation/graph');
+}
+
+export async function simulateDigitalTwinFailure(zone: string) {
+  return fetchApi<TwinGraphResponse>(`/simulation/failure/${encodeURIComponent(zone)}`);
+}
+
+export async function runStressTest(params: StressTestRequest) {
+  return fetchApi<StressTestResponse>('/simulation/stress', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+}
+
+export async function compareScenarios(req: ScenarioCompareRequest) {
+  return fetchApi<ScenarioCompareResponse>('/simulation/compare', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+  });
 }
 
 // Types
@@ -146,4 +178,73 @@ export interface ZoneRecommendations {
   }>;
   current_score: number;
   projected_score_if_actions_taken: number;
+}
+
+export interface TwinGraphNode {
+  id: string;
+  score?: number;
+  status?: string;
+  population?: number;
+  water_stress?: number;
+}
+
+export interface TwinGraphResponse {
+  nodes?: TwinGraphNode[];
+  links?: Array<{
+    source: string;
+    target: string;
+    type: string;
+  }>;
+  metrics?: Record<string, unknown>;
+  network_resilience_pct?: number;
+  directly_impacted?: Record<string, { impact_type?: string; reduction_percent?: number }>;
+}
+
+export interface StressTestRequest {
+  population_growth_rate: number;
+  temp_rise_per_year: number;
+  years: number;
+}
+
+export interface StressTestResponse {
+  growth_rate: number;
+  temp_rise_per_year: number;
+  zones: Array<{
+    zone: string;
+    water_crisis_year: number | null;
+    waste_crisis_year: number | null;
+    overall_risk: string;
+  }>;
+}
+
+export interface ScenarioCompareRequest {
+  scenarios: Array<{
+    label: string;
+    interventions: Record<string, number>;
+  }>;
+  start_year?: number;
+  end_year?: number;
+}
+
+export interface ScenarioCompareResponse {
+  scenarios: Array<{
+    label: string;
+    interventions: Record<string, number>;
+    simulation: Record<string, Record<string, {
+      year: number;
+      zone: string;
+      sustainability_score: number;
+      water_stress_index: number;
+      ghg_emissions_mtco2: number;
+      renewable_share_percent: number;
+      waste_processed_pct: number;
+      green_sqm_per_capita: number;
+    }>>;
+  }>;
+  city_timeseries: Array<{
+    label: string;
+    year: number;
+    avg_score: number;
+    total_ghg: number;
+  }>;
 }

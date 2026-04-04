@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
-
-const ZONES = ['North', 'South', 'East', 'West', 'Central', 'North-East', 'North-West', 'South-West', 'South-East'];
+import { fetchBackendJson } from '@/lib/sustainabilityBackend';
 
 export async function GET() {
-  return NextResponse.json({ zones: ZONES });
+  const result = await fetchBackendJson('/data/zones');
+  if (!result.ok) {
+    return NextResponse.json({ error: result.error || 'Unable to load zones' }, { status: result.status });
+  }
+  return NextResponse.json(result.data ?? { zones: [] });
 }

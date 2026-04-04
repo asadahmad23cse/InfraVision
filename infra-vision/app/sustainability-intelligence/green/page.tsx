@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell, ReferenceLine
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell
 } from 'recharts';
-import { TreePine, Thermometer, MapPin, Activity, HelpCircle, ArrowRight } from 'lucide-react';
+import { TreePine, Thermometer, MapPin } from 'lucide-react';
 import { getFullData, getZones } from '@/lib/sustainabilityApi';
 
 const WHO_TARGET = 9; // sqm per person
@@ -15,16 +15,23 @@ export default function GreenSpacePage() {
   const [zones, setZones] = useState<string[]>([]);
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const toNum = (value: unknown, fallback = 0) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
+      setError(null);
       try {
         const [full, zonesRes] = await Promise.all([getFullData(), getZones()]);
         setZones(zonesRes.zones || []);
         setZoneData(full.data || []);
       } catch (e) {
-        console.error(e);
+        setError(e instanceof Error ? e.message : 'Unable to load green space data');
       } finally {
         setLoading(false);
       }
@@ -33,21 +40,23 @@ export default function GreenSpacePage() {
   }, []);
 
   const greenData = zones.map((z) => {
-    const d = zoneData.filter((r: any) => r.zone === z);
-    const latest = d.find((r: any) => r.year === Math.max(...d.map((x: any) => x.year)));
+    const d = zoneData.filter((r: any) => r.zone === z).sort((a: any, b: any) => toNum(a.year) - toNum(b.year));
+    const latest = d[d.length - 1];
     if (!latest) return { zone: z, green_sqkm: 0, tree_pct: 0, built: 0, pop: 0, score: 0, heat_risk: 'low', sqm_capita: 0, gap_to_who: WHO_TARGET };
-    const pop = latest.population || 1;
-    const green = latest.green_space_sqkm || 0;
+    const pop = Math.max(1, toNum(latest.population, 1));
+    const green = toNum(latest.green_space_sqkm);
     const sqmCapita = (green * 1e6) / pop;
-    const score = green * 0.5 + (latest.tree_cover_percent || 0) * 0.3;
-    const heatRisk = (latest.built_up_density_percent || 0) > 80 && score < 15 ? 'critical' :
-      (latest.built_up_density_percent || 0) > 70 && score < 20 ? 'high' :
-      (latest.built_up_density_percent || 0) > 60 ? 'medium' : 'low';
+    const treeCover = toNum(latest.tree_cover_percent);
+    const builtUp = toNum(latest.built_up_density_percent);
+    const score = green * 0.5 + treeCover * 0.3;
+    const heatRisk = builtUp > 80 && score < 15 ? 'critical' :
+      builtUp > 70 && score < 20 ? 'high' :
+      builtUp > 60 ? 'medium' : 'low';
     return {
       zone: z,
       green_sqkm: green,
-      tree_pct: latest.tree_cover_percent || 0,
-      built: latest.built_up_density_percent || 0,
+      tree_pct: treeCover,
+      built: builtUp,
       pop,
       score: Math.min(100, score * 2),
       heat_risk: heatRisk,
@@ -76,6 +85,11 @@ export default function GreenSpacePage() {
 
   return (
     <div className="p-8 max-w-[1400px] mx-auto min-h-screen">
+      {error && (
+        <div className="mb-6 bg-rose-500/10 border border-rose-500/30 rounded-xl px-4 py-3 text-rose-300 text-sm">
+          {error}
+        </div>
+      )}
       
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">

@@ -6,8 +6,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   Legend, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
-
-const API = process.env.NEXT_PUBLIC_SUSTAINABILITY_API || '';
+import { compareScenarios } from '@/lib/sustainabilityApi';
 
 const SCENARIO_COLORS = ['#cbd5e1', '#10b981', '#06b6d4', '#f59e0b', '#8b5cf6', '#ec4899'];
 
@@ -76,21 +75,21 @@ export default function ScenariosPage() {
   const [results, setResults]   = useState<any>(null);
   const [loading, setLoading]   = useState(false);
   const [endYear, setEndYear]   = useState(2035);
+  const [error, setError]       = useState<string | null>(null);
 
   const run = async () => {
     setLoading(true);
+    setError(null);
     const scenarios = selected.map(i => ({
       label: PRESET_SCENARIOS[i].label,
       interventions: PRESET_SCENARIOS[i].interventions,
     }));
     try {
-      const r = await fetch(`${API}/api/simulation/compare`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scenarios, start_year: 2025, end_year: endYear }),
-      });
-      if (r.ok) setResults(await r.json());
-    } catch (e) { console.error(e); }
+      const res = await compareScenarios({ scenarios, start_year: 2025, end_year: endYear });
+      setResults(res);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Unable to compare scenarios');
+    }
     finally { setLoading(false); }
   };
 
@@ -114,6 +113,12 @@ export default function ScenariosPage() {
           Forecast longitudinal sustainability impacts. Compare multiple capital investment strategies side-by-side against the baseline trajectory through {endYear}.
         </p>
       </motion.div>
+
+      {error && (
+        <div className="mb-6 bg-rose-500/10 border border-rose-500/30 rounded-xl px-4 py-3 text-rose-300 text-sm">
+          {error}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
         
