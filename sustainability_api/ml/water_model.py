@@ -13,6 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from config import WATER_MODEL_PATH, ALL_ZONES
 
 _models: dict = {}  # cache: zone -> prophet model
+DEFAULT_CONFIDENCE_PCT = 85.0
 
 
 def _ensure_prophet_runtime():
@@ -108,10 +109,22 @@ def forecast_water(zone: str, target_years: list[int],
     model = _load_model(zone)
     if model is None:
         # Fallback: linear extrapolation placeholder
-        return [{"year": y, "demand_forecast": 320 + (y - 2022) * 8,
-                 "lower": 310 + (y - 2022) * 7,
-                 "upper": 330 + (y - 2022) * 9,
-                 "confidence_pct": 70.0} for y in target_years]
+        results = []
+        for y in target_years:
+            yhat = 320 + (y - 2022) * 8
+            yhat_lower = 310 + (y - 2022) * 7
+            yhat_upper = 330 + (y - 2022) * 9
+            results.append({
+                "year": y,
+                "demand_forecast": round(max(0, yhat), 2),
+                "yhat_lower": round(max(0, yhat_lower), 2),
+                "yhat_upper": round(max(0, yhat_upper), 2),
+                # Backward-compatible aliases.
+                "lower": round(max(0, yhat_lower), 2),
+                "upper": round(max(0, yhat_upper), 2),
+                "confidence_pct": DEFAULT_CONFIDENCE_PCT,
+            })
+        return results
 
     future = pd.DataFrame({
         "ds": pd.to_datetime([f"{y}-06-01" for y in target_years]),
@@ -122,12 +135,24 @@ def forecast_water(zone: str, target_years: list[int],
     results = []
     for i, row in forecast.iterrows():
         year = target_years[i]
+        yhat = float(row["yhat"])
+        yhat_lower = float(row["yhat_lower"])
+        yhat_upper = float(row["yhat_upper"])
+        interval_width = max(0.0, yhat_upper - yhat_lower)
+        confidence_pct = DEFAULT_CONFIDENCE_PCT
+        # Dynamic confidence estimate based on relative uncertainty width.
+        if yhat > 0:
+            relative_width = interval_width / yhat
+            confidence_pct = max(70.0, min(95.0, 100.0 - (relative_width * 100.0)))
         results.append({
             "year": year,
-            "demand_forecast": round(max(0, row["yhat"]), 2),
-            "lower": round(max(0, row["yhat_lower"]), 2),
-            "upper": round(max(0, row["yhat_upper"]), 2),
-            "confidence_pct": 80.0,
+            "demand_forecast": round(max(0, yhat), 2),
+            "yhat_lower": round(max(0, yhat_lower), 2),
+            "yhat_upper": round(max(0, yhat_upper), 2),
+            # Backward-compatible aliases.
+            "lower": round(max(0, yhat_lower), 2),
+            "upper": round(max(0, yhat_upper), 2),
+            "confidence_pct": round(confidence_pct, 1),
         })
     return results
 

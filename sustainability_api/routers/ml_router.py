@@ -116,6 +116,17 @@ def forecast_water(
     from ml.water_model import forecast_water as fw
     years = list(range(start_year, end_year + 1))
     predictions = fw(zone, years, temperature, population_millions)
+    # Enforce standardized confidence interval keys without breaking legacy keys.
+    for p in predictions:
+        if "yhat_lower" not in p and "lower" in p:
+            p["yhat_lower"] = p["lower"]
+        if "yhat_upper" not in p and "upper" in p:
+            p["yhat_upper"] = p["upper"]
+        if "lower" not in p and "yhat_lower" in p:
+            p["lower"] = p["yhat_lower"]
+        if "upper" not in p and "yhat_upper" in p:
+            p["upper"] = p["yhat_upper"]
+        p["confidence_pct"] = float(p.get("confidence_pct", 85.0))
     importance = {}
     try:
         from ml.water_model import get_water_feature_importance
