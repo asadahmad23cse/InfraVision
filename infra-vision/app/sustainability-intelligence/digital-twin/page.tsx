@@ -14,9 +14,11 @@ import {
 } from 'recharts';
 import {
   compareScenarios,
+  getMlExplain,
   getDigitalTwinGraph,
   runStressTest,
   simulateDigitalTwinFailure,
+  type MlExplainResponse,
   type ScenarioCompareResponse,
   type StressTestRequest,
   type StressTestResponse,
@@ -95,6 +97,9 @@ export default function DigitalTwinPage() {
   });
   const [policyLoading, setPolicyLoading] = useState(false);
   const [policyData, setPolicyData] = useState<ScenarioCompareResponse | null>(null);
+  const [explainZone, setExplainZone] = useState('Central');
+  const [explainLoading, setExplainLoading] = useState(false);
+  const [explainData, setExplainData] = useState<MlExplainResponse | null>(null);
 
   const loadGraph = useCallback(async (zone?: string) => {
     setLoading(true);
@@ -121,24 +126,31 @@ export default function DigitalTwinPage() {
     }
   }, []);
 
-  const runPolicyCompare = useCallback(async (inputs: PolicyInputs) => {
+  const runPolicyCompare = useCallback(async (inputs: PolicyInputs, zone: string) => {
     setPolicyLoading(true);
+    setExplainLoading(true);
+    setError(null);
     try {
-      const data = await compareScenarios({
-        scenarios: [
-          {
-            label: 'Live Policy',
-            interventions: toPolicyFractions(inputs),
-          },
-        ],
-        start_year: 2025,
-        end_year: 2035,
-      });
+      const [data, explanation] = await Promise.all([
+        compareScenarios({
+          scenarios: [
+            {
+              label: 'Live Policy',
+              interventions: toPolicyFractions(inputs),
+            },
+          ],
+          start_year: 2025,
+          end_year: 2035,
+        }),
+        getMlExplain(zone, 2024),
+      ]);
       setPolicyData(data);
+      setExplainData(explanation);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to run policy simulation');
     } finally {
       setPolicyLoading(false);
+      setExplainLoading(false);
     }
   }, []);
 
@@ -150,12 +162,6 @@ export default function DigitalTwinPage() {
     if (tab !== 'stress') return;
     runStress(stressParams);
   }, [tab, runStress, stressParams]);
-
-  useEffect(() => {
-    if (tab !== 'stress') return;
-    const handle = setTimeout(() => runPolicyCompare(policyInputs), 400);
-    return () => clearTimeout(handle);
-  }, [tab, policyInputs, runPolicyCompare]);
 
   const nodes = graphData?.nodes || [];
   const links = graphData?.links || [];
@@ -180,6 +186,7 @@ export default function DigitalTwinPage() {
   const finalPolicyPoint = policyChartData[policyChartData.length - 1];
   const scoreGain = finalPolicyPoint ? finalPolicyPoint.live_score - finalPolicyPoint.baseline_score : 0;
   const ghgDrop = finalPolicyPoint ? finalPolicyPoint.baseline_ghg - finalPolicyPoint.live_ghg : 0;
+  const explainBars = (explainData?.waterfall || []).slice(0, 6);
 
   const handleZoneClick = (zone: string) => {
     if (failedZone === zone) {
@@ -215,7 +222,12 @@ export default function DigitalTwinPage() {
         {(['graph', 'stress'] as const).map((t) => (
           <button
             key={t}
-            onClick={() => setTab(t)}
+            onClick={() => {
+              setTab(t);
+              if (t === 'stress' && tab !== 'stress') {
+                runPolicyCompare(policyInputs, explainZone);
+              }
+            }}
             className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 ${
               tab === t
                 ? 'bg-white/10 text-white shadow-[0_0_20px_rgba(255,255,255,0.05)] ring-1 ring-white/20'
@@ -548,6 +560,26 @@ export default function DigitalTwinPage() {
                   </div>
                 ))}
               </div>
+              <div className="mt-5 flex items-center gap-3">
+                <select
+                  value={explainZone}
+                  onChange={(e) => setExplainZone(e.target.value)}
+                  className="flex-1 rounded-xl bg-black/30 border border-white/15 text-gray-200 text-sm px-3 py-2"
+                >
+                  {ZONES.map((zone) => (
+                    <option key={zone} value={zone}>
+                      {zone}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => runPolicyCompare(policyInputs, explainZone)}
+                  disabled={policyLoading || explainLoading}
+                  className="px-4 py-2 rounded-xl bg-violet-500/20 border border-violet-400/40 text-violet-200 text-xs font-bold tracking-widest uppercase disabled:opacity-50"
+                >
+                  {policyLoading || explainLoading ? 'Running...' : 'Run Simulation'}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -585,6 +617,35 @@ export default function DigitalTwinPage() {
                     <Line type="monotone" dataKey="live_score" stroke="#10b981" name="Live policy score" dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
+              </div>
+              <div className="mt-6 border-t border-white/10 pt-5">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-white font-semibold text-sm">SHAP explainability ({explainZone})</h4>
+                  {explainLoading && <span className="text-xs text-violet-300">Refreshing...</span>}
+                </div>
+                {explainBars.length > 0 ? (
+                  <div className="space-y-2">
+                    {explainBars.map((item) => (
+                      <div key={item.feature} className="grid grid-cols-[1fr_auto] gap-3 items-center">
+                        <div className="min-w-0">
+                          <p className="text-xs text-gray-300 truncate">{item.feature}</p>
+                          <div className="h-1.5 rounded-full bg-white/10 overflow-hidden mt-1">
+                            <div
+                              className={`h-full ${item.shap_value >= 0 ? 'bg-emerald-400/80' : 'bg-rose-400/80'}`}
+                              style={{ width: `${Math.min(100, Math.max(6, item.abs_value * 8))}%` }}
+                            />
+                          </div>
+                        </div>
+                        <span className={`text-xs font-mono ${item.shap_value >= 0 ? 'text-emerald-300' : 'text-rose-300'}`}>
+                          {item.shap_value >= 0 ? '+' : ''}
+                          {item.shap_value.toFixed(2)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-400">Run simulation to populate model impact drivers.</p>
+                )}
               </div>
             </div>
 

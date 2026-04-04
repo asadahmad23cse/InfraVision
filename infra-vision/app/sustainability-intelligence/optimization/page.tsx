@@ -4,12 +4,11 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Cell, Legend,
+  ResponsiveContainer, Cell,
 } from 'recharts';
+import { getOptimizationPareto, optimizePolicy, type OptimizationUiResponse, type ParetoPoint } from '@/lib/sustainabilityApi';
 
-const API = process.env.NEXT_PUBLIC_SUSTAINABILITY_API || '';
-
-const VARIABLES = [
+const VARIABLES: Array<{ key: 'solar' | 'waste' | 'ev'; label: string; color: string }> = [
   { key: 'solar', label: 'Solar & Renewable', color: '#38bdf8' },
   { key: 'waste', label: 'Waste Management', color: '#a78bfa' },
   { key: 'ev',    label: 'EV & Transit',     color: '#f472b6' },
@@ -19,11 +18,11 @@ export default function OptimizationPage() {
   const [budget, setBudget]   = useState(1500);
   const [ghgTarget, setGhgTarget] = useState(5.0);
   const [scoreTarget, setScoreTarget] = useState(10.0);
-  const [result, setResult]   = useState<any>(null);
+  const [result, setResult]   = useState<OptimizationUiResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState<string|null>(null);
   
-  const [paretoData, setParetoData] = useState<any[]>([]);
+  const [paretoData, setParetoData] = useState<ParetoPoint[]>([]);
   const [paretoLoading, setParetoLoading] = useState(false);
   const [tab, setTab]         = useState<'optimizer'|'pareto'>('optimizer');
 
@@ -31,25 +30,18 @@ export default function OptimizationPage() {
     setLoading(true);
     setError(null);
     try {
-      const r = await fetch(`${API}/api/optimization/optimize`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          budget_cr: budget,
-          target_ghg_reduction: ghgTarget,
-          min_score_lift: scoreTarget,
-        }),
+      const data = await optimizePolicy({
+        budget_cr: budget,
+        target_ghg_reduction: ghgTarget,
+        min_score_lift: scoreTarget,
       });
-      if (!r.ok) throw new Error('Solver failed to find a valid solution or API is unreachable.');
-      const data = await r.json();
-      
       setResult(data);
       if (data.status === "fallback") {
         setError("Constraints too strict. Showing best achievable solution.");
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
-      setError(e.message || 'Optimization failed.');
+      setError(e instanceof Error ? e.message : 'Optimization failed.');
       setResult(null);
     } finally { 
       setLoading(false); 
@@ -59,11 +51,8 @@ export default function OptimizationPage() {
   const loadPareto = async () => {
     setParetoLoading(true);
     try {
-      const r = await fetch(`${API}/api/optimization/pareto?budget_cr=${budget}&steps=8`);
-      if (r.ok) {
-        const d = await r.json();
-        setParetoData(d.pareto_points || []);
-      }
+      const d = await getOptimizationPareto(budget, 8);
+      setParetoData(d.pareto_points || []);
     } catch(e) { console.error(e); }
     finally { setParetoLoading(false); }
   };
@@ -188,10 +177,10 @@ export default function OptimizationPage() {
                 {/* KPI Bar */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
-                    { label: 'Score Lift',    value: `+${result.score}`,   color: 'from-cyan-400 to-blue-500', glow: 'shadow-cyan-500/20' },
-                    { label: 'GHG Reduction', value: `${result.ghg_reduction}Mt`, color: 'from-emerald-400 to-teal-500', glow: 'shadow-emerald-500/20' },
-                    { label: 'Actual CapEx',  value: `₹${result.cost.toLocaleString()}`, color: 'from-violet-400 to-purple-500', glow: 'shadow-violet-500/20' },
-                    { label: 'Efficiency ROI',value: `${((result.score / Math.max(result.cost, 1)) * 100).toFixed(1)}%`, color: 'from-amber-400 to-orange-500', glow: 'shadow-amber-500/20' },
+                    { label: 'Target Score',  value: `${Number(result.optimal_score || 0).toFixed(2)}`,   color: 'from-cyan-400 to-blue-500', glow: 'shadow-cyan-500/20' },
+                    { label: 'Score Lift',    value: `+${Number(result.score || 0).toFixed(2)}`, color: 'from-sky-400 to-indigo-500', glow: 'shadow-sky-500/20' },
+                    { label: 'GHG Reduction', value: `${Number(result.ghg_reduction || 0).toFixed(2)}Mt`, color: 'from-emerald-400 to-teal-500', glow: 'shadow-emerald-500/20' },
+                    { label: 'Actual CapEx',  value: `₹${Number(result.cost || 0).toLocaleString()}`, color: 'from-violet-400 to-purple-500', glow: 'shadow-violet-500/20' },
                   ].map((k, i) => (
                     <motion.div key={k.label} initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ delay: 0.1 * i }}
                       className={`bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5 shadow-xl hover:scale-[1.03] transition-transform group relative overflow-hidden`}>

@@ -93,6 +93,34 @@ export async function compareScenarios(req: ScenarioCompareRequest) {
   });
 }
 
+export async function optimizePolicy(req: OptimizationRequest) {
+  return fetchApi<OptimizationUiResponse>('/optimization/optimize', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+  });
+}
+
+export async function solveOptimization(req: OptimizationRequest) {
+  return fetchApi<OptimizationSolveResponse>('/optimization/solve', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+  });
+}
+
+export async function getAlertsHistory(limit = 50) {
+  return fetchApi<AlertsHistoryResponse>(`/alerts/history?limit=${limit}`);
+}
+
+export async function getMlExplain(zone: string, year = 2024) {
+  return fetchApi<MlExplainResponse>(`/ml/explain?zone=${encodeURIComponent(zone)}&year=${year}`);
+}
+
+export async function getOptimizationPareto(budgetCr: number, steps = 8) {
+  return fetchApi<{ pareto_points: ParetoPoint[] }>(`/optimization/pareto?budget_cr=${budgetCr}&steps=${steps}`);
+}
+
 // Types
 export interface SustainabilityRow {
   zone: string;
@@ -265,4 +293,68 @@ export interface ForecastSeriesResponse {
   model: string;
   predictions: Array<Record<string, number | string>>;
   feature_importance?: Record<string, number>;
+}
+
+export interface OptimizationRequest {
+  budget_cr: number;
+  target_ghg_reduction: number;
+  min_score_lift: number;
+}
+
+export interface OptimizationUiResponse {
+  solar: number;
+  waste: number;
+  ev: number;
+  score: number;
+  optimal_score: number;
+  cost: number;
+  ghg_reduction: number;
+  status: string;
+}
+
+export interface OptimizationSolveResponse {
+  status?: string;
+  optimal_score?: number;
+  projected_impact?: {
+    score_lift_points?: number;
+    ghg_reduction_mtco2?: number;
+    total_cost_cr?: number;
+  };
+  optimal_mix?: Record<string, number>;
+}
+
+export interface AlertRecord {
+  id?: string;
+  alert_type?: string;
+  zone?: string;
+  severity?: number;
+  message?: string;
+  metric_name?: string;
+  metric_value?: number;
+  threshold?: number;
+  timestamp?: string;
+  is_resolved?: boolean;
+  is_anomaly?: boolean;
+}
+
+export interface AlertsHistoryResponse {
+  alerts: AlertRecord[];
+}
+
+export interface MlExplainResponse {
+  zone: string;
+  year: number;
+  prediction?: number;
+  base_value?: number;
+  shap_values?: Record<string, number>;
+  top_positive_drivers?: Array<{ feature: string; shap: number; direction: string }>;
+  top_negative_drivers?: Array<{ feature: string; shap: number; direction: string }>;
+  waterfall?: Array<{ feature: string; shap_value: number; direction: string; abs_value: number }>;
+}
+
+export interface ParetoPoint {
+  budget_cr: number;
+  score_lift: number;
+  ghg_reduction: number;
+  cost?: number;
 }

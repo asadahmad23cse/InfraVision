@@ -3,8 +3,9 @@ import { fetchBackendJson } from '@/lib/sustainabilityBackend';
 
 const ALLOWED_CATEGORIES = new Set(['water', 'energy', 'waste', 'carbon']);
 
-export async function GET(req: NextRequest, { params }: { params: { category: string } }) {
-  const category = String(params.category || '').toLowerCase();
+export async function GET(req: NextRequest, context: { params: Promise<{ category: string }> }) {
+  const { category: rawCategory } = await context.params;
+  const category = String(rawCategory || '').toLowerCase();
   if (!ALLOWED_CATEGORIES.has(category)) {
     return NextResponse.json({ error: 'Invalid forecast category' }, { status: 400 });
   }

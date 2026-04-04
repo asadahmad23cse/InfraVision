@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { fetchBackendJson } from '@/lib/sustainabilityBackend';
 
-export async function GET(_: Request, { params }: { params: { zone: string } }) {
-  const zone = params.zone;
+export async function GET(_: NextRequest, context: { params: Promise<{ zone: string }> }) {
+  const { zone } = await context.params;
   if (!zone) {
     return NextResponse.json({ error: 'Zone is required' }, { status: 400 });
   }

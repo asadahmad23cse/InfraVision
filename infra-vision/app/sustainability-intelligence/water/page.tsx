@@ -6,7 +6,7 @@ import {
   BarChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, ComposedChart, ReferenceLine,
 } from 'recharts';
 import { AlertTriangle, AlertCircle, Sparkles } from 'lucide-react';
-import { getFullData, forecastWater, getForecastSeries, getZones, type WaterForecast } from '@/lib/sustainabilityApi';
+import { getAlertsHistory, getFullData, forecastWater, getForecastSeries, getZones, type AlertRecord, type WaterForecast } from '@/lib/sustainabilityApi';
 
 const STRESS_COLORS: Record<string, string> = {
   critical: '#fb7185', // rose-400
@@ -19,7 +19,7 @@ export default function WaterStressPage() {
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const [waterForecast, setWaterForecast] = useState<WaterForecast | null>(null);
   const [zoneData, setZoneData] = useState<any[]>([]);
-  const [alerts, setAlerts] = useState<string[]>([]);
+  const [alerts, setAlerts] = useState<AlertRecord[]>([]);
   const [zones, setZones] = useState<string[]>([]);
   const [waterForecastSeries, setWaterForecastSeries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,10 +38,27 @@ export default function WaterStressPage() {
         const [full, zonesRes] = await Promise.all([getFullData(), getZones()]);
         setZones(zonesRes.zones || []);
         setZoneData(full.data || []);
-        const alertsList: string[] = [];
-        for (const z of zonesRes.zones || []) {
-          const f = await forecastWater(z, 2030);
-          if (f.alert) alertsList.push(f.alert);
+
+        let alertsList: AlertRecord[] = [];
+        try {
+          const history = await getAlertsHistory(20);
+          alertsList = (history.alerts || []).filter((a) => Boolean(a?.message));
+        } catch {
+          alertsList = [];
+        }
+
+        if (alertsList.length === 0) {
+          for (const z of zonesRes.zones || []) {
+            const f = await forecastWater(z, 2030);
+            if (f.alert) {
+              alertsList.push({
+                zone: z,
+                alert_type: 'WATER_STRESS_FORECAST',
+                message: f.alert,
+                is_anomaly: false,
+              });
+            }
+          }
         }
         setAlerts(alertsList);
       } catch (e) {
@@ -171,7 +188,15 @@ export default function WaterStressPage() {
               {alerts.map((a, i) => (
                 <div key={i} className="flex items-start gap-3 bg-black/20 p-3 rounded-xl border border-rose-500/10 backdrop-blur-sm">
                   <AlertCircle className="w-4 h-4 text-rose-400 mt-0.5 flex-shrink-0" />
-                  <p className="text-white/80 text-sm leading-relaxed">{a}</p>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-md border uppercase tracking-widest font-bold ${a.is_anomaly ? 'bg-rose-500/15 text-rose-300 border-rose-500/40' : 'bg-amber-500/10 text-amber-300 border-amber-500/30'}`}>
+                        {a.is_anomaly ? 'ML Detected' : 'Threshold Alert'}
+                      </span>
+                      {a.zone && <span className="text-[10px] text-white/40 uppercase tracking-wider">{a.zone}</span>}
+                    </div>
+                    <p className="text-white/80 text-sm leading-relaxed">{a.message || a.alert_type || 'Alert detected'}</p>
+                  </div>
                 </div>
               ))}
             </div>
