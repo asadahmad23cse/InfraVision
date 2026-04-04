@@ -1,43 +1,55 @@
 """
-Linear Programming Optimization Engine using SciPy/PuLP.
-Objective: Minimize GHG + cost while maximizing sustainability score.
+Linear Programming Optimization Engine using PuLP.
+Objective: minimize cost and maximize sustainability outcomes.
 Decision variables: solar_increase, waste_improvement, green_expansion,
-                   water_conservation, ev_adoption, public_transport (all 0–1)
+water_conservation, ev_adoption, public_transport.
 """
-import numpy as np
 from typing import Optional
-import sys, os
+import sys
+import os
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-# Cost per unit (₹ Crore per 0→1 scale)
+# Cost per unit (INR Crore per 0->100 scale)
 UNIT_COSTS = {
-    "solar_increase":     500,
-    "waste_improvement":  300,
-    "green_expansion":    200,
+    "solar_increase": 500,
+    "waste_improvement": 300,
+    "green_expansion": 200,
     "water_conservation": 150,
-    "ev_adoption":        400,
-    "public_transport":   250,
+    "ev_adoption": 400,
+    "public_transport": 250,
 }
 
 # GHG reduction per unit (MtCO2/year)
 GHG_REDUCTIONS = {
-    "solar_increase":     2.5,
-    "ev_adoption":        3.0,
-    "public_transport":   2.0,
-    "waste_improvement":  0.8,
-    "green_expansion":    0.4,
+    "solar_increase": 2.5,
+    "ev_adoption": 3.0,
+    "public_transport": 2.0,
+    "waste_improvement": 0.8,
+    "green_expansion": 0.4,
     "water_conservation": 0.2,
 }
 
 # Sustainability score lift per unit (points)
 SCORE_LIFTS = {
-    "solar_increase":     5.0,
-    "waste_improvement":  4.0,
-    "green_expansion":    3.5,
+    "solar_increase": 5.0,
+    "waste_improvement": 4.0,
+    "green_expansion": 3.5,
     "water_conservation": 3.0,
-    "ev_adoption":        2.5,
-    "public_transport":   2.0,
+    "ev_adoption": 2.5,
+    "public_transport": 2.0,
 }
+
+
+def _resolve_current_city_score(current_state: Optional[dict]) -> float:
+    """Resolve baseline city score used to calculate optimal target score."""
+    if not isinstance(current_state, dict):
+        return 55.0
+    for key in ("current_city_score", "city_score", "current_score", "sustainability_score"):
+        value = current_state.get(key)
+        if isinstance(value, (int, float)):
+            return float(value)
+    return 55.0
 
 
 def optimize_policy(
@@ -47,53 +59,47 @@ def optimize_policy(
     current_state: Optional[dict] = None,
 ) -> dict:
     """
-    Solve LP: find optimal intervention mix.
-    Returns: {variable: optimal_value, ...} + projected impact.
+    Solve LP and return optimal intervention mix plus projected impact.
+    Adds mandatory top-level `optimal_score` = current_city_score + total_score_lift.
     """
     import pulp
-    
+
     variables = list(UNIT_COSTS.keys())
-    
-    # 1. Define variables with safe bounds
     dvars = {v: pulp.LpVariable(v, lowBound=0, upBound=100) for v in variables}
-    
-    # 2. Relax constraints dynamically to prevent impossible combinations
+
     ghg_target = min(target_ghg_reduction, 10)
     score_target = min(min_score_lift, 20)
 
     prob = pulp.LpProblem("SustainabilityOptimization", pulp.LpMaximize)
-
-    # 3. Add slack variables
     slack_ghg = pulp.LpVariable("slack_ghg", lowBound=0)
     slack_score = pulp.LpVariable("slack_score", lowBound=0)
 
-    # Objective: maximize sustainability score - cost penalty - high penalty for using slack
-    prob += pulp.lpSum([SCORE_LIFTS[v] * dvars[v] for v in variables]) \
-            - 0.001 * pulp.lpSum([UNIT_COSTS[v] * dvars[v] for v in variables]) \
-            - 9999 * slack_ghg - 9999 * slack_score
+    prob += (
+        pulp.lpSum([SCORE_LIFTS[v] * dvars[v] for v in variables])
+        - 0.001 * pulp.lpSum([UNIT_COSTS[v] * dvars[v] for v in variables])
+        - 9999 * slack_ghg
+        - 9999 * slack_score
+    )
 
-    # Budget constraint
     prob += pulp.lpSum([UNIT_COSTS[v] * dvars[v] for v in variables]) <= budget_cr
-
-    # GHG reduction constraint with slack
     prob += pulp.lpSum([GHG_REDUCTIONS[v] * dvars[v] for v in variables]) + slack_ghg >= ghg_target
-
-    # Minimum score lift with slack
     prob += pulp.lpSum([SCORE_LIFTS[v] * dvars[v] for v in variables]) + slack_score >= score_target
 
-    # Solve
     solver = pulp.PULP_CBC_CMD(msg=0)
     prob.solve(solver)
-    
+
     status_str = pulp.LpStatus[prob.status]
     print("Solver status:", status_str)
     print("Inputs:", budget_cr, target_ghg_reduction, min_score_lift)
 
-    # 4. Fail-safe fallback (MANDATORY)
+    current_city_score = _resolve_current_city_score(current_state)
+
     if status_str != "Optimal":
-        print("⚠️ Infeasible detected → using fallback")
+        print("Infeasible detected, using fallback")
+        fallback_score_lift = 65.0
         return {
             "status": "fallback",
+            "optimal_score": round(current_city_score + fallback_score_lift, 2),
             "optimal_mix": {
                 "solar_increase": 40,
                 "waste_improvement": 30,
@@ -104,7 +110,7 @@ def optimize_policy(
             },
             "projected_impact": {
                 "ghg_reduction_mtco2": ghg_target * 0.7,
-                "score_lift_points": 65,
+                "score_lift_points": fallback_score_lift,
                 "total_cost_cr": budget_cr * 0.9,
                 "roi_percent": 15.0,
                 "budget_used_pct": 90.0,
@@ -112,18 +118,21 @@ def optimize_policy(
             "priority_ranking": [],
         }
 
-    # 5. Always return valid response using solver values
-    optimal = {v: float(dvars[v].value() or (30 if v == "solar_increase" else 20)) for v in variables}
-    status = "optimal"
-
-    # Compute projected impact
+    optimal = {}
+    for v in variables:
+        raw_value = dvars[v].value()
+        if raw_value is None:
+            raw_value = 30 if v == "solar_increase" else 20
+        optimal[v] = float(raw_value)
     total_cost = sum(UNIT_COSTS[v] * optimal[v] for v in variables)
     total_ghg_reduction = sum(GHG_REDUCTIONS[v] * optimal[v] for v in variables)
     total_score_lift = sum(SCORE_LIFTS[v] * optimal[v] for v in variables)
+    optimal_score = current_city_score + total_score_lift
     roi = (total_score_lift * 10) / max(1, total_cost) * 100
 
     return {
-        "status": status,
+        "status": "optimal",
+        "optimal_score": round(optimal_score, 2),
         "optimal_mix": optimal,
         "projected_impact": {
             "ghg_reduction_mtco2": round(total_ghg_reduction, 2),
@@ -133,9 +142,16 @@ def optimize_policy(
             "budget_used_pct": round(total_cost / budget_cr * 100, 1),
         },
         "priority_ranking": sorted(
-            [{"action": v, "efficiency": round(SCORE_LIFTS[v] / UNIT_COSTS[v] * 100, 3),
-              "allocated": optimal[v]} for v in variables],
-            key=lambda x: x["efficiency"], reverse=True
+            [
+                {
+                    "action": v,
+                    "efficiency": round(SCORE_LIFTS[v] / UNIT_COSTS[v] * 100, 3),
+                    "allocated": optimal[v],
+                }
+                for v in variables
+            ],
+            key=lambda x: x["efficiency"],
+            reverse=True,
         ),
     }
 

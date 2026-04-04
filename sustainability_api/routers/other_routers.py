@@ -34,7 +34,7 @@ def solve_optimization(req: OptimizationRequest):
 def optimize_for_ui(req: OptimizationRequest):
     """
     Returns exact flat JSON required by the premium UI dashboard:
-    { solar, waste, ev, score, cost, ghg_reduction }
+    { solar, waste, ev, score, cost, ghg_reduction, optimal_score }
     """
     from optimization.lp_solver import optimize_policy
     res = optimize_policy(
@@ -49,6 +49,7 @@ def optimize_for_ui(req: OptimizationRequest):
         "waste": mix.get("waste_improvement", 0),
         "ev": mix.get("ev_adoption", 0),
         "score": impact.get("score_lift_points", 0),
+        "optimal_score": res.get("optimal_score", impact.get("score_lift_points", 0)),
         "cost": impact.get("total_cost_cr", 0),
         "ghg_reduction": impact.get("ghg_reduction_mtco2", 0),
         "status": res.get("status", "optimal")
