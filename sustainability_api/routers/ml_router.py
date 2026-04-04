@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Query, HTTPException
 from pydantic import BaseModel
 import pandas as pd
+import numpy as np
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from config import ALL_ZONES
@@ -31,7 +32,38 @@ def get_df() -> pd.DataFrame:
 
 
 class TrainRequest(BaseModel):
-    models: list[str] = ["water", "energy", "waste", "carbon", "score"]
+    models: list[str] = ["water", "energy", "waste", "carbon", "score", "anomaly"]
+
+
+def _build_anomaly_training_samples(df: pd.DataFrame) -> list[dict]:
+    """
+    Build multi-sensor training samples for IsolationForest from historical zone data.
+    Each sample contains {water_flow, energy_load, waste_fill}.
+    """
+    rng = np.random.default_rng(42)
+    samples: list[dict] = []
+    for zone in ALL_ZONES:
+        zdf = df[df["zone"] == zone]
+        if zdf.empty:
+            continue
+        recent = zdf[zdf["year"] >= 2000] if (zdf["year"] >= 2000).any() else zdf.tail(30)
+        for _, row in recent.iterrows():
+            samples.append({
+                "water_flow": float(row.get("water_demand_mgd", 300)) * float(rng.uniform(1.6, 2.8)),
+                "energy_load": float(row.get("energy_consumption_mu", 1800)) * float(rng.uniform(0.45, 0.9)),
+                "waste_fill": float(np.clip(
+                    float(row.get("landfill_dependency_percent", 50)) * float(rng.uniform(0.7, 1.2)),
+                    0, 100
+                )),
+            })
+    # Add broad normal samples for better baseline separation.
+    for _ in range(800):
+        samples.append({
+            "water_flow": float(rng.normal(320, 60)),
+            "energy_load": float(rng.normal(1800, 300)),
+            "waste_fill": float(np.clip(rng.normal(62, 12), 0, 100)),
+        })
+    return samples
 
 
 @router.post("/train")
@@ -56,6 +88,18 @@ def train_models(req: TrainRequest):
     if "score" in req.models:
         from ml.composite_score import train_score_model
         results["score"] = train_score_model(df)
+        # Warm SHAP explainer so /api/ml/explain is fast and ready.
+        from ml.explainability import init_score_shap_explainer
+        results["score_shap_initialized"] = init_score_shap_explainer()
+    if "anomaly" in req.models:
+        from ml.anomaly_detection import train_anomaly_model
+        samples = _build_anomaly_training_samples(df)
+        model = train_anomaly_model(samples)
+        results["anomaly"] = {
+            "trained": model is not None,
+            "samples": len(samples),
+            "model": "IsolationForest",
+        }
     return {"status": "trained", "results": results}
 
 

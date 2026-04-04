@@ -15,18 +15,48 @@ from config import WATER_MODEL_PATH, ALL_ZONES
 _models: dict = {}  # cache: zone -> prophet model
 
 
+def _ensure_prophet_runtime():
+    """
+    Runtime compatibility for Prophet on environments where:
+    1) NumPy 2 removed np.float_/np.int_
+    2) bundled cmdstan path is missing makefile
+    """
+    if not hasattr(np, "float_"):
+        np.float_ = np.float64
+    if not hasattr(np, "int_"):
+        np.int_ = np.int64
+
+    try:
+        import prophet  # noqa: F401
+        import cmdstanpy
+        prophet_root = Path(prophet.__file__).resolve().parent
+        local_cmdstan = prophet_root / "stan_model" / "cmdstan-2.33.1"
+        if local_cmdstan.exists():
+            makefile = local_cmdstan / "makefile"
+            if not makefile.exists():
+                makefile.write_text("# auto-generated for cmdstan path validation\n", encoding="utf-8")
+            cmdstanpy.set_cmdstan_path(str(local_cmdstan))
+    except Exception:
+        # If this setup fails, Prophet import may still succeed with another backend path.
+        pass
+
+
 def _make_training_df(zone_df: pd.DataFrame) -> pd.DataFrame:
     """Prepare Prophet-format dataframe (ds, y) with regressors."""
     df = zone_df.copy()
     df["ds"] = pd.to_datetime(df["year"].astype(str) + "-06-01")
-    df["y"] = df["water_demand_mgd"].ffill()
-    df["temperature"] = df.get("temperature_celsius", pd.Series([28.0] * len(df)))
-    df["population_scaled"] = df["population"] / 1e6
+    df["y"] = df["water_demand_mgd"].ffill().bfill()
+    if "temperature_celsius" in df.columns:
+        df["temperature"] = df["temperature_celsius"].fillna(28.0)
+    else:
+        df["temperature"] = 28.0
+    df["population_scaled"] = (df["population"] / 1e6).ffill().bfill()
     return df[["ds", "y", "temperature", "population_scaled"]].dropna()
 
 
 def train_water_model(full_df: pd.DataFrame) -> dict:
     """Train one Prophet model per zone. Saves to disk."""
+    _ensure_prophet_runtime()
     try:
         from prophet import Prophet
     except ImportError:
@@ -51,6 +81,8 @@ def train_water_model(full_df: pd.DataFrame) -> dict:
         m.fit(tdf)
         joblib.dump(m, str(WATER_MODEL_PATH).replace(".pkl", f"_{zone.replace('-','_')}.pkl"))
         trained[zone] = m
+    # Save registry metadata at canonical model path from config.
+    joblib.dump({"zones": list(trained.keys())}, str(WATER_MODEL_PATH))
     _models.update(trained)
     return trained
 

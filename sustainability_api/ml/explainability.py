@@ -9,6 +9,30 @@ import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from etl.feature_engineering import FEATURE_NAMES, build_feature_vector
 
+_score_explainer = None
+
+
+def init_score_shap_explainer(model=None) -> bool:
+    """
+    Initialize and cache SHAP explainer for the composite score model.
+    Returns True if SHAP explainer is ready, else False.
+    """
+    global _score_explainer
+    if _score_explainer is not None:
+        return True
+    if model is None:
+        from ml.composite_score import _load_model
+        model = _load_model()
+    if model is None:
+        return False
+    try:
+        import shap
+        _score_explainer = shap.TreeExplainer(model)
+        return True
+    except Exception:
+        _score_explainer = None
+        return False
+
 
 def explain_score_prediction(row: dict, model=None) -> dict:
     """
@@ -23,8 +47,12 @@ def explain_score_prediction(row: dict, model=None) -> dict:
     X = np.array([fv])
 
     try:
-        import shap
-        explainer = shap.TreeExplainer(model)
+        explainer = _score_explainer if _score_explainer is not None else None
+        if explainer is None:
+            if not init_score_shap_explainer(model):
+                raise RuntimeError("SHAP explainer initialization failed")
+            explainer = _score_explainer
+
         shap_vals = explainer.shap_values(X)[0]
         attribution = {
             FEATURE_NAMES[i]: round(float(shap_vals[i]), 4)
