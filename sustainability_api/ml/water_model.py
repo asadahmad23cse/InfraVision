@@ -88,6 +88,7 @@ def train_water_model(full_df: pd.DataFrame) -> dict:
 
 
 def _load_model(zone: str):
+    _ensure_prophet_runtime()
     if zone in _models:
         return _models[zone]
     path = str(WATER_MODEL_PATH).replace(".pkl", f"_{zone.replace('-','_')}.pkl")

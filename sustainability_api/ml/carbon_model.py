@@ -118,5 +118,8 @@ def get_carbon_feature_importance() -> dict[str, float]:
     if model is None:
         return {f: round(1/len(FEATURE_COLS), 3) for f in FEATURE_COLS}
     coefs = np.abs(model.coef_)
-    total = coefs.sum()
-    return {FEATURE_COLS[i]: round(float(coefs[i]) / total, 4) for i in range(len(FEATURE_COLS))}
+    total = float(coefs.sum()) or 1.0
+    return {
+        FEATURE_COLS[i]: float(round(float(coefs[i]) / total, 4))
+        for i in range(len(FEATURE_COLS))
+    }

@@ -114,5 +114,8 @@ def get_score_feature_importance() -> dict[str, float]:
     if model is None:
         return {f: round(1/len(FEATURE_NAMES), 4) for f in FEATURE_NAMES}
     scores = model.feature_importances_
-    total = scores.sum()
-    return {FEATURE_NAMES[i]: round(float(scores[i]) / total, 4) for i in range(len(FEATURE_NAMES))}
+    total = float(scores.sum()) or 1.0
+    return {
+        FEATURE_NAMES[i]: float(round(float(scores[i]) / total, 4))
+        for i in range(len(FEATURE_NAMES))
+    }

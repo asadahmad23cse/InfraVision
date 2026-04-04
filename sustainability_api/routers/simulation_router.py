@@ -72,7 +72,7 @@ class ScenarioRequest(BaseModel):
 
 
 @router.post("/compare")
-def compare_scenarios(req: ScenarioRequest):
+def compare_scenarios_post(req: ScenarioRequest):
     """
     Run baseline + multiple scenarios and return city-level time series comparison.
     """
@@ -87,6 +87,40 @@ def compare_scenarios(req: ScenarioRequest):
     scenario_engine.SIM_END_YEAR = req.end_year
     result = cs(initial_states, req.scenarios)
     return result
+
+
+@router.get("/compare")
+def compare_scenarios_get(
+    start_year: int = 2025,
+    end_year: int = 2035,
+    solar_increase: float = 0.2,
+    waste_improvement: float = 0.2,
+    green_expansion: float = 0.2,
+    water_conservation: float = 0.2,
+    ev_adoption: float = 0.2,
+    public_transport: float = 0.2,
+):
+    """
+    GET compatibility endpoint for quick scenario comparison.
+    """
+    req = ScenarioRequest(
+        scenarios=[
+            {
+                "label": "Policy Mix (GET)",
+                "interventions": {
+                    "solar_increase": solar_increase,
+                    "waste_improvement": waste_improvement,
+                    "green_expansion": green_expansion,
+                    "water_conservation": water_conservation,
+                    "ev_adoption": ev_adoption,
+                    "public_transport": public_transport,
+                },
+            }
+        ],
+        start_year=start_year,
+        end_year=end_year,
+    )
+    return compare_scenarios_post(req)
 
 
 class StressRequest(BaseModel):

@@ -225,3 +225,37 @@ def get_feature_importance(model: str = Query("score")):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     raise HTTPException(status_code=400, detail="Unknown model")
+
+
+@router.get("/forecast/{category}")
+def forecast_by_category(
+    category: str,
+    zone: str = Query(...),
+    start_year: int = Query(2025),
+    end_year: int = Query(2030),
+    temperature: float = Query(30.0),
+    population_millions: float = Query(3.5),
+):
+    """
+    Unified forecast endpoint for compatibility:
+    /api/ml/forecast/{category} where category in {water, energy, waste, carbon}
+    """
+    category = category.lower().strip()
+    if category == "water":
+        return forecast_water(
+            zone=zone,
+            start_year=start_year,
+            end_year=end_year,
+            temperature=temperature,
+            population_millions=population_millions,
+        )
+    if category == "energy":
+        return forecast_energy(zone=zone, start_year=start_year, end_year=end_year)
+    if category == "waste":
+        return forecast_waste(zone=zone, start_year=start_year, end_year=end_year)
+    if category == "carbon":
+        return forecast_carbon(zone=zone, start_year=start_year, end_year=end_year)
+    raise HTTPException(
+        status_code=400,
+        detail="Unknown category. Use one of: water, energy, waste, carbon",
+    )

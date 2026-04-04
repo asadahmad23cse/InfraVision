@@ -106,5 +106,8 @@ def get_waste_feature_importance() -> dict[str, float]:
     if model is None:
         return {f: round(1/len(FEATURE_COLS), 3) for f in FEATURE_COLS}
     scores = model.feature_importances_
-    total = sum(scores)
-    return {FEATURE_COLS[i]: round(float(scores[i]) / total, 4) for i in range(len(FEATURE_COLS))}
+    total = float(sum(scores)) or 1.0
+    return {
+        FEATURE_COLS[i]: float(round(float(scores[i]) / total, 4))
+        for i in range(len(FEATURE_COLS))
+    }
