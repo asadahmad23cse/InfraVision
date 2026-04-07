@@ -36,9 +36,7 @@ export default function OptimizationPage() {
         min_score_lift: scoreTarget,
       });
       setResult(data);
-      if (data.status === "fallback") {
-        setError("Constraints too strict. Showing best achievable solution.");
-      }
+      // 'partial' or 'fallback' still shows results — no red error
     } catch (e: unknown) {
       console.error(e);
       setError(e instanceof Error ? e.message : 'Optimization failed.');
@@ -140,10 +138,19 @@ export default function OptimizationPage() {
               ) : 'Run LP Optimizer'}
             </button>
             
+            {/* Real API error — always red */}
             {error && (
               <motion.div initial={{opacity:0, y:-10}} animate={{opacity:1, y:0}} className="p-4 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 text-xs leading-relaxed">
-                <strong className="block mb-1">Solver Constraints Infeasible</strong>
+                <strong className="block mb-1">⚠ Solver Error</strong>
                 {error}
+              </motion.div>
+            )}
+
+            {/* Partial solution info banner — amber, not red */}
+            {result && (result.status === 'partial' || result.status === 'fallback') && !error && (
+              <motion.div initial={{opacity:0, y:-10}} animate={{opacity:1, y:0}} className="p-4 rounded-xl border border-amber-500/20 bg-amber-500/10 text-amber-300 text-xs leading-relaxed">
+                <strong className="block mb-1">💡 Best Achievable Allocation</strong>
+                Budget limits reached for the given targets. Displaying the most efficient allocation achievable within your constraints.
               </motion.div>
             )}
           </motion.div>
@@ -196,7 +203,13 @@ export default function OptimizationPage() {
                   className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
                   <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-4">
                     <h3 className="text-white font-bold tracking-wide">Optimal Capital Deployment Map</h3>
-                    <span className="text-[10px] px-2 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg tracking-widest uppercase font-bold shadow-[0_0_10px_rgba(16,185,129,0.1)]">Solution Confirmed</span>
+                    <span className={`text-[10px] px-2 py-1 border rounded-lg tracking-widest uppercase font-bold ${
+                      result.status === 'partial' || result.status === 'fallback'
+                        ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.1)]'
+                        : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]'
+                    }`}>
+                      {result.status === 'partial' || result.status === 'fallback' ? 'Best Achievable' : 'Solution Confirmed'}
+                    </span>
                   </div>
                   
                   <div className="h-64">

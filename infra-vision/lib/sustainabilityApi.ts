@@ -309,7 +309,7 @@ export interface OptimizationUiResponse {
   optimal_score: number;
   cost: number;
   ghg_reduction: number;
-  status: string;
+  status: 'optimal' | 'partial' | 'fallback' | string;
 }
 
 export interface OptimizationSolveResponse {

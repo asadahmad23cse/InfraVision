@@ -150,32 +150,10 @@ export function getLocalOptimizationSolve(
 
   let { cost, ghg, score } = totals(mix);
 
-  const infeasible =
-    (ghgT > 0 && ghg < ghgT * 0.65) || (scoreT > 0 && score < scoreT * 0.65);
-
-  if (infeasible) {
-    const fallbackScoreLift = 65;
-    return {
-      status: 'fallback' as const,
-      optimal_score: round(currentCityScore + fallbackScoreLift, 2),
-      optimal_mix: {
-        solar_increase: 40,
-        waste_improvement: 30,
-        ev_adoption: 20,
-        green_expansion: 10,
-        water_conservation: 10,
-        public_transport: 20,
-      },
-      projected_impact: {
-        ghg_reduction_mtco2: round(ghgT * 0.7, 2),
-        score_lift_points: fallbackScoreLift,
-        total_cost_cr: round(budget * 0.9, 0),
-        roi_percent: 15,
-        budget_used_pct: 90,
-      },
-      priority_ranking: [] as Array<{ action: string; efficiency: number; allocated: number }>,
-    };
-  }
+  // Never show hardcoded fallback — always surface real allocation.
+  // Mark as 'partial' if we couldn't fully satisfy one or both targets.
+  const isPartial =
+    (ghgT > 0 && ghg < ghgT * 0.9) || (scoreT > 0 && score < scoreT * 0.9);
 
   const roi = (score * 10) / Math.max(1, cost) * 100;
   const priorityRanking = [...VARS]
@@ -187,7 +165,7 @@ export function getLocalOptimizationSolve(
     .sort((a, b) => b.efficiency - a.efficiency);
 
   return {
-    status: 'optimal' as const,
+    status: (isPartial ? 'partial' : 'optimal') as 'optimal' | 'partial',
     optimal_score: round(currentCityScore + score, 2),
     optimal_mix: Object.fromEntries(VARS.map((v) => [v, mix[v]])) as Record<OptVarKey, number>,
     projected_impact: {
