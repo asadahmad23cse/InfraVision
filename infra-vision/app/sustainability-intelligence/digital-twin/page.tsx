@@ -71,6 +71,24 @@ function toPolicyFractions(policy: PolicyInputs) {
   };
 }
 
+/** FastAPI wraps failure payload in `{ graph: { nodes, links } }`; UI expects nodes/links at top level. */
+function normalizeTwinResponse(data: unknown): TwinGraphResponse {
+  if (!data || typeof data !== 'object') return {};
+  const d = data as Record<string, unknown>;
+  if (d.graph && typeof d.graph === 'object' && !Array.isArray(d.graph)) {
+    const g = d.graph as Record<string, unknown>;
+    return {
+      nodes: Array.isArray(g.nodes) ? (g.nodes as TwinGraphResponse['nodes']) : [],
+      links: Array.isArray(g.links) ? (g.links as TwinGraphResponse['links']) : [],
+      metrics: (g.metrics as Record<string, unknown>) || {},
+      directly_impacted: d.directly_impacted as TwinGraphResponse['directly_impacted'],
+      network_resilience_pct:
+        typeof d.network_resilience_pct === 'number' ? d.network_resilience_pct : undefined,
+    };
+  }
+  return data as TwinGraphResponse;
+}
+
 export default function DigitalTwinPage() {
   const [graphData, setGraphData] = useState<TwinGraphResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -105,8 +123,8 @@ export default function DigitalTwinPage() {
     setLoading(true);
     setError(null);
     try {
-      const data = zone ? await simulateDigitalTwinFailure(zone) : await getDigitalTwinGraph();
-      setGraphData(data);
+      const raw = zone ? await simulateDigitalTwinFailure(zone) : await getDigitalTwinGraph();
+      setGraphData(normalizeTwinResponse(raw));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load digital twin graph');
     } finally {
