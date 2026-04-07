@@ -373,104 +373,123 @@ export default function WaterStressPage() {
 
         {/* Step 4: Demand Trend + Forecast Confidence */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-          className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-7 shadow-[0_10px_40px_rgba(0,0,0,0.4)]">
-          <div className="flex justify-between items-start mb-6">
+          className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-3xl p-7 shadow-[0_15px_45px_rgba(0,0,0,0.5)] relative overflow-hidden group">
+          <div className="absolute inset-0 bg-gradient-to-tr from-cyan-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-duration-700 pointer-events-none" />
+          
+          <div className="flex justify-between items-start mb-6 border-b border-white/10 pb-5">
             <div>
-              <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mb-1">04 / Historical Context</p>
-              <h2 className="text-xl font-semibold text-white tracking-tight">Demand Forecast with Confidence Band</h2>
+              <p className="text-[10px] text-cyan-400/80 font-black uppercase tracking-widest mb-1.5 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                04 / Predictive Intelligence
+              </p>
+              <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-3">
+                Demand Forecast vs Capacity
+              </h2>
+              <p className="text-xs text-gray-400 mt-1.5">Machine learning projection of water scarcity trajectories with 95% confidence intervals</p>
             </div>
-            {selectedZone && <span className="px-3 py-1 bg-cyan-500/10 text-cyan-400 rounded-lg border border-cyan-500/20 text-xs font-bold tracking-widest uppercase">{selectedZone}</span>}
+            {selectedZone && (
+              <div className="flex flex-col items-end gap-1.5">
+                <span className="px-3 py-1 bg-cyan-500/10 text-cyan-400 rounded-lg border border-cyan-500/20 text-xs font-bold tracking-widest uppercase shadow-inner">
+                  {selectedZone} Node
+                </span>
+                <span className="text-[9px] text-gray-500 uppercase font-black tracking-widest">Model: Meta Prophet</span>
+              </div>
+            )}
           </div>
           
-          <div className="h-72 w-full">
-            {selectedZone && (demandTrendByZone(selectedZone).length > 0 || forecastBandData.length > 0) ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={forecastBandData.length > 0 ? forecastBandData : demandTrendByZone(selectedZone)} margin={{ top: 10, right: 10, left: 8, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="gapGlow" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#fb7185" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#fb7185" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                  <XAxis dataKey="year" tick={{fill: 'rgba(255,255,255,0.4)', fontSize: 11}} axisLine={false} tickLine={false} dy={10} />
-                  <YAxis
-                    tick={{fill: 'rgba(255,255,255,0.4)', fontSize: 11}}
-                    axisLine={false}
-                    tickLine={false}
-                    width={48}
-                    domain={
-                      forecastBandData.length > 0
-                        ? [
-                            (min: number) =>
-                              Number.isFinite(min)
-                                ? Math.max(0, min - Math.max(8, min * 0.06))
-                                : 0,
-                            (max: number) =>
-                              Number.isFinite(max)
-                                ? max + Math.max(8, max * 0.06)
-                                : 100,
-                          ]
-                        : ['auto', 'auto']
-                    }
-                  />
-                  <Tooltip 
-                    contentStyle={{backgroundColor: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.5)'}}
-                    itemStyle={{fontWeight: 600}}
-                    cursor={{ stroke: 'rgba(255,255,255,0.1)', strokeWidth: 1, strokeDasharray: '4 4' }}
-                  />
-                  <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }}/>
-                  
-                  <ReferenceLine x={2022} stroke="rgba(255,255,255,0.3)" strokeDasharray="3 3" label={{value:'Now', fill:'rgba(255,255,255,0.5)', fontSize:10, position: 'top'}} />
-                  
-                  {forecastBandData.length > 0 ? (
-                    <>
-                      {/* Lines are more reliable than stacked Areas + url(#gradient) across Recharts/Turbopack builds. */}
-                      <Line
-                        type="monotone"
-                        dataKey="yhat_upper"
-                        stroke="rgba(34,211,238,0.35)"
-                        strokeWidth={1}
-                        dot={false}
-                        name="Upper bound"
-                        connectNulls
-                        isAnimationActive={false}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="yhat_lower"
-                        stroke="rgba(34,211,238,0.35)"
-                        strokeWidth={1}
-                        dot={false}
-                        name="Lower bound"
-                        connectNulls
-                        isAnimationActive={false}
-                      />
-                      <Line
-                        type="monotone"
-                        dataKey="forecast"
-                        stroke="#22d3ee"
-                        strokeWidth={3}
-                        name="Forecast demand"
-                        dot={{ r: 3, fill: '#22d3ee' }}
-                        activeDot={{ r: 6, strokeWidth: 0 }}
-                        connectNulls
-                        style={{ filter: 'drop-shadow(0 4px 6px rgba(34,211,238,0.35))' }}
-                        isAnimationActive={false}
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <Area type="monotone" dataKey="gap" fill="url(#gapGlow)" stroke="none" name="Structural Deficit" />
-                      <Line type="monotone" dataKey="demand" stroke="#fb7185" strokeWidth={3} name="Total Demand" dot={false} activeDot={{r: 6, strokeWidth: 0}} style={{filter: 'drop-shadow(0 4px 6px rgba(251,113,133,0.4))'}} />
-                      <Line type="monotone" dataKey="supply" stroke="#34d399" strokeWidth={3} name="Total Supply" dot={false} activeDot={{r: 6, strokeWidth: 0}} style={{filter: 'drop-shadow(0 4px 6px rgba(52,211,153,0.4))'}} />
-                    </>
-                  )}
-                </ComposedChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex h-full items-center justify-center border-2 border-dashed border-white/5 rounded-2xl">
-                <p className="text-white/40 text-sm">Select a zone above to view forecast confidence band</p>
+          <div className="h-[320px] w-full">
+            {selectedZone ? (() => {
+              // Build a combined continuous dataset for a true professional chart
+              const hist = demandTrendByZone(selectedZone);
+              const forecastMap = new Map(forecastBandData.map((f: any) => [f.year, f]));
+              
+              const allYears = Array.from(new Set([...hist.map((h: any) => h.year), ...forecastBandData.map((f: any) => f.year)])).sort();
+              
+              const combinedData = allYears.map(y => {
+                const h = hist.find((r: any) => r.year === y);
+                const f = forecastMap.get(y);
+                
+                // For a seamless line, 2024 should connect to 2025.
+                // We will just expose all variables for the chart to chew on.
+                return {
+                  year: y,
+                  historical_demand: h ? h.demand : null,
+                  historical_supply: h ? h.supply : null,
+                  forecast_demand: f ? f.forecast : null,
+                  band: f && f.yhat_lower && f.yhat_upper ? [f.yhat_lower, f.yhat_upper] : null,
+                };
+              });
+
+              // Add a bridging point so the historical line connects to the forecast line
+              const lastHist = combinedData.filter(d => d.historical_demand !== null).pop();
+              if (lastHist) {
+                const forecastMatch = combinedData.find(d => d.year === lastHist.year);
+                if (forecastMatch) {
+                  forecastMatch.forecast_demand = lastHist.historical_demand;
+                  forecastMatch.band = [lastHist.historical_demand, lastHist.historical_demand];
+                }
+              }
+
+              return (
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={combinedData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="bandGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.25}/>
+                        <stop offset="100%" stopColor="#22d3ee" stopOpacity={0.05}/>
+                      </linearGradient>
+                      <linearGradient id="histGradient" x1="0" y1="0" x2="0" y2="1">
+                         <stop offset="0%" stopColor="#fb7185" stopOpacity={0.3}/>
+                         <stop offset="100%" stopColor="#fb7185" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                    <XAxis dataKey="year" tick={{fill: '#64748b', fontSize: 11, fontWeight: 600}} axisLine={{stroke: 'rgba(255,255,255,0.1)'}} tickLine={false} dy={10} />
+                    <YAxis 
+                      tick={{fill: '#64748b', fontSize: 11, fontWeight: 500}} 
+                      axisLine={false} 
+                      tickLine={false} 
+                      width={55}
+                      domain={['auto', 'auto']}
+                      tickFormatter={(v) => `${v} MGD`}
+                    />
+                    
+                    <Tooltip 
+                      contentStyle={{backgroundColor: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.5)'}}
+                      itemStyle={{fontWeight: 700, fontSize: '13px'}}
+                      labelStyle={{color: '#94a3b8', fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px'}}
+                      cursor={{ stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1, strokeDasharray: '4 4' }}
+                      formatter={(val: any, name: string) => {
+                        if (name === "band") return [`${val[0]} - ${val[1]}`, "95% Confidence Base/Peak"];
+                        return [typeof val === 'number' ? val.toFixed(1) : val, name];
+                      }}
+                    />
+                    <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '11px', fontWeight: 600, color: '#94a3b8' }} iconType="circle" />
+                    
+                    <ReferenceLine x={2024} stroke="#f59e0b" strokeDasharray="4 4" strokeWidth={2} strokeOpacity={0.5} label={{value:'Present Analysis', fill:'#f59e0b', fontSize:9, position: 'top', fontWeight: 800}} />
+
+                    {/* Historical Baseline */}
+                    <Area type="monotone" dataKey="historical_demand" fill="url(#histGradient)" stroke="none" name="Historical Demand (Area)" legendType="none" />
+                    <Line type="monotone" dataKey="historical_demand" stroke="#fb7185" strokeWidth={3} name="Total Historical Demand" dot={{ r: 3, fill: '#000', stroke: '#fb7185', strokeWidth: 2 }} activeDot={{r: 6}} style={{filter: 'drop-shadow(0 4px 6px rgba(251,113,133,0.4))'}} connectNulls />
+                    <Line type="monotone" dataKey="historical_supply" stroke="#34d399" strokeWidth={2} strokeDasharray="3 3" name="System Supply Capacity" dot={false} activeDot={false} connectNulls />
+
+                    {/* ML Forecast */}
+                    <Area type="monotone" dataKey="band" fill="url(#bandGradient)" stroke="none" name="95% Confidence Band" />
+                    <Line type="monotone" dataKey="forecast_demand" stroke="#22d3ee" strokeWidth={3} strokeDasharray="6 4" name="ML Demand Forecast" dot={{ r: 4, fill: '#000', stroke: '#22d3ee', strokeWidth: 2 }} activeDot={{r: 7, fill: '#22d3ee', strokeWidth: 0}} style={{filter: 'drop-shadow(0 4px 8px rgba(34,211,238,0.5))'}} connectNulls />
+                    
+                  </ComposedChart>
+                </ResponsiveContainer>
+              );
+            })() : (
+              <div className="flex h-full items-center justify-center border-2 border-dashed border-white/10 rounded-2xl bg-white/[0.02]">
+                <div className="text-center">
+                  <div className="w-16 h-16 rounded-full bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-6 h-6 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                  </div>
+                  <h3 className="text-white font-bold tracking-tight mb-1">Awaiting Telemetry</h3>
+                  <p className="text-gray-500 text-xs max-w-[250px]">Select a geographic node from the stress map above to render the machine learning forecast and confidence bands.</p>
+                </div>
               </div>
             )}
           </div>
