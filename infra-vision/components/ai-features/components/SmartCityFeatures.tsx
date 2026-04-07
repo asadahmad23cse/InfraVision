@@ -330,52 +330,146 @@ export function SmartCityFeatures({ onInfrastructureAnalyze, onRoadHousingPlanni
             </motion.div>
           </motion.div>
 
-          {/* Hero Visual - High-End Floating Image Array */}
+          {/* Hero Visual - Premium Holographic Terminal Array */}
           <motion.div
             className="relative w-full aspect-[4/3] perspective-1000 hidden lg:block ml-4"
             initial={{ opacity: 0, scale: 0.9, rotateY: -10 }}
             animate={{ opacity: 1, scale: 1, rotateY: 0 }}
             transition={{ duration: 1.5, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            style={{
-              x: visualX,
-              y: visualY
-            }}
+            style={{ x: visualX, y: visualY }}
           >
-            {/* The Staggered Glass Grid */}
-            <div className="absolute inset-0 grid grid-cols-3 gap-3 md:gap-4 transform rotate-y-[-8deg] rotate-x-[8deg] scale-110">
-              {[
-                { delay: 0.5, op: "opacity-80 hover:opacity-100", img: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzbWFydCUyMGNpdHklMjBkYXNoYm9hcmQlMjBhbmFseXRpY3MlMjBzY3JlZW5zfGVufDF8fHx8MTc1NzkxNDU1NHww&ixlib=rb-4.1.0&q=80&w=1080" },
-                { delay: 0.6, op: "opacity-60 hover:opacity-100", img: "https://images.unsplash.com/photo-1558368399-3d5fe0e460f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzbWFydCUyMGNpdHklMjByb2FkcyUyMHVyYmFuJTIwaW5mcmFzdHJ1Y3R1cmV8ZW58MXx8fHwxNzU3OTE0NTU3fDA&ixlib=rb-4.1.0&q=80&w=1080" },
-                { delay: 0.7, op: "opacity-40 hover:opacity-100", img: "https://images.unsplash.com/photo-1552750691-3174d623f8e7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxncmVlbiUyMHJlbmV3YWJsZSUyMGVuZXJneSUyMHNtYXJ0JTIwY2l0eXxlbnwxfHx8fDE3NTc5MTQ1NjB8MA&ixlib=rb-4.1.0&q=80&w=1080" },
-                { delay: 0.8, op: "opacity-90 hover:opacity-100 scale-105 z-10", img: "https://images.unsplash.com/photo-1566262258598-53deb7089bf8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaXR5JTIwc2t5bGluZSUyMG5pZ2h0JTIwZnV0dXJpc3RpY3xlbnwxfHx8fDE3NTc5MTQ1NjN8MA&ixlib=rb-4.1.0&q=80&w=1080" },
-                { delay: 0.9, op: "opacity-100 scale-110 z-20 shadow-[0_0_50px_rgba(0,168,232,0.6)] border-white/20", img: "https://images.unsplash.com/photo-1725203653092-494c7eec1a30?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzbWFydCUyMGNpdHklMjB0ZWNobm9sb2d5JTIwZGlnaXRhbHxlbnwxfHx8fDE3NTc5MTQ1Njl8MA&ixlib=rb-4.1.0&q=80&w=1080" },
-                { delay: 1.0, op: "opacity-70 hover:opacity-100", img: "https://images.unsplash.com/photo-1558899367-3cd83fb31ed8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0cmFmZmljJTIwZmxvdyUyMHNtYXJ0JTIwdHJhbnNwb3J0YXRpb258ZW58MXx8fHwxNzU3OTE0NTY2fDA&ixlib=rb-4.1.0&q=80&w=1080" },
-                { delay: 1.1, op: "opacity-30 hover:opacity-100", img: "https://images.unsplash.com/photo-1719460672237-4253bfabb5c9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx1cmJhbiUyMGJ1aWxkaW5ncyUyMG1vZGVybiUyMGFyY2hpdGVjdHVyZXxlbnwxfHx8fDE3NTc5MTQ1NzN8MA&ixlib=rb-4.1.0&q=80&w=1080" },
-                { delay: 1.2, op: "opacity-50 hover:opacity-100", img: "https://images.unsplash.com/photo-1756701781600-12a63ab571fb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaXR5JTIwZGV2ZWxvcG1lbnQlMjBncm93dGglMjB1cmJhbiUyMHBsYW5uaW5nfGVufDF8fHx8MTc1NzkxNDU3Nnww&ixlib=rb-4.1.0&q=80&w=1080" },
-                { delay: 1.3, op: "opacity-20 hover:opacity-100", img: "https://images.unsplash.com/photo-1542800952-e5471ed41326?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxncmVlbiUyMGNpdHklMjBzdXN0YWluYWJpbGl0eSUyMHBhcmtzJTIwbmF0dXJlfGVufDF8fHx8MTc1NzkxNDU3OXww&ixlib=rb-4.1.0&q=80&w=1080" }
-              ].map((tile, i) => (
-                <motion.div
-                  key={i}
-                  className={`relative rounded-[20px] overflow-hidden border border-white/10 bg-[#0a0a0c] lg:shadow-2xl transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] hover:z-30 hover:scale-[1.25] hover:shadow-[0_0_50px_rgba(0,168,232,0.5)] ${tile.op}`}
-                  initial={{ opacity: 0, z: -100, rotateX: 20 }}
-                  animate={{ opacity: 1, z: 0, rotateX: 0 }}
-                  transition={{ duration: 1.2, delay: tile.delay, ease: [0.16, 1, 0.3, 1] }}
-                >
-                  <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.02] to-white/[0.08] mix-blend-overlay z-10 pointer-events-none" />
-                  <img 
-                    src={tile.img} 
-                    alt={`Smart City Feed ${i}`} 
-                    className="w-full h-full object-cover filter grayscale-[60%] contrast-[1.1] brightness-[0.7] sepia-[10%] hue-rotate-[-10deg] hover:grayscale-0 hover:brightness-100 hover:contrast-100 hover:sepia-0 hover:hue-rotate-0 transition-all duration-700" 
-                  />
-                  <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/60 backdrop-blur-md border border-white/10 text-[8px] font-mono text-white/50 z-20">
-                    CAM-{i+1}
+            <div className="absolute inset-0 transform rotate-y-[-8deg] rotate-x-[8deg] scale-100 group mt-10">
+              
+              {/* Main Center Terminal Dashboard */}
+              <div className="absolute inset-0 rounded-[24px] border border-white/10 bg-[#0a0a0c]/80 backdrop-blur-2xl shadow-2xl overflow-hidden group-hover:border-[#00A8E8]/30 transition-all duration-700 z-20 flex flex-col">
+                {/* Terminal Header */}
+                <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-white/[0.02]">
+                  <div className="flex items-center gap-2 text-white/50 text-xs font-mono">
+                     <Activity className="w-4 h-4 text-[#00A8E8]" />
+                     INFRA_CORE_v2.0.4 
                   </div>
-                </motion.div>
-              ))}
+                  <div className="flex space-x-2">
+                     <div className="w-2.5 h-2.5 rounded-full bg-white/10 group-hover:bg-red-500/80 transition-colors duration-500"></div>
+                     <div className="w-2.5 h-2.5 rounded-full bg-white/10 group-hover:bg-yellow-500/80 transition-colors duration-500 delay-100"></div>
+                     <div className="w-2.5 h-2.5 rounded-full bg-white/10 group-hover:bg-green-500/80 transition-colors duration-500 delay-200"></div>
+                  </div>
+                </div>
+                {/* Terminal Body */}
+                <div className="p-6 flex-1 flex flex-col gap-6 relative">
+                  {/* Cyber Grid Background */}
+                  <div className="absolute inset-0 opacity-[0.03] group-hover:opacity-10 transition-opacity duration-700 bg-[linear-gradient(rgba(255,255,255,1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,1)_1px,transparent_1px)] bg-[size:30px_30px]" />
+                  
+                  {/* Active Simulation Stats */}
+                  <div className="flex gap-6 relative z-10 hidden md:flex">
+                     <div className="flex-1 bg-[#111113]/80 border border-white/5 p-5 rounded-xl backdrop-blur-sm">
+                        <div className="text-[10px] text-white/40 uppercase tracking-widest mb-2 flex justify-between">
+                           <span>Global Stress</span>
+                           <Activity className="w-3 h-3 text-white/20" />
+                        </div>
+                        <div className="text-4xl font-light text-white flex items-baseline gap-2">14.2<span className="text-lg text-white/40">%</span></div>
+                        <div className="mt-2 flex items-center gap-1 text-[#34D399] text-xs">
+                           <span className="w-1.5 h-1.5 rounded-full bg-[#34D399] animate-pulse" /> Optimal
+                        </div>
+                     </div>
+                     <div className="flex-1 bg-[#111113]/80 border border-white/5 p-5 rounded-xl backdrop-blur-sm">
+                        <div className="text-[10px] text-white/40 uppercase tracking-widest mb-2 flex justify-between">
+                           <span>Carbon Drift</span>
+                           <Leaf className="w-3 h-3 text-white/20" />
+                        </div>
+                        <div className="text-4xl font-light text-white flex items-baseline gap-2">890<span className="text-lg text-white/40">MT</span></div>
+                        <div className="mt-2 flex items-center gap-1 text-red-400 text-xs">
+                           <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" /> +0.4% Variance
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* Graph Visual */}
+                  <div className="flex-1 bg-[#111113]/80 border border-white/5 rounded-xl p-4 relative z-10 overflow-hidden flex flex-col justify-end group-hover:border-[#00A8E8]/20 transition-colors duration-700">
+                     {/* Data Visualization Mock */}
+                     <svg className="w-full h-[120px] isolate" preserveAspectRatio="none" viewBox="0 0 100 100">
+                        {/* Glow Gradient */}
+                        <defs>
+                           <linearGradient id="gradArea" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#0EA5E9" stopOpacity="0.4" />
+                              <stop offset="100%" stopColor="#0EA5E9" stopOpacity="0" />
+                           </linearGradient>
+                        </defs>
+                        {/* Area */}
+                        <path d="M0,80 Q20,30 40,60 T80,40 T100,50 L100,100 L0,100 Z" fill="url(#gradArea)" className="transition-all duration-1000 group-hover:opacity-100 opacity-50" />
+                        {/* Line */}
+                        <path d="M0,80 Q20,30 40,60 T80,40 T100,50" fill="none" stroke="#0EA5E9" strokeWidth="1.5" className="drop-shadow-[0_0_8px_rgba(14,165,233,0.8)]" />
+                        {/* Scatter points */}
+                        <circle cx="20" cy="55" r="1.5" fill="#fff" />
+                        <circle cx="40" cy="60" r="1.5" fill="#fff" />
+                        <circle cx="60" cy="40" r="1.5" fill="#fff" />
+                        <circle cx="80" cy="40" r="1.5" fill="#fff" />
+                     </svg>
+
+                     {/* Scanning Radar Element */}
+                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-1000">
+                        <div className="w-32 h-32 rounded-full border border-[#0EA5E9]/20 flex items-center justify-center animate-[spin_4s_linear_infinite]">
+                           <div className="w-1/2 h-[1px] bg-gradient-to-r from-transparent to-[#0EA5E9]/60 absolute top-1/2 left-1/2 origin-left" />
+                        </div>
+                     </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating Spatial Map Card */}
+              <motion.div 
+                className="absolute -right-8 -top-6 w-64 h-auto bg-[#0a0a0c]/95 backdrop-blur-3xl border border-white/10 rounded-2xl p-5 shadow-[0_30px_60px_rgba(0,0,0,0.6)] z-30"
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: [0, -10, 0], opacity: 1 }}
+                transition={{ y: { duration: 6, repeat: Infinity, ease: 'easeInOut' }, opacity: { duration: 1, delay: 1 } }}
+              >
+                  <div className="text-[10px] text-[#00A8E8] uppercase tracking-widest font-mono mb-4 flex justify-between items-center">
+                     <span>Sector 7G</span>
+                     <span className="bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded border border-red-500/20 animate-pulse">ANOMALY</span>
+                  </div>
+                  {/* Decorative Map Grid */}
+                  <div className="grid grid-cols-5 gap-1.5 mb-2">
+                     {Array(20).fill(0).map((_, i) => (
+                        <div key={i} className={`h-4 rounded-[2px] transition-colors duration-500 delay-${i*75} ${[7,8,12,13].includes(i) ? 'bg-red-500/80 shadow-[0_0_10px_rgba(239,68,68,0.4)]' : 'bg-white/[0.08]'}`} />
+                     ))}
+                  </div>
+                  <div className="text-[9px] text-white/30 uppercase tracking-widest font-mono mt-3 border-t border-white/10 pt-2 text-right">
+                    Spatial Analytics Engine
+                  </div>
+              </motion.div>
+
+              {/* Floating Energy Node Card */}
+              <motion.div 
+                className="absolute -left-12 bottom-12 w-60 h-auto bg-[#0a0a0c]/95 backdrop-blur-3xl border border-white/10 rounded-2xl p-5 shadow-[0_30px_60px_rgba(0,0,0,0.6)] z-30"
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: [0, 8, 0], opacity: 1 }}
+                transition={{ y: { duration: 5, repeat: Infinity, ease: 'easeInOut' }, opacity: { duration: 1, delay: 1.2 } }}
+              >
+                 <div className="flex items-center gap-4 mb-5">
+                    <div className="w-10 h-10 rounded-full border border-[#34D399]/40 bg-[#34D399]/10 flex items-center justify-center shadow-[0_0_15px_rgba(52,211,153,0.2)]">
+                       <Leaf className="w-5 h-5 text-[#34D399]" />
+                    </div>
+                    <div>
+                        <div className="text-sm text-white/90 font-medium">Grid Balance</div>
+                       <div className="text-[10px] text-white/40 uppercase tracking-wider font-mono">Optimized State</div>
+                    </div>
+                 </div>
+                 <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <motion.div 
+                      className="h-full bg-gradient-to-r from-[#00A8E8] to-[#34D399]" 
+                      initial={{ width: 0 }}
+                      whileInView={{ width: '78%' }}
+                      transition={{ duration: 1.5, delay: 0.5, ease: "easeOut" }}
+                    />
+                 </div>
+                 <div className="flex justify-between items-center mt-3">
+                    <div className="text-[10px] font-mono text-white/30">System Load</div>
+                    <div className="text-[10px] font-mono text-[#34D399] font-bold">78% EFFICIENCY</div>
+                 </div>
+              </motion.div>
             </div>
             
-            {/* Ambient Back Glow for Grid (To separate it from the black back) */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(0,168,232,0.12)_0%,transparent_60%)] pointer-events-none blur-[60px] -z-10" />
+            {/* Ambient Back Glow for The Terminal Arrays */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(0,168,232,0.12)_0%,transparent_50%)] pointer-events-none blur-[80px] -z-10" />
           </motion.div>
         </div>
       </section>
