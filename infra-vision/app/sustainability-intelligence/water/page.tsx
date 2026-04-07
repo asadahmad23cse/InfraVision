@@ -128,11 +128,13 @@ export default function WaterStressPage() {
 
   const forecastBandData = selectedZone
     ? waterForecastSeries.map((row: any) => {
-        const lower = toNum(row.yhat_lower ?? row.lower);
-        const upper = toNum(row.yhat_upper ?? row.upper);
+        const lower = toNum(row.yhat_lower ?? row.lower ?? row.yhat_lower_ci);
+        const upper = toNum(row.yhat_upper ?? row.upper ?? row.yhat_upper_ci);
+        let forecast = toNum(row.demand_forecast ?? row.yhat ?? row.demand_forecast_mgd);
+        if (!forecast && lower && upper) forecast = (lower + upper) / 2;
         return {
           year: toNum(row.year),
-          forecast: toNum(row.demand_forecast),
+          forecast,
           yhat_lower: lower,
           yhat_upper: upper,
           interval_base: lower,
@@ -346,7 +348,17 @@ export default function WaterStressPage() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                   <XAxis dataKey="year" tick={{fill: 'rgba(255,255,255,0.4)', fontSize: 11}} axisLine={false} tickLine={false} dy={10} />
-                  <YAxis tick={{fill: 'rgba(255,255,255,0.4)', fontSize: 11}} axisLine={false} tickLine={false} dx={-10} />
+                  <YAxis
+                    tick={{fill: 'rgba(255,255,255,0.4)', fontSize: 11}}
+                    axisLine={false}
+                    tickLine={false}
+                    dx={-10}
+                    domain={
+                      forecastBandData.length > 0
+                        ? ['dataMin - 20', 'dataMax + 20']
+                        : ['auto', 'auto']
+                    }
+                  />
                   <Tooltip 
                     contentStyle={{backgroundColor: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.5)'}}
                     itemStyle={{fontWeight: 600}}
@@ -358,9 +370,36 @@ export default function WaterStressPage() {
                   
                   {forecastBandData.length > 0 ? (
                     <>
-                      <Area type="monotone" dataKey="interval_base" stackId="ci" stroke="none" fill="transparent" legendType="none" />
-                      <Area type="monotone" dataKey="interval_range" stackId="ci" stroke="none" fill="url(#forecastBand)" name="Confidence Interval" />
-                      <Line type="monotone" dataKey="forecast" stroke="#22d3ee" strokeWidth={3} name="Forecast Demand" dot={false} activeDot={{r: 6, strokeWidth: 0}} style={{filter: 'drop-shadow(0 4px 6px rgba(34,211,238,0.4))'}} />
+                      {/* stackId: lower segment then band height; avoid fill="transparent" (breaks some Recharts builds). */}
+                      <Area
+                        type="monotone"
+                        dataKey="interval_base"
+                        stackId="ci"
+                        stroke="none"
+                        fill="rgba(15,23,42,0.02)"
+                        legendType="none"
+                        isAnimationActive={false}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="interval_range"
+                        stackId="ci"
+                        stroke="none"
+                        fill="url(#forecastBand)"
+                        name="Confidence interval"
+                        isAnimationActive={false}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="forecast"
+                        stroke="#22d3ee"
+                        strokeWidth={3}
+                        name="Forecast demand"
+                        dot={{ r: 3, fill: '#22d3ee' }}
+                        activeDot={{ r: 6, strokeWidth: 0 }}
+                        style={{ filter: 'drop-shadow(0 4px 6px rgba(34,211,238,0.4))' }}
+                        isAnimationActive={false}
+                      />
                     </>
                   ) : (
                     <>

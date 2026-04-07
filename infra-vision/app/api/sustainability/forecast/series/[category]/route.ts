@@ -43,21 +43,24 @@ export async function GET(req: NextRequest, context: { params: Promise<{ categor
     const latest = rows[rows.length - 1];
     const latestYear = latest?.year || 2022;
 
-    const baseValue = (() => {
-      if (!latest) return 0;
-      switch (category) {
+    const byYear = new Map(rows.map((r) => [r.year, r]));
+
+    const metricFor = (r: (typeof rows)[0], cat: string) => {
+      switch (cat) {
         case 'water':
-          return Number(latest.water_demand_mgd || 0);
+          return Number(r.water_demand_mgd || 0);
         case 'energy':
-          return Number(latest.energy_consumption_mu || 0);
+          return Number(r.energy_consumption_mu || 0);
         case 'waste':
-          return Number(latest.waste_generated_tpd || 0);
+          return Number(r.waste_generated_tpd || 0);
         case 'carbon':
-          return Number(latest.ghg_emissions_mtco2 || 0);
+          return Number(r.ghg_emissions_mtco2 || 0);
         default:
           return 0;
       }
-    })();
+    };
+
+    const baseValue = latest ? metricFor(latest, category) : 0;
 
     const annualGrowth = (() => {
       switch (category) {
@@ -76,8 +79,14 @@ export async function GET(req: NextRequest, context: { params: Promise<{ categor
 
     const predictions = [];
     for (let y = startYear; y <= endYear; y += 1) {
-      const t = Math.max(0, y - latestYear);
-      const yhat = baseValue * Math.pow(1 + annualGrowth, t);
+      const row = byYear.get(y);
+      let yhat: number;
+      if (row) {
+        yhat = metricFor(row, category);
+      } else {
+        const t = Math.max(0, y - latestYear);
+        yhat = baseValue * Math.pow(1 + annualGrowth, t);
+      }
       const lower = yhat * 0.92;
       const upper = yhat * 1.08;
 
