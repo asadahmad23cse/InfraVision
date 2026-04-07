@@ -12,23 +12,17 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
-import { Droplets, Zap, Recycle, Flame, Target, Activity, Crosshair } from 'lucide-react';
+import { Droplets, Zap, Flame, Target, Activity } from 'lucide-react';
 import { getOverview, getFullData, type OverviewResponse, type SustainabilityRow } from '@/lib/sustainabilityApi';
 
-/** Palantir Foundry–style command palette: neon amber + military green */
-const AMBER = '#ffb30f';
-const AMBER_DIM = 'rgba(255, 179, 15, 0.45)';
-const MILITARY = '#6b8f3a';
-const MILITARY_DIM = 'rgba(107, 143, 58, 0.5)';
-const HUD_BG = '#050608';
-const PANEL = '#080b0d';
+/** FinTech / Bloomberg terminal palette */
+const BG = '#000000';
+const TICKER_UP = '#00e676';
+const TICKER_DOWN = '#ff1744';
+const TICKER_FLAT = '#9e9e9e';
+const ACCENT = '#ff9800';
 
-const RISK_TOKENS: Record<string, { stroke: string; label: string }> = {
-  critical: { stroke: AMBER, label: 'CRIT' },
-  high: { stroke: '#d4a017', label: 'HIGH' },
-  moderate: { stroke: '#9aa86c', label: 'MOD' },
-  safe: { stroke: MILITARY, label: 'OK' },
-};
+const RISK_ORDER: Record<string, number> = { safe: 0, moderate: 1, high: 2, critical: 3 };
 
 function getWaterRisk(gapPct: number) {
   if (gapPct >= 30) return 'critical';
@@ -57,14 +51,27 @@ function microDelta(series: number[]): { delta: number; pct: number | null } {
   return { delta, pct };
 }
 
+/** Higher metric = good for investor-style "up" */
+function tickerColorForDelta(
+  delta: number,
+  pct: number | null,
+  higherIsGood: boolean,
+): string {
+  if (delta === 0 && (pct === null || pct === 0)) return TICKER_FLAT;
+  const effective = higherIsGood ? delta : -delta;
+  if (effective > 0) return TICKER_UP;
+  if (effective < 0) return TICKER_DOWN;
+  return TICKER_FLAT;
+}
+
 function MicroSparkline({ values, stroke }: { values: number[]; stroke: string }) {
   const n = values.length;
   if (n < 2) {
-    return <div className="h-9 w-full border border-white/[0.06] bg-black/40" />;
+    return <div className="h-10 w-full border border-[#2a2a2a] bg-black" />;
   }
   const min = Math.min(...values);
   const max = Math.max(...values);
-  const pad = (max - min) * 0.15 || 1;
+  const pad = (max - min) * 0.12 || 1;
   const lo = min - pad;
   const hi = max + pad;
   const span = hi - lo || 1;
@@ -76,87 +83,90 @@ function MicroSparkline({ values, stroke }: { values: number[]; stroke: string }
     })
     .join(' ');
   return (
-    <svg className="h-9 w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+    <svg className="h-10 w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
       <polyline
         points={points}
         fill="none"
         stroke={stroke}
-        strokeWidth="2"
+        strokeWidth="1.5"
         vectorEffect="non-scaling-stroke"
-        strokeLinecap="square"
+        strokeLinecap="butt"
         strokeLinejoin="miter"
       />
     </svg>
   );
 }
 
-function DataNodeCard(props: {
-  nodeId: string;
+function TickerKpiCard(props: {
+  symbol: string;
   label: string;
-  value: string;
+  displayValue: string;
   icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
-  accent: 'amber' | 'olive';
   trendKey: string;
   trendData: Array<Record<string, number>>;
+  higherIsGood: boolean;
   delay: number;
 }) {
-  const { nodeId, label, value, icon: Icon, accent, trendKey, trendData, delay } = props;
-  const stroke = accent === 'amber' ? AMBER : MILITARY;
-  const border = accent === 'amber' ? AMBER_DIM : MILITARY_DIM;
-  const glow =
-    accent === 'amber'
-      ? '0 0 28px rgba(255, 179, 15, 0.12), inset 0 0 0 1px rgba(255, 179, 15, 0.22)'
-      : '0 0 28px rgba(107, 143, 58, 0.12), inset 0 0 0 1px rgba(107, 143, 58, 0.25)';
+  const { symbol, label, displayValue, icon: Icon, trendKey, trendData, higherIsGood, delay } = props;
   const series = seriesFromTrend(trendData, trendKey);
   const { delta, pct } = microDelta(series);
+  const color = tickerColorForDelta(delta, pct, higherIsGood);
+  const sparkStroke =
+    series.length >= 2
+      ? tickerColorForDelta(series[series.length - 1] - series[0], null, higherIsGood)
+      : TICKER_FLAT;
+
+  const arrow = delta > 0 ? '▲' : delta < 0 ? '▼' : '■';
+  const deltaStr =
+    delta === 0 && pct === null
+      ? 'UNCH'
+      : `${delta >= 0 ? '+' : ''}${delta.toFixed(2)}${pct !== null ? `  ${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%` : ''}`;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.25 }}
-      className="relative min-h-[140px] border bg-[#080b0d] p-4 font-mono text-[11px] uppercase tracking-[0.2em] text-white/45"
-      style={{
-        borderColor: border,
-        boxShadow: glow,
-      }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay, duration: 0.15 }}
+      className="flex min-h-[158px] flex-col border border-[#2a2a2a] bg-[#0d0d0d] p-3 font-mono"
     >
-      <span className="pointer-events-none absolute left-0 top-0 h-2 w-2 border-l-2 border-t-2 border-[#ffb30f]/70" />
-      <span className="pointer-events-none absolute right-0 top-0 h-2 w-2 border-r-2 border-t-2 border-[#ffb30f]/70" />
-      <span className="pointer-events-none absolute bottom-0 left-0 h-2 w-2 border-b-2 border-l-2 border-[#6b8f3a]/60" />
-      <span className="pointer-events-none absolute bottom-0 right-0 h-2 w-2 border-b-2 border-r-2 border-[#6b8f3a]/60" />
-
-      <div className="relative z-10 flex items-start justify-between gap-2">
-        <div>
-          <p className="text-[9px] text-white/35">{nodeId}</p>
-          <p className="mt-1 text-[10px] font-semibold tracking-[0.18em] text-white/55">{label}</p>
+      <div className="flex items-start justify-between gap-2 border-b border-[#1f1f1f] pb-2">
+        <div className="min-w-0">
+          <p className="text-[10px] font-bold tracking-wider text-[#757575]">{symbol}</p>
+          <p className="truncate text-[9px] uppercase tracking-[0.14em] text-[#9e9e9e]">{label}</p>
         </div>
-        <Icon className="h-4 w-4 shrink-0" style={{ color: stroke, filter: `drop-shadow(0 0 6px ${stroke})` }} />
+        <Icon className="h-3.5 w-3.5 shrink-0 text-[#616161]" />
       </div>
 
-      <p
-        className="relative z-10 mt-3 text-2xl font-semibold tabular-nums tracking-tight text-white"
-        style={{ textShadow: `0 0 24px ${accent === 'amber' ? 'rgba(255,179,15,0.25)' : 'rgba(107,143,58,0.3)'}` }}
-      >
-        {value}
+      <p className="mt-2 text-[26px] font-bold leading-none tabular-nums tracking-tight" style={{ color }}>
+        {displayValue}
       </p>
 
-      <div className="relative z-10 mt-2 border border-white/[0.08] bg-black/50 px-1 py-0.5">
+      <div className="mt-2 flex flex-1 flex-col justify-end border border-[#252525] bg-black">
         <MicroSparkline
           values={series.length >= 2 ? series : series.length === 1 ? [series[0], series[0]] : [0, 0]}
-          stroke={stroke}
+          stroke={sparkStroke}
         />
       </div>
 
-      <div className="relative z-10 mt-2 flex items-baseline justify-between gap-2 border-t border-white/[0.06] pt-2 text-[9px] normal-case tracking-normal text-white/40">
-        <span>MICRO-TREND</span>
-        <span className="tabular-nums" style={{ color: stroke }}>
-          {delta === 0 && pct === null
-            ? '—'
-            : `${delta >= 0 ? '+' : ''}${delta.toFixed(2)}${pct !== null ? ` (${pct >= 0 ? '+' : ''}${pct.toFixed(1)}%)` : ''}`}
+      <div className="mt-2 flex items-center justify-between border-t border-[#1f1f1f] pt-2 text-[10px] tabular-nums">
+        <span className="text-[#616161]">LAST</span>
+        <span className="font-bold" style={{ color }}>
+          <span className="mr-1">{arrow}</span>
+          {deltaStr}
         </span>
       </div>
     </motion.div>
+  );
+}
+
+function RiskGlyph({ level }: { level: string }) {
+  const n = RISK_ORDER[level] ?? 0;
+  const c =
+    n >= 3 ? TICKER_DOWN : n === 2 ? '#ff9100' : n === 1 ? '#ffee58' : TICKER_UP;
+  return (
+    <span className="inline-block w-3 text-center font-black" style={{ color: c }}>
+      {n >= 3 ? '█' : n === 2 ? '▓' : n === 1 ? '▒' : '░'}
+    </span>
   );
 }
 
@@ -250,303 +260,291 @@ export default function SustainabilityOverviewPage() {
     });
   }, [overview]);
 
-  const systemStatus = useMemo(() => {
-    if (!overview) return { label: 'OPTIMAL' as const, tone: 'green' as const };
-    if (overview.city_sustainability_score < 40) return { label: 'CRITICAL' as const, tone: 'amber' as const };
-    if (overview.city_sustainability_score < 60) return { label: 'DEGRADED' as const, tone: 'amber' as const };
-    return { label: 'OPTIMAL' as const, tone: 'green' as const };
-  }, [overview]);
+  const avgZoneScore = useMemo(() => {
+    if (!zoneChartData.length) return 0;
+    return zoneChartData.reduce((s, z) => s + z.score, 0) / zoneChartData.length;
+  }, [zoneChartData]);
+
+  const orderBookRows = useMemo(() => {
+    return zoneChartData
+      .map((z) => {
+        const stress =
+          (RISK_ORDER[z.water_risk] + RISK_ORDER[z.waste_risk]) / 6;
+        const bidPct = Math.min(100, Math.max(8, z.score * 0.85 + 12));
+        const askPct = Math.min(100, stress * 100);
+        const netVsMkt = z.score - avgZoneScore;
+        return { ...z, bidPct, askPct, netVsMkt };
+      })
+      .sort((a, b) => a.score - b.score);
+  }, [zoneChartData, avgZoneScore]);
+
+  const scoreSeries = useMemo(() => seriesFromTrend(trendData, 'score'), [trendData]);
+  const { delta: benchDelta } = microDelta(scoreSeries);
+  const benchColor = tickerColorForDelta(benchDelta, null, true);
 
   if (loading || !overview) {
     return (
       <div
         className="flex min-h-[80vh] items-center justify-center font-mono"
-        style={{ backgroundColor: HUD_BG }}
+        style={{ backgroundColor: BG }}
       >
-        <div className="flex flex-col items-center gap-4 border border-[#ffb30f]/30 bg-black/60 px-10 py-8 shadow-[0_0_40px_rgba(255,179,15,0.08)]">
-          <Crosshair className="h-8 w-8 animate-pulse text-[#ffb30f]" style={{ filter: 'drop-shadow(0 0 12px #ffb30f)' }} />
-          <p className="text-[10px] font-bold tracking-[0.35em] text-[#ffb30f]/80">ESTABLISHING UPLINK</p>
-          <p className="text-[9px] tracking-[0.25em] text-white/35">COMMAND / GEOSPATIAL GRID</p>
+        <div className="border border-[#333] bg-[#0d0d0d] px-12 py-10">
+          <p className="text-[11px] font-bold tracking-[0.4em] text-[#9e9e9e]">LOADING FEED</p>
+          <p className="mt-3 text-[10px] tracking-[0.25em] text-[#616161]">INSTITUTIONAL · OVERVIEW</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div
-      className="relative min-h-screen overflow-hidden font-mono"
-      style={{
-        backgroundColor: HUD_BG,
-        backgroundImage: `
-          linear-gradient(rgba(255, 179, 15, 0.045) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(107, 143, 58, 0.05) 1px, transparent 1px)
-        `,
-        backgroundSize: '32px 32px',
-      }}
-    >
-      <div className="foundry-grid-pulse pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_31px,rgba(255,255,255,0.03)_32px)]" />
-
-      <div className="relative z-10 mx-auto max-w-[1600px] px-4 py-6 sm:px-6 sm:py-8 lg:px-10">
-        {/* Header — brutalist command strip */}
-        <header className="mb-6 grid grid-cols-1 gap-4 border border-white/[0.08] bg-black/40 lg:mb-8 lg:grid-cols-12 lg:gap-px lg:bg-white/[0.08] lg:p-px">
-          <div
-            className="flex flex-col justify-center border border-white/[0.06] bg-[#080b0d] px-5 py-4 lg:col-span-8"
-            style={{ boxShadow: `inset 0 0 0 1px ${systemStatus.tone === 'amber' ? AMBER_DIM : MILITARY_DIM}` }}
-          >
-            <div className="flex flex-wrap items-center gap-3 text-[10px] font-bold tracking-[0.28em] text-white/40">
-              <span className="inline-flex items-center gap-2 text-white/55">
-                <span
-                  className="h-2 w-2 shrink-0 rounded-none"
-                  style={{
-                    backgroundColor: systemStatus.tone === 'amber' ? AMBER : MILITARY,
-                    boxShadow: `0 0 14px ${systemStatus.tone === 'amber' ? AMBER : MILITARY}`,
-                  }}
-                />
-                SYS.STATUS
-              </span>
-              <span className="text-white/20">│</span>
-              <span style={{ color: systemStatus.tone === 'amber' ? AMBER : MILITARY }}>{systemStatus.label}</span>
-              <span className="text-white/20">│</span>
-              <span>UNIT: DELHI MUNICIPAL</span>
+    <div className="min-h-screen font-mono" style={{ backgroundColor: BG, color: '#e0e0e0' }}>
+      <div className="mx-auto max-w-[1600px] border-x border-[#1a1a1a] px-3 py-4 sm:px-5 sm:py-5">
+        {/* Top strip — ticker + controls */}
+        <header className="mb-1 border border-[#2a2a2a] bg-[#0d0d0d]">
+          <div className="flex flex-wrap items-stretch justify-between gap-px bg-[#2a2a2a]">
+            <div className="min-w-[200px] flex-1 bg-[#0d0d0d] px-4 py-3">
+              <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.2em] text-[#757575]">
+                <span className="h-2 w-2 bg-[#00e676]" />
+                LIVE
+                <span className="text-[#424242]">|</span>
+                <span className="text-[#9e9e9e]">DELHI MUNI COMPOSITE</span>
+              </div>
+              <h1 className="mt-2 text-lg font-bold uppercase tracking-[0.08em] text-white sm:text-xl">
+                Institutional <span style={{ color: ACCENT }}>Overview</span>
+              </h1>
+              <p className="mt-1 text-[10px] font-normal normal-case leading-snug tracking-normal text-[#757575]">
+                Data-dense resource dashboard · aggregated zones · no delay guarantee
+              </p>
             </div>
-            <h1 className="mt-3 text-xl font-bold uppercase tracking-[0.12em] text-white sm:text-2xl md:text-3xl">
-              Operations <span style={{ color: AMBER }}>Overview</span>
-            </h1>
-            <p className="mt-2 max-w-3xl text-[11px] font-normal normal-case leading-relaxed tracking-normal text-white/45">
-              Geospatial resource mesh · macro KPI nodes · longitudinal trajectory (aggregated zones)
-            </p>
+            <div className="flex w-full flex-col justify-center border-t border-[#2a2a2a] bg-black px-4 py-3 sm:w-auto sm:border-l sm:border-t-0 sm:min-w-[200px]">
+              <label className="text-[9px] font-bold tracking-[0.25em] text-[#616161]">AS-OF YEAR</label>
+              <select
+                value={year}
+                onChange={(e) => setYear(Number(e.target.value))}
+                className="mt-1 w-full cursor-pointer border border-[#424242] bg-black py-2 pl-2 pr-8 text-sm font-bold tabular-nums text-white outline-none focus:border-[#757575]"
+                style={{ borderRadius: 0 }}
+              >
+                {Array.from({ length: 16 }, (_, i) => 2015 + i).map((y) => (
+                  <option key={y} value={y} className="bg-black text-white">
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-
-          <div className="flex flex-col justify-center gap-3 border border-white/[0.06] bg-[#080b0d] px-5 py-4 lg:col-span-4">
-            <label className="text-[9px] font-bold tracking-[0.3em] text-white/35">TIMELINE.SLICE</label>
-            <select
-              value={year}
-              onChange={(e) => setYear(Number(e.target.value))}
-              className="w-full cursor-pointer border border-[#ffb30f]/35 bg-black px-3 py-2.5 text-sm font-semibold tabular-nums tracking-wider text-[#ffb30f] outline-none focus:border-[#ffb30f] focus:shadow-[0_0_20px_rgba(255,179,15,0.2)]"
-            >
-              {Array.from({ length: 16 }, (_, i) => 2015 + i).map((y) => (
-                <option key={y} value={y} className="bg-[#0a0c0f] text-white">
-                  {y}
-                </option>
-              ))}
-            </select>
-            <p className="text-[9px] tracking-[0.2em] text-white/30">SOURCE: FUSION LAYER / CSV + API</p>
+          <div className="flex flex-wrap items-center gap-6 border-t border-[#2a2a2a] bg-black px-4 py-2 text-[11px] tabular-nums">
+            <span className="text-[#616161]">BENCH</span>
+            <span className="font-bold" style={{ color: benchColor }}>
+              {scoreSeries.length >= 2
+                ? `${benchDelta >= 0 ? '▲' : '▼'} ${benchDelta >= 0 ? '+' : ''}${benchDelta.toFixed(2)} Y/Y`
+                : '—'}
+            </span>
+            <span className="text-[#424242]">|</span>
+            <span className="text-[#616161]">IDX</span>
+            <span className="font-bold text-white">{overview.city_sustainability_score.toFixed(2)}</span>
+            <span className="text-[#424242]">|</span>
+            <span className="text-[#616161]">SRC</span>
+            <span className="text-[#9e9e9e]">CSV/API</span>
           </div>
         </header>
 
-        {/* Tactical insight block */}
+        {/* Analyst blurb — dense */}
         <motion.section
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.2 }}
-          className="mb-6 border-l-4 border-[#ffb30f] bg-black/55 pl-5 pr-4 py-4 shadow-[inset_0_0_60px_rgba(255,179,15,0.04)] sm:mb-8"
-          style={{ borderRight: `1px solid ${AMBER_DIM}`, borderTop: '1px solid rgba(255,255,255,0.06)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+          className="mt-3 border border-[#2a2a2a] bg-[#0d0d0d] px-4 py-3"
         >
-          <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold tracking-[0.25em] text-[#ffb30f]/90">
-            <Activity className="h-3.5 w-3.5" />
-            SYNTHESIZED BRIEF
-            <span className="border border-[#6b8f3a]/50 bg-[#6b8f3a]/10 px-2 py-0.5 text-[8px] text-[#9ccc65]">AUTO</span>
+          <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold tracking-[0.18em] text-[#757575]">
+            <Activity className="h-3 w-3" style={{ color: ACCENT }} />
+            RESEARCH NOTE
+            <span className="border border-[#424242] bg-black px-1.5 py-0 text-[9px] text-[#9e9e9e]">AUTO</span>
           </div>
-          <p className="mt-3 max-w-5xl text-[12px] font-normal normal-case leading-relaxed tracking-normal text-white/65">
+          <p className="mt-2 text-[11px] font-normal normal-case leading-relaxed tracking-normal text-[#bdbdbd]">
             {overview.city_sustainability_score < 50
-              ? 'Critical intervention vector: aggregate composite score is low. Structural deficits in water distribution (supply–demand delta) and landfill pressure dominate. Recommend capital allocation to high-stress southwestern nodes.'
-              : 'System within tolerance: renewable mix is stabilizing GHG. Eastern water-stress clusters require proactive mitigation to avoid cascade risk toward end of decade.'}
+              ? 'Downside case: composite below investment-grade threshold. Water supply–demand gap and landfill dependency drive tail risk; prioritize capital to worst quartile nodes.'
+              : 'Base case: renewable trajectory supportive of stabilization. Monitor eastern water stress for convexity into late decade.'}
           </p>
         </motion.section>
 
-        {/* KPI data nodes — strict 4-column grid */}
-        <div className="mb-6 grid grid-cols-2 gap-px bg-white/[0.08] sm:mb-8 lg:grid-cols-4">
-          <DataNodeCard
-            nodeId="NODE-α / SCORE"
+        {/* KPI grid — 4 ticker cards */}
+        <div className="mt-3 grid grid-cols-2 gap-px bg-[#2a2a2a] lg:grid-cols-4">
+          <TickerKpiCard
+            symbol="DMC.SCORE"
             label="Composite Index"
-            value={overview.city_sustainability_score.toFixed(1)}
+            displayValue={overview.city_sustainability_score.toFixed(2)}
             icon={Target}
-            accent="olive"
             trendKey="score"
             trendData={trendData}
-            delay={0.05}
+            higherIsGood
+            delay={0.02}
           />
-          <DataNodeCard
-            nodeId="NODE-β / GHG"
-            label="GHG Footprint"
-            value={`${overview.ghg_emissions_mtco2} Mt`}
+          <TickerKpiCard
+            symbol="DMC.GHG"
+            label="GHG MtCO2e"
+            displayValue={`${overview.ghg_emissions_mtco2} Mt`}
             icon={Flame}
-            accent="amber"
             trendKey="ghg"
             trendData={trendData}
-            delay={0.1}
+            higherIsGood={false}
+            delay={0.04}
           />
-          <DataNodeCard
-            nodeId="NODE-γ / H₂O"
-            label="Water Deficit"
-            value={`${Math.round(overview.water_gap_mgd)} MGD`}
+          <TickerKpiCard
+            symbol="DMC.H2O"
+            label="Water gap MGD"
+            displayValue={`${Math.round(overview.water_gap_mgd)}`}
             icon={Droplets}
-            accent="amber"
             trendKey="water_gap"
             trendData={trendData}
-            delay={0.15}
+            higherIsGood={false}
+            delay={0.06}
           />
-          <DataNodeCard
-            nodeId="NODE-δ / REN"
-            label="Clean Energy"
-            value={`${overview.renewable_share_percent}%`}
+          <TickerKpiCard
+            symbol="DMC.REN"
+            label="Renewable %"
+            displayValue={`${overview.renewable_share_percent}%`}
             icon={Zap}
-            accent="olive"
             trendKey="renewable"
             trendData={trendData}
-            delay={0.2}
+            higherIsGood
+            delay={0.08}
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-px bg-white/[0.08] lg:grid-cols-12 lg:p-px">
-          {/* Main trajectory — radar scan + high-contrast grid */}
+        <div className="mt-3 grid grid-cols-1 gap-px bg-[#2a2a2a] lg:grid-cols-12">
+          {/* Chart */}
           <motion.section
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.15 }}
-            className="relative border border-white/[0.06] bg-[#080b0d] p-4 sm:p-6 lg:col-span-8"
-            style={{ boxShadow: `inset 0 0 0 1px ${AMBER_DIM}` }}
+            transition={{ delay: 0.06 }}
+            className="border border-[#2a2a2a] bg-[#0d0d0d] p-3 sm:p-4 lg:col-span-8"
           >
-            <div className="mb-5 flex flex-col gap-2 border-b border-white/[0.08] pb-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="mb-3 flex flex-col gap-1 border-b border-[#252525] pb-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <h2 className="text-[11px] font-bold tracking-[0.28em] text-white/50">LONGITUDINAL.TRAJECTORY</h2>
-                <p className="mt-1 text-[10px] font-normal normal-case tracking-normal text-white/40">
-                  Composite score · all zones · normalized timeline
-                </p>
+                <h2 className="text-[10px] font-bold tracking-[0.22em] text-[#757575]">COMPOSITE · TIME SERIES</h2>
+                <p className="text-[9px] text-[#616161]">All zones · mean score · fiscal years</p>
               </div>
-              <div className="flex items-center gap-2 border border-[#6b8f3a]/40 bg-[#6b8f3a]/10 px-2 py-1 text-[9px] font-bold tracking-[0.2em] text-[#9ccc65]">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-none bg-[#6b8f3a]" />
-                AGG. STREAM
+              <div className="text-[10px] tabular-nums text-[#9e9e9e]">
+                REF <span className="text-white">{year}</span>
               </div>
             </div>
-
-            <div className="relative h-80 w-full overflow-hidden border border-white/[0.1] bg-black/60">
-              <div
-                className="pointer-events-none absolute inset-0 z-20 mix-blend-screen"
-                style={{ background: 'repeating-linear-gradient(0deg, transparent, transparent 23px, rgba(255,255,255,0.04) 24px)' }}
-              />
-              <div
-                className="foundry-radar-beam pointer-events-none absolute inset-y-0 z-30 w-[38%] opacity-90"
-                style={{
-                  background:
-                    'linear-gradient(90deg, transparent 0%, rgba(255, 179, 15, 0.06) 35%, rgba(255, 213, 80, 0.22) 50%, rgba(255, 179, 15, 0.06) 65%, transparent 100%)',
-                  boxShadow: '0 0 40px rgba(255, 179, 15, 0.12)',
-                }}
-              />
+            <div className="h-80 w-full border border-[#252525] bg-black">
               {trendData.length === 0 ? (
-                <div className="flex h-full items-center justify-center">
-                  <div className="h-8 w-8 animate-spin border-2 border-[#ffb30f] border-t-transparent" />
-                </div>
+                <div className="flex h-full items-center justify-center text-[10px] text-[#616161]">NO SERIES</div>
               ) : (
-                <div className="relative z-10 h-full w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={trendData} margin={{ top: 12, right: 8, left: 0, bottom: 4 }}>
-                      <defs>
-                        <linearGradient id="foundryScoreFill" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={AMBER} stopOpacity={0.35} />
-                          <stop offset="100%" stopColor={AMBER} stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid
-                        stroke="rgba(255,255,255,0.22)"
-                        strokeWidth={1}
-                        vertical
-                        horizontal
-                      />
-                      <XAxis
-                        dataKey="year"
-                        tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10, fontFamily: 'ui-monospace' }}
-                        axisLine={{ stroke: 'rgba(255,255,255,0.25)' }}
-                        tickLine={{ stroke: 'rgba(255,255,255,0.25)' }}
-                      />
-                      <YAxis
-                        tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 10, fontFamily: 'ui-monospace' }}
-                        axisLine={{ stroke: 'rgba(255,255,255,0.25)' }}
-                        tickLine={{ stroke: 'rgba(255,255,255,0.25)' }}
-                        domain={['dataMin - 8', 'dataMax + 8']}
-                        width={36}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: 'rgba(5, 6, 8, 0.94)',
-                          border: `1px solid ${AMBER_DIM}`,
-                          borderRadius: 0,
-                          fontFamily: 'ui-monospace',
-                          fontSize: 11,
-                          boxShadow: '0 0 24px rgba(255,179,15,0.15)',
-                        }}
-                        labelStyle={{ color: AMBER }}
-                        itemStyle={{ color: '#e2e8f0' }}
-                      />
-                      <ReferenceLine
-                        x={year}
-                        stroke={MILITARY}
-                        strokeDasharray="4 4"
-                        strokeOpacity={0.85}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="score"
-                        stroke={AMBER}
-                        strokeWidth={2}
-                        fill="url(#foundryScoreFill)"
-                        activeDot={{
-                          r: 5,
-                          fill: MILITARY,
-                          stroke: AMBER,
-                          strokeWidth: 2,
-                        }}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={trendData} margin={{ top: 8, right: 6, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="bbgScoreFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={ACCENT} stopOpacity={0.2} />
+                        <stop offset="100%" stopColor={ACCENT} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid stroke="#2a2a2a" strokeWidth={1} vertical horizontal />
+                    <XAxis
+                      dataKey="year"
+                      tick={{ fill: '#757575', fontSize: 10, fontFamily: 'ui-monospace' }}
+                      axisLine={{ stroke: '#333' }}
+                      tickLine={{ stroke: '#333' }}
+                    />
+                    <YAxis
+                      tick={{ fill: '#757575', fontSize: 10, fontFamily: 'ui-monospace' }}
+                      axisLine={{ stroke: '#333' }}
+                      tickLine={{ stroke: '#333' }}
+                      domain={['dataMin - 8', 'dataMax + 8']}
+                      width={32}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#0d0d0d',
+                        border: '1px solid #424242',
+                        borderRadius: 0,
+                        fontFamily: 'ui-monospace',
+                        fontSize: 11,
+                        color: '#e0e0e0',
+                      }}
+                    />
+                    <ReferenceLine x={year} stroke="#616161" strokeDasharray="3 3" />
+                    <Area
+                      type="monotone"
+                      dataKey="score"
+                      stroke={ACCENT}
+                      strokeWidth={1.5}
+                      fill="url(#bbgScoreFill)"
+                      activeDot={{ r: 4, fill: TICKER_UP, stroke: '#fff', strokeWidth: 1 }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               )}
             </div>
           </motion.section>
 
-          {/* Zone risk matrix — defense-style list */}
+          {/* Zone order book */}
           <motion.aside
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-col border border-white/[0.06] bg-[#080b0d] p-4 sm:p-6 lg:col-span-4"
-            style={{ boxShadow: `inset 0 0 0 1px ${MILITARY_DIM}` }}
+            transition={{ delay: 0.1 }}
+            className="flex flex-col border border-[#2a2a2a] bg-[#0d0d0d] lg:col-span-4"
           >
-            <h2 className="text-[11px] font-bold tracking-[0.28em] text-white/50">ZONE.RISK.MATRIX</h2>
-            <p className="mt-1 text-[10px] font-normal normal-case tracking-normal text-white/40">
-              Cross-sectional hazard tags
-            </p>
+            <div className="border-b border-[#2a2a2a] bg-black px-3 py-2">
+              <h2 className="text-[10px] font-bold tracking-[0.22em] text-[#757575]">ZONE RISK · ORDER BOOK</h2>
+              <p className="text-[9px] text-[#616161]">Sorted worst IDX · synthetic depth from hazard stack</p>
+            </div>
 
-            <div className="custom-scrollbar mt-5 max-h-[340px] flex-1 space-y-px overflow-y-auto bg-white/[0.06] pr-1 lg:max-h-none">
-              {zoneChartData
-                .slice()
-                .sort((a, b) => a.score - b.score)
-                .map((z) => (
-                  <div
-                    key={z.zone}
-                    className="flex items-center justify-between gap-2 border border-white/[0.05] bg-black/50 px-3 py-2.5 transition-colors hover:bg-white/[0.04]"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-[11px] font-semibold uppercase tracking-[0.15em] text-white/85">{z.zone}</p>
-                      <div className="mt-1 flex flex-wrap gap-2">
-                        <span className="inline-flex items-center gap-1 text-[8px] font-bold tracking-[0.15em] text-white/35">
-                          <Droplets className="h-3 w-3" style={{ color: RISK_TOKENS[z.water_risk].stroke }} />
-                          H₂O.{RISK_TOKENS[z.water_risk].label}
-                        </span>
-                        <span className="inline-flex items-center gap-1 text-[8px] font-bold tracking-[0.15em] text-white/35">
-                          <Recycle className="h-3 w-3" style={{ color: RISK_TOKENS[z.waste_risk].stroke }} />
-                          WST.{RISK_TOKENS[z.waste_risk].label}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="shrink-0 text-right">
-                      <p className="text-lg font-semibold tabular-nums text-white" style={{ textShadow: `0 0 12px ${MILITARY}` }}>
-                        {z.score.toFixed(0)}
-                      </p>
-                      <p className="text-[8px] tracking-[0.2em] text-white/30">IDX</p>
+            <div className="grid grid-cols-[minmax(0,1fr)_52px_52px_48px_56px] gap-px bg-[#2a2a2a] text-[9px] font-bold tracking-wider text-[#616161]">
+              <div className="bg-[#121212] px-2 py-1.5">INSTRUMENT</div>
+              <div className="bg-[#121212] py-1.5 text-center text-[#00e676]">BID</div>
+              <div className="bg-[#121212] py-1.5 text-center text-[#ff1744]">ASK</div>
+              <div className="bg-[#121212] py-1.5 text-center">H₂O</div>
+              <div className="bg-[#121212] py-1.5 text-center">WST</div>
+            </div>
+
+            <div className="custom-scrollbar max-h-[360px] min-w-0 flex-1 overflow-x-auto overflow-y-auto lg:max-h-none">
+              {orderBookRows.map((row, i) => (
+                <div
+                  key={row.zone}
+                  className="grid grid-cols-[minmax(0,1fr)_52px_52px_48px_56px] gap-px border-b border-[#1a1a1a] bg-black text-[10px] tabular-nums"
+                  style={{ backgroundColor: i % 2 === 0 ? '#000000' : '#0a0a0a' }}
+                >
+                  <div className="flex min-w-0 flex-col justify-center px-2 py-2">
+                    <span className="truncate font-bold uppercase tracking-wide text-white">{row.zone}</span>
+                    <span className="mt-0.5 text-[9px]">
+                      <span style={{ color: row.netVsMkt >= 0 ? TICKER_UP : TICKER_DOWN }}>
+                        {row.netVsMkt >= 0 ? '▲' : '▼'}
+                        {row.netVsMkt >= 0 ? '+' : ''}
+                        {row.netVsMkt.toFixed(1)}
+                      </span>
+                      <span className="text-[#424242]"> vs mkt</span>
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-center border-l border-[#1a1a1a] bg-[#050505] px-1">
+                    <div className="h-8 w-full border border-[#252525] bg-black">
+                      <div
+                        className="h-full bg-[#00e676]/25"
+                        style={{ width: `${row.bidPct}%` }}
+                      />
                     </div>
                   </div>
-                ))}
+                  <div className="flex items-center justify-center border-l border-[#1a1a1a] bg-[#050505] px-1">
+                    <div className="h-8 w-full border border-[#252525] bg-black">
+                      <div
+                        className="h-full bg-[#ff1744]/30"
+                        style={{ width: `${row.askPct}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-center border-l border-[#1a1a1a] bg-black">
+                    <RiskGlyph level={row.water_risk} />
+                  </div>
+                  <div className="flex items-center justify-center border-l border-[#1a1a1a] bg-black">
+                    <RiskGlyph level={row.waste_risk} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-[#2a2a2a] bg-black px-3 py-2 text-[9px] text-[#616161]">
+              <span className="text-[#00e676]">BID</span> depth ∝ composite ·{' '}
+              <span className="text-[#ff1744]">ASK</span> depth ∝ water+waste stress
             </div>
           </motion.aside>
         </div>
