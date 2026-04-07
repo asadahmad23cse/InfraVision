@@ -234,6 +234,7 @@ export function SmartCityFeatures({ onInfrastructureAnalyze, onRoadHousingPlanni
                 size="lg" 
                 className="bg-white text-black hover:bg-gray-200 hover:scale-[1.02] active:scale-[0.98] px-8 py-6 rounded-xl font-bold tracking-wide transition-all duration-300 shadow-[0_0_30px_rgba(255,255,255,0.15)] hover:shadow-[0_0_40px_rgba(255,255,255,0.25)] group flex justify-center items-center h-[52px]"
                 suppressHydrationWarning
+                onClick={() => { window.location.href = '/sustainability-intelligence'; }}
               >
                 Access Intelligence
                 <ArrowRight className="ml-2 w-4 h-4 text-black group-hover:translate-x-1 transition-transform" />

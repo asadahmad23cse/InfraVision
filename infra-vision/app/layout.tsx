@@ -26,7 +26,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 <Link href="/sustainability-intelligence" className="text-[11px] uppercase tracking-widest text-[#34D399]/70 hover:text-[#34D399] font-medium transition-colors">
                   Intelligence Live
                 </Link>
-                <Link href="/login" className="text-[11px] font-bold uppercase tracking-widest bg-white text-black px-6 py-2.5 rounded-full hover:bg-gray-200 transition-all hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
+                <Link href="/sustainability-intelligence" className="text-[11px] font-bold uppercase tracking-widest bg-white text-black px-6 py-2.5 rounded-full hover:bg-gray-200 transition-all hover:scale-105 shadow-[0_0_20px_rgba(255,255,255,0.1)]">
                   Access Core
                 </Link>
               </div>
