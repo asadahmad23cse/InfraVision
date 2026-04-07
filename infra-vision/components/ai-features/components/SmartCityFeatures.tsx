@@ -10,7 +10,11 @@ import {
   Play,
   ArrowRight,
   Menu,
-  X
+  X,
+  Network,
+  Cpu,
+  Target,
+  Activity
 } from 'lucide-react';
 import { FeatureCard } from '@/components/ai-features/components/FeatureCard';
 import { PremiumUrbanGrowthCard } from '@/components/ai-features/components/PremiumUrbanGrowthCard';
@@ -632,84 +636,76 @@ export function SmartCityFeatures({ onInfrastructureAnalyze, onRoadHousingPlanni
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section id="how-it-works" className="py-24 bg-gradient-to-br from-gray-50 to-gray-100 relative">
-        <div className="max-w-7xl mx-auto px-6">
+      {/* Platform Architecture Section (How It Works) */}
+      <section id="how-it-works" className="py-32 bg-[#050505] relative border-t border-white/[0.02]">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,168,232,0.03)_0%,transparent_70%)]" />
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-24"
           >
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">How It Works</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Three simple steps to transform your city planning process
+            <p className="text-[11px] uppercase tracking-[0.3em] font-bold text-[#00A8E8] mb-4">Core Architecture</p>
+            <h2 className="text-4xl md:text-5xl font-light text-white mb-6 tracking-tight">Intelligence Pipeline</h2>
+            <p className="text-lg text-white/40 max-w-2xl mx-auto font-medium tracking-wide leading-relaxed">
+              Three deterministic phases to process raw urban telemetry into capital-efficient sustainability policies.
             </p>
           </motion.div>
 
-          {/* Timeline Steps */}
-          <div className="relative">
-            {/* Connecting Line */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-gradient-to-b from-[#00A8E8] to-[#34D399] rounded-full opacity-30"></div>
+          <div className="relative max-w-5xl mx-auto">
+            {/* Minimalist vertical line */}
+            <div className="absolute left-[28px] md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white/10 to-transparent transform md:-translate-x-1/2"></div>
             
-            <div className="space-y-16">
+            <div className="space-y-20">
               {[
                 {
                   number: "01",
-                  title: "Data Integration",
-                  description: "Connect your city's data sources - from traffic sensors to demographic information.",
-                  icon: BarChart3
+                  title: "Telemetry & Sensor Fusion",
+                  description: "Ingest structured and unstructured data from IoT endpoints, traffic grids, and emission sensors into a unified digital twin.",
+                  icon: Network
                 },
                 {
                   number: "02", 
-                  title: "AI Analysis",
-                  description: "Our advanced algorithms analyze patterns and identify optimization opportunities.",
-                  icon: TrendingUp
+                  title: "Predictive ML Engine",
+                  description: "Apply advanced forecasting models and anomaly detection to map out ecological risks and economic drift before they manifest.",
+                  icon: Cpu
                 },
                 {
                   number: "03",
-                  title: "Smart Recommendations",
-                  description: "Receive actionable insights and strategic recommendations for city improvement.",
-                  icon: MapPin
+                  title: "Policy & Capital Optimization",
+                  description: "Run real-time linear programming (LP) to calculate the most capital-efficient interventions for maximum sustainability impact.",
+                  icon: Target
                 }
               ].map((step, index) => (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
-                  whileInView={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: index * 0.2 }}
-                  className={`flex items-center gap-12 ${index % 2 === 1 ? 'flex-row-reverse' : ''}`}
+                  transition={{ duration: 0.8, delay: index * 0.2 }}
+                  className={`flex flex-col md:flex-row items-start md:items-center gap-8 md:gap-16 ${index % 2 === 1 ? 'md:flex-row-reverse' : ''}`}
                 >
-                  {/* Step Content */}
-                  <div className="flex-1">
-                    <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-white/20 shadow-xl">
-                      <div className="flex items-center gap-4 mb-4">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00A8E8] to-[#34D399] flex items-center justify-center">
-                          <step.icon className="w-6 h-6 text-white" />
-                        </div>
-                        <h3 className="text-2xl font-bold text-gray-900">{step.title}</h3>
-                      </div>
-                      <p className="text-gray-600 text-lg leading-relaxed">{step.description}</p>
-                      <motion.a
-                        href="#"
-                        className="inline-flex items-center gap-2 text-[#00A8E8] font-medium mt-4 hover:text-[#34D399] transition-colors"
-                        whileHover={{ x: 4 }}
-                      >
-                        Learn more <ArrowRight className="w-4 h-4" />
-                      </motion.a>
+                  <div className={`md:w-1/2 ${index % 2 === 1 ? 'md:text-left' : 'md:text-right'} pl-16 md:pl-0`}>
+                    <div className="inline-block px-3 py-1 mb-4 rounded border border-white/[0.05] bg-white/[0.02] text-[10px] font-mono tracking-widest text-[#00A8E8] uppercase">
+                      Phase {step.number}
                     </div>
+                    <h3 className="text-2xl md:text-3xl font-medium text-white/90 mb-4 tracking-tight">{step.title}</h3>
+                    <p className={`text-white/40 text-sm leading-relaxed max-w-sm ${index % 2 === 0 ? 'md:ml-auto' : ''}`}>{step.description}</p>
                   </div>
 
-                  {/* Step Number Badge */}
-                  <div className="relative">
+                  <div className="absolute left-0 md:static md:w-auto flex justify-center w-14">
                     <motion.div
-                      className="w-16 h-16 rounded-full bg-gradient-to-br from-[#00A8E8] to-[#34D399] flex items-center justify-center text-white font-bold text-xl shadow-2xl relative z-10"
-                      whileHover={{ scale: 1.1 }}
+                      className="w-14 h-14 rounded-2xl bg-[#0f0f11] border border-white/10 flex items-center justify-center text-white relative z-10 shadow-[0_0_30px_rgba(0,168,232,0.15)]"
+                      whileHover={{ scale: 1.1, borderColor: 'rgba(0,168,232,0.5)' }}
                     >
-                      {step.number}
+                      <step.icon className="w-5 h-5 text-[#00A8E8]" />
                     </motion.div>
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#00A8E8] to-[#34D399] blur-lg opacity-50"></div>
+                  </div>
+
+                  <div className="hidden md:block md:w-1/2">
+                    {/* Minimalist illustration abstract line */}
+                    <div className={`h-[1px] w-1/3 bg-gradient-to-r from-transparent ${index % 2 === 0 ? 'via-white/10 to-transparent' : 'via-white/10 to-transparent'} ${index % 2 === 1 ? 'ml-auto' : ''}`} />
                   </div>
                 </motion.div>
               ))}
@@ -718,8 +714,8 @@ export function SmartCityFeatures({ onInfrastructureAnalyze, onRoadHousingPlanni
         </div>
       </section>
 
-      {/* Live Metrics Showcase */}
-      <section id="metrics" className="py-24 bg-white relative overflow-hidden">
+      {/* Institutional Grade Metrics Simulation */}
+      <section id="metrics" className="py-32 bg-[#0a0a0c] relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
@@ -727,35 +723,27 @@ export function SmartCityFeatures({ onInfrastructureAnalyze, onRoadHousingPlanni
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">Live City Metrics</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-              Real-time insights and analytics powering smarter city decisions
+            <p className="text-[11px] uppercase tracking-[0.3em] font-bold text-emerald-400 mb-4">Live Telemetry</p>
+            <h2 className="text-4xl md:text-5xl font-light text-white mb-6">Real-Time Risk Diagnostics</h2>
+            <p className="text-lg text-white/40 max-w-2xl mx-auto mb-8 font-medium">
+              Enterprise-grade dashboard preview. Monitor structural stress, emissions, and water safety margins live.
             </p>
 
             {/* Toggle Chips */}
             <div className="flex flex-wrap justify-center gap-4 mb-12">
-              {['Population', 'Economy', 'Infrastructure'].map((category) => (
+              {['Energy Matrix', 'Hydrology', 'Emissions'].map((category) => (
                 <motion.button
                   key={category}
-                  className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
-                    activeMetricTab === category
-                      ? 'bg-gradient-to-r from-[#00A8E8] to-[#34D399] text-white' 
-                      : 'bg-[#F5F7FA] text-gray-600 hover:bg-gradient-to-r hover:from-[#00A8E8] hover:to-[#34D399] hover:text-white'
+                  className={`px-6 py-2 rounded-full font-semibold text-xs tracking-wider uppercase transition-all duration-300 border ${
+                    (activeMetricTab === 'Population' && category === 'Energy Matrix') ||
+                    (activeMetricTab === 'Economy' && category === 'Emissions') ||
+                    (activeMetricTab === 'Infrastructure' && category === 'Hydrology') 
+                      ? 'bg-white/10 text-white border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.05)]' 
+                      : 'bg-[#0f0f11] text-white/40 border-white/5 hover:bg-white/5 hover:text-white/80'
                   }`}
-                  style={{
-                    boxShadow: activeMetricTab === category
-                      ? '0 4px 12px rgba(0,0,0,0.12), 0 0 20px rgba(0,168,232,0.3)' 
-                      : '0 4px 12px rgba(0,0,0,0.12)',
-                    backdropFilter: 'blur(16px)'
-                  }}
-                  onClick={() => setActiveMetricTab(category as 'Population' | 'Economy' | 'Infrastructure')}
-                  whileHover={{ 
-                    scale: 1.03,
-                    boxShadow: activeMetricTab === category
-                      ? '0 6px 16px rgba(0,0,0,0.15), 0 0 30px rgba(0,168,232,0.4)' 
-                      : '0 6px 16px rgba(0,0,0,0.15), 0 0 20px rgba(0,168,232,0.3)'
-                  }}
-                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setActiveMetricTab(category === 'Energy Matrix' ? 'Population' : category === 'Emissions' ? 'Economy' : 'Infrastructure')}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
                   suppressHydrationWarning
                 >
                   {category}
@@ -764,225 +752,162 @@ export function SmartCityFeatures({ onInfrastructureAnalyze, onRoadHousingPlanni
             </div>
           </motion.div>
 
-          {/* Animated Dashboards */}
           <motion.div 
             key={activeMetricTab}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.5 }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 xl:gap-12"
+            className="grid grid-cols-1 lg:grid-cols-2 gap-8"
           >
-            {/* Growth Trends Chart */}
+            {/* Terminal Style Chart */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.1 }}
-              className="bg-white rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-lg md:shadow-2xl border border-gray-100 hover:shadow-xl transition-all duration-300"
-              whileHover={{ y: -4 }}
+              className="bg-[#0f0f11] rounded-[24px] p-8 border border-white/5 shadow-2xl relative overflow-hidden flex flex-col"
             >
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl md:text-2xl font-bold text-gray-900">Growth Trends</h3>
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00A8E8]/50 to-transparent opacity-50" />
+              
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h3 className="text-xl font-medium text-white/90">Stress Volatility</h3>
+                  <p className="text-[10px] uppercase font-bold text-white/30 tracking-widest mt-1">15-Day Simulation</p>
+                </div>
                 <div className="flex gap-2">
-                  <div className="w-3 h-3 rounded-full bg-gradient-to-r from-[#00A8E8] to-[#34D399]"></div>
-                  <div className="w-3 h-3 rounded-full bg-gray-200"></div>
+                  <Activity className="w-5 h-5 text-[#00A8E8] animate-pulse" />
                 </div>
               </div>
-              <div className="h-48 md:h-64 relative">
-                <svg className="w-full h-full" viewBox="0 0 400 200">
+
+              <div className="h-64 relative w-full flex-grow">
+                {/* Recharts / SVG substitute for aesthetic */}
+                <svg className="w-full h-full" viewBox="0 0 400 200" preserveAspectRatio="none">
                   {/* Grid Lines */}
                   <defs>
-                    <pattern id="grid" width="40" height="20" patternUnits="userSpaceOnUse">
-                      <path d="M 40 0 L 0 0 0 20" fill="none" stroke="#f1f5f9" strokeWidth="1"/>
+                    <pattern id="grid-dark" width="40" height="20" patternUnits="userSpaceOnUse">
+                      <path d="M 40 0 L 0 0 0 20" fill="none" stroke="rgba(255,255,255,0.02)" strokeWidth="1"/>
+                      <path d="M 0 20 L 40 20 L 40 0" fill="none" stroke="rgba(255,255,255,0.02)" strokeWidth="1"/>
                     </pattern>
                   </defs>
-                  <rect width="100%" height="100%" fill="url(#grid)" />
+                  <rect width="100%" height="100%" fill="url(#grid-dark)" />
                   
-                  {/* Chart Path */}
+                  {/* Chart Path Line */}
                   <motion.path
                     d={
-                      activeMetricTab === 'Population' ? "M 0,150 Q 80,120 160,100 Q 240,85 320,70 Q 360,60 400,50" :
-                      activeMetricTab === 'Economy' ? "M 0,160 Q 100,110 200,90 Q 300,75 400,60" :
-                      "M 0,140 Q 120,100 240,85 Q 320,75 400,65"
+                      activeMetricTab === 'Population' ? "M 0,160 Q 40,150 80,180 T 160,110 T 240,140 T 320,60 T 400,90" :
+                      activeMetricTab === 'Economy' ? "M 0,110 Q 60,100 120,60 T 240,150 T 320,80 T 400,40" :
+                      "M 0,190 Q 60,170 120,180 T 240,100 T 320,120 T 400,50"
                     }
                     stroke={
-                      activeMetricTab === 'Population' ? "url(#populationGradient)" :
-                      activeMetricTab === 'Economy' ? "url(#economyGradient)" :
-                      "url(#infrastructureGradient)"
+                      activeMetricTab === 'Population' ? "#00A8E8" :
+                      activeMetricTab === 'Economy' ? "#fb7185" :
+                      "#34D399"
                     }
                     strokeWidth="3"
                     fill="none"
                     initial={{ pathLength: 0 }}
                     animate={{ pathLength: 1 }}
-                    transition={{ duration: 2, ease: "easeInOut" }}
+                    transition={{ duration: 1.5, ease: "easeOut" }}
                   />
                   
                   {/* Area Fill */}
                   <motion.path
                     d={
-                      activeMetricTab === 'Population' ? "M 0,150 Q 80,120 160,100 Q 240,85 320,70 Q 360,60 400,50 L 400,200 L 0,200 Z" :
-                      activeMetricTab === 'Economy' ? "M 0,160 Q 100,110 200,90 Q 300,75 400,60 L 400,200 L 0,200 Z" :
-                      "M 0,140 Q 120,100 240,85 Q 320,75 400,65 L 400,200 L 0,200 Z"
+                      activeMetricTab === 'Population' ? "M 0,160 Q 40,150 80,180 T 160,110 T 240,140 T 320,60 T 400,90 L 400,200 L 0,200 Z" :
+                      activeMetricTab === 'Economy' ? "M 0,110 Q 60,100 120,60 T 240,150 T 320,80 T 400,40 L 400,200 L 0,200 Z" :
+                      "M 0,190 Q 60,170 120,180 T 240,100 T 320,120 T 400,50 L 400,200 L 0,200 Z"
                     }
                     fill={
-                      activeMetricTab === 'Population' ? "url(#populationAreaGradient)" :
-                      activeMetricTab === 'Economy' ? "url(#economyAreaGradient)" :
-                      "url(#infrastructureAreaGradient)"
+                      activeMetricTab === 'Population' ? "url(#popArea)" :
+                      activeMetricTab === 'Economy' ? "url(#ecoArea)" :
+                      "url(#infArea)"
                     }
-                    initial={{ pathLength: 0, opacity: 0 }}
-                    animate={{ pathLength: 1, opacity: 1 }}
-                    transition={{ duration: 2.2, ease: "easeInOut", delay: 0.3 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 1.5, delay: 0.2 }}
                   />
                   
-                  {/* Data Points */}
-                  {[
-                    { x: 80, y: activeMetricTab === 'Population' ? 120 : activeMetricTab === 'Economy' ? 110 : 100 },
-                    { x: 160, y: activeMetricTab === 'Population' ? 100 : activeMetricTab === 'Economy' ? 90 : 85 },
-                    { x: 240, y: activeMetricTab === 'Population' ? 85 : activeMetricTab === 'Economy' ? 75 : 75 },
-                    { x: 320, y: activeMetricTab === 'Population' ? 70 : activeMetricTab === 'Economy' ? 60 : 65 }
-                  ].map((point, i) => (
-                    <motion.circle
-                      key={i}
-                      cx={point.x}
-                      cy={point.y}
-                      r="4"
-                      fill="white"
-                      stroke={
-                        activeMetricTab === 'Population' ? "#00A8E8" :
-                        activeMetricTab === 'Economy' ? "#F59E0B" :
-                        "#64748B"
-                      }
-                      strokeWidth="2"
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ duration: 0.3, delay: 1.5 + i * 0.1 }}
-                      whileHover={{ scale: 1.5, transition: { duration: 0.2 } }}
-                    />
-                  ))}
-                  
-                  {/* Gradients */}
                   <defs>
-                    {/* Population Gradients */}
-                    <linearGradient id="populationGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#00A8E8" />
-                      <stop offset="100%" stopColor="#34D399" />
+                    <linearGradient id="popArea" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="rgba(0,168,232,0.3)" />
+                      <stop offset="100%" stopColor="rgba(0,168,232,0)" />
                     </linearGradient>
-                    <linearGradient id="populationAreaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="rgba(0,168,232,0.2)" />
-                      <stop offset="100%" stopColor="rgba(52,211,153,0.05)" />
+                    <linearGradient id="ecoArea" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="rgba(251,113,133,0.3)" />
+                      <stop offset="100%" stopColor="rgba(251,113,133,0)" />
                     </linearGradient>
-                    
-                    {/* Economy Gradients */}
-                    <linearGradient id="economyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#F59E0B" />
-                      <stop offset="50%" stopColor="#00A8E8" />
-                      <stop offset="100%" stopColor="#34D399" />
-                    </linearGradient>
-                    <linearGradient id="economyAreaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="rgba(245,158,11,0.2)" />
-                      <stop offset="50%" stopColor="rgba(0,168,232,0.15)" />
-                      <stop offset="100%" stopColor="rgba(52,211,153,0.05)" />
-                    </linearGradient>
-                    
-                    {/* Infrastructure Gradients */}
-                    <linearGradient id="infrastructureGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#64748B" />
-                      <stop offset="50%" stopColor="#0EA5E9" />
-                      <stop offset="100%" stopColor="#06B6D4" />
-                    </linearGradient>
-                    <linearGradient id="infrastructureAreaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="rgba(100,116,139,0.2)" />
-                      <stop offset="50%" stopColor="rgba(14,165,233,0.15)" />
-                      <stop offset="100%" stopColor="rgba(6,182,212,0.05)" />
+                    <linearGradient id="infArea" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="rgba(52,211,153,0.3)" />
+                      <stop offset="100%" stopColor="rgba(52,211,153,0)" />
                     </linearGradient>
                   </defs>
                 </svg>
                 
-                {/* Metric Labels */}
-                <div className="absolute bottom-2 left-2 right-2 flex justify-between text-xs text-gray-500">
-                  <span>Jan</span>
-                  <span>Mar</span>
-                  <span>May</span>
-                  <span>Jul</span>
-                  <span>Sep</span>
-                  <span>Nov</span>
+                <div className="absolute inset-x-0 bottom-0 border-t border-white/5 pt-2 flex justify-between text-[10px] text-white/30 font-mono">
+                  <span>-15d</span><span>-10d</span><span>-5d</span><span>Now</span>
                 </div>
               </div>
             </motion.div>
 
-            {/* City Heatmap */}
+            {/* City Heatmap - Matrix Style */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-white rounded-2xl md:rounded-3xl p-6 md:p-8 shadow-lg md:shadow-2xl border border-gray-100 hover:shadow-xl transition-all duration-300"
-              whileHover={{ y: -4 }}
+              className="bg-[#0f0f11] rounded-[24px] p-8 border border-white/5 shadow-2xl relative"
             >
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl md:text-2xl font-bold text-gray-900">City Heatmap</h3>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                  <span className="hidden sm:inline">High</span>
-                  <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                  <span className="hidden sm:inline">Med</span>
-                  <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                  <span className="hidden sm:inline">Low</span>
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                   <h3 className="text-xl font-medium text-white/90">Zonal Risk Grid</h3>
+                   <p className="text-[10px] uppercase font-bold text-white/30 tracking-widest mt-1">Spatial Anomaly Map</p>
+                </div>
+                <div className="flex items-center gap-3 text-[10px] font-mono text-white/40 uppercase">
+                  <div className="flex items-center gap-1"><div className="w-2 h-2 bg-rose-500 rounded-sm"></div> Critical</div>
+                  <div className="flex items-center gap-1"><div className="w-2 h-2 bg-emerald-500 rounded-sm"></div> Normal</div>
                 </div>
               </div>
               
-              <div className="grid grid-cols-8 gap-1 md:gap-2 h-48 md:h-64">
+              <div className="grid grid-cols-8 gap-[2px] h-64 bg-[#050505] p-[2px] rounded-lg border border-white/5">
                 {isClient && metricColors.length > 0 ? (
-                  metricColors.map((backgroundColor, i) => (
-                    <motion.div
-                      key={`${activeMetricTab}-${i}`}
-                      className="rounded-sm hover:scale-110 transition-transform cursor-pointer"
-                      style={{ backgroundColor }}
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ 
-                        duration: 0.3, 
-                        delay: i * 0.01,
-                        type: "spring",
-                        stiffness: 400,
-                        damping: 17
-                      }}
-                      whileHover={{ 
-                        scale: 1.2, 
-                        zIndex: 10,
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                        transition: { duration: 0.2 }
-                      }}
-                    />
-                  ))
+                  metricColors.map((backgroundColor, i) => {
+                     // Override bright colors to fit dark mode better
+                     const isEco = activeMetricTab === 'Economy';
+                     const isPop = activeMetricTab === 'Population';
+                     const randomLevel = Math.random();
+                     let color = "rgba(255,255,255,0.02)";
+                     
+                     if (randomLevel > 0.85) color = isEco ? "rgba(251,113,133,0.8)" : isPop ? "rgba(0,168,232,0.8)" : "rgba(52,211,153,0.8)";
+                     else if (randomLevel > 0.6) color = isEco ? "rgba(251,113,133,0.3)" : isPop ? "rgba(0,168,232,0.3)" : "rgba(52,211,153,0.3)";
+                     else if (randomLevel > 0.3) color = "rgba(255,255,255,0.06)";
+
+                     return (
+                      <motion.div
+                        key={`${activeMetricTab}-${i}`}
+                        className="rounded-[2px] w-full h-full cursor-crosshair"
+                        style={{ backgroundColor: color }}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ 
+                          duration: 0.5, 
+                          delay: i * 0.005,
+                        }}
+                        whileHover={{ 
+                          backgroundColor: "#fff",
+                          boxShadow: '0 0 10px #fff',
+                          transition: { duration: 0 }
+                        }}
+                      />
+                     )
+                  })
                 ) : (
-                  // SSR fallback - empty grid to prevent layout shift
                   Array.from({ length: 64 }).map((_, i) => (
-                    <div
-                      key={`placeholder-${i}`}
-                      className="rounded-sm bg-gray-200"
-                    />
+                    <div key={`placeholder-${i}`} className="bg-white/5 rounded-[2px]" />
                   ))
                 )}
               </div>
-              
-              {/* Geographic Labels */}
-              <div className="grid grid-cols-2 gap-4 mt-4 text-xs text-gray-600">
-                <div className="text-left">
-                  <span className="block font-medium">
-                    {activeMetricTab === 'Population' ? 'Downtown Core' : 
-                     activeMetricTab === 'Economy' ? 'Business District' : 
-                     'Infrastructure Hub'}
-                  </span>
-                  <span>High Density</span>
-                </div>
-                <div className="text-right">
-                  <span className="block font-medium">
-                    {activeMetricTab === 'Population' ? 'Residential Areas' : 
-                     activeMetricTab === 'Economy' ? 'Commercial Zones' : 
-                     'Utility Networks'}
-                  </span>
-                  <span>Moderate Density</span>
-                </div>
+              <div className="flex justify-between items-center mt-4">
+                 <span className="font-mono text-[10px] text-white/30">LAT: 28.6139</span>
+                 <span className="font-mono text-[10px] text-white/30">LNG: 77.2090</span>
               </div>
             </motion.div>
           </motion.div>
