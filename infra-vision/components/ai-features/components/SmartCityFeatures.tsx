@@ -431,8 +431,7 @@ export function SmartCityFeatures({ onInfrastructureAnalyze, onRoadHousingPlanni
                   index === 2 ? onDataVisualization :
                   index === 3 ? onUrbanGrowthPatterns :
                   index === 4 ? () => {
-                     if (onSustainabilityGreenPlanning) onSustainabilityGreenPlanning();
-                     router.push('/sustainability-intelligence');
+                     window.location.href = '/sustainability-intelligence';
                   } :
                   undefined
                 }
