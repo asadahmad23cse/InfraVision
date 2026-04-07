@@ -591,23 +591,23 @@ export function SmartCityFeatures({ onInfrastructureAnalyze, onRoadHousingPlanni
       </section>
 
       {/* Key Features Section */}
-      <section id="features" className="py-24 bg-white relative">
-        <div className="max-w-7xl mx-auto px-6">
+      <section id="features" className="py-32 bg-[#0a0a0c] relative">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(0,168,232,0.05)_0%,transparent_50%)]" />
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-16"
+            className="text-center mb-24"
           >
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">
+            <p className="text-[11px] uppercase tracking-[0.3em] font-bold text-[#00A8E8] mb-4">Core Capabilities</p>
+            <h2 className="text-4xl md:text-5xl font-light text-white mb-6">
               Powerful Features for
-              <span className="bg-gradient-to-r from-[#00A8E8] to-[#34D399] bg-clip-text text-transparent ml-3">
-                Smart Cities
-              </span>
+              <strong className="font-semibold text-white ml-2">Smart Cities</strong>
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Discover how our AI-powered platform transforms urban planning with cutting-edge technology
+            <p className="text-lg text-white/40 max-w-3xl mx-auto leading-relaxed">
+              Discover how our AI-powered platform transforms urban planning with cutting-edge technology and real-time inference.
             </p>
           </motion.div>
 

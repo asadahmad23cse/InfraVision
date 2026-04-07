@@ -16,167 +16,73 @@ interface FeatureCardProps {
 export function FeatureCard({ number, title, description, Icon, index, onClick, isClickable }: FeatureCardProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
+      transition={{ duration: 0.7, delay: index * 0.1, ease: 'easeOut' }}
       whileHover={{ 
-        y: -8,
-        scale: 1.02,
+        y: -4,
         transition: { duration: 0.3 }
       }}
       onClick={isClickable ? onClick : undefined}
-      className={`group relative overflow-hidden h-full ${isClickable ? 'cursor-pointer' : ''}`}
+      className={`group relative overflow-hidden h-full rounded-[24px] ${isClickable ? 'cursor-pointer' : ''}`}
     >
-      {/* Interactive Shadow Layer */}
-      <motion.div
-        className="absolute inset-0 rounded-2xl"
-        style={{
-          background: 'linear-gradient(135deg, rgba(0,168,232,0.1), rgba(14,165,233,0.1), rgba(52,211,153,0.1))',
-          filter: 'blur(20px)',
-          transform: 'scale(1.1)',
-          zIndex: -1
-        }}
-        initial={{ opacity: 0 }}
-        whileHover={{ 
-          opacity: 1,
-          scale: 1.15,
-          transition: { duration: 0.4, ease: 'easeOut' }
-        }}
-      />
-
-      {/* Enhanced Shadow on Hover */}
-      <motion.div
-        className="absolute -inset-2 rounded-2xl"
-        style={{
-          background: 'linear-gradient(135deg, rgba(0,168,232,0.15), rgba(14,165,233,0.15), rgba(52,211,153,0.15))',
-          filter: 'blur(30px)',
-          zIndex: -2
-        }}
-        initial={{ opacity: 0, scale: 0.8 }}
-        whileHover={{ 
-          opacity: 1,
-          scale: 1.2,
-          transition: { duration: 0.5, ease: 'easeOut' }
-        }}
-      />
-
-      {/* Premium Glassmorphism Card */}
+      {/* Background card layer */}
       <div 
-        className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 lg:p-8 border border-white/20 relative overflow-hidden transition-all duration-200 ease-out h-full flex flex-col"
-        style={{
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)',
-          minHeight: '320px'
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.boxShadow = '0 12px 40px rgba(0, 0, 0, 0.15), 0 6px 20px rgba(0, 0, 0, 0.1), 0 3px 10px rgba(0, 0, 0, 0.06)';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.12), 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04)';
-        }}
+        className="bg-[#0f0f11] rounded-[24px] p-6 lg:p-10 border border-white/5 relative overflow-hidden transition-all duration-300 h-full min-h-[320px] flex flex-col group-hover:border-white/10 group-hover:bg-[#131316]"
       >
-        {/* Neon Border Glow on Hover */}
-        <motion.div 
-          className="absolute inset-0 rounded-2xl"
-          style={{
-            background: 'linear-gradient(135deg, rgba(0,168,232,0.3), rgba(14,165,233,0.3), rgba(52,211,153,0.3))',
-            backgroundSize: '300% 300%'
-          }}
-          animate={{
-            backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
-          }}
-          transition={{
-            duration: 4,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-          initial={{ opacity: 0 }}
-          whileHover={{ opacity: 1 }}
-        />
-        
-        {/* Border Glow Effect */}
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-[#00A8E8]/10 via-[#0EA5E9]/10 to-[#34D399]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm"></div>
-        
-        {/* Dynamic Light Reflection */}
+        {/* Subtle Ambient Hover Glow */}
         <motion.div
-          className="absolute inset-0 rounded-2xl pointer-events-none"
+          className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-[24px]"
           style={{
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 30%, transparent 70%, rgba(14,165,233,0.1) 100%)'
-          }}
-          initial={{ opacity: 0, x: '-100%' }}
-          whileHover={{ 
-            opacity: 1,
-            x: '100%',
-            transition: { duration: 0.8, ease: 'easeInOut' }
+            background: 'radial-gradient(ellipse at center, rgba(0,168,232,0.06) 0%, transparent 60%)'
           }}
         />
+        
+        {/* Animated Top Border Line */}
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-[#00A8E8]/0 to-transparent group-hover:via-[#00A8E8]/40 transition-all duration-500 opacity-0 group-hover:opacity-100" />
         
         <div className="relative z-10 flex flex-col h-full">
-          {/* Icon and Number Section */}
-          <div className="flex items-start gap-4 lg:gap-6 mb-6">
-            <div className="flex-shrink-0">
-              {/* Enhanced Icon with Pulse */}
-              <motion.div
-                whileHover={{ 
-                  scale: 1.1, 
-                  rotate: 10,
-                  transition: { duration: 0.3 }
-                }}
-                className="w-14 h-14 lg:w-16 lg:h-16 rounded-xl bg-gradient-to-br from-[#00A8E8] to-[#34D399] flex items-center justify-center shadow-lg relative overflow-hidden"
-              >
-                {/* Pulse Animation */}
-                <motion.div
-                  className="absolute inset-0 rounded-xl"
-                  animate={{
-                    boxShadow: [
-                      '0 0 0 0 rgba(0,168,232,0.4)',
-                      '0 0 0 10px rgba(0,168,232,0)',
-                      '0 0 0 0 rgba(0,168,232,0.4)'
-                    ]
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: 'easeInOut'
-                  }}
-                />
-                <Icon className="w-7 h-7 lg:w-8 lg:h-8 text-white relative z-10" />
-              </motion.div>
-            </div>
+          {/* Icon and Number Header */}
+          <div className="flex items-start justify-between mb-8 lg:mb-12">
+            <motion.div
+              whileHover={{ 
+                scale: 1.05, 
+                transition: { type: "spring", stiffness: 400, damping: 10 }
+              }}
+              className="w-12 h-12 lg:w-14 lg:h-14 rounded-[14px] bg-white/[0.03] border border-white/10 flex items-center justify-center relative overflow-hidden group-hover:border-[#00A8E8]/40 transition-colors duration-300"
+            >
+              <div className="absolute inset-0 bg-[#00A8E8]/20 opacity-0 group-hover:opacity-100 blur-md transition-opacity duration-300" />
+              <Icon className="w-5 h-5 lg:w-6 lg:h-6 text-white/70 group-hover:text-[#00A8E8] relative z-10 transition-colors duration-300" />
+            </motion.div>
             
-            {/* Number */}
-            <div className="flex-shrink-0 mt-1">
-              <span className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-[#00A8E8] to-[#34D399] bg-clip-text text-transparent">
-                {number}
-              </span>
+            <div className="text-[10px] font-mono tracking-[0.25em] text-white/20 group-hover:text-white/40 transition-colors duration-300 border border-white/5 px-2 py-1 rounded">
+              PHASE {number.replace('.', '')}
             </div>
           </div>
           
-          {/* Content Section */}
+          {/* Text Content */}
           <div className="flex-1 flex flex-col">
-            {/* Title */}
-            <h3 className="text-lg lg:text-xl font-bold text-gray-900 group-hover:text-[#00A8E8] transition-colors duration-300 leading-tight mb-3 lg:mb-4">
+            <h3 className="text-xl lg:text-2xl font-light text-white/90 group-hover:text-white transition-colors duration-300 tracking-tight leading-tight mb-4">
               {title}
             </h3>
             
-            {/* Description */}
-            <p className="text-gray-600 leading-relaxed text-sm lg:text-base mb-4 lg:mb-6 flex-1">
+            <p className="text-white/40 group-hover:text-white/60 leading-relaxed text-sm lg:text-base transition-colors duration-300 flex-1">
               {description}
             </p>
             
-            {/* Action Link */}
+            {/* Clickable Explore Arrow */}
             {isClickable && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                whileHover={{ opacity: 1, y: 0 }}
-                className="group-hover:opacity-100 opacity-0 transition-all duration-300 mt-auto"
+                initial={{ opacity: 0, x: -10 }}
+                whileHover={{ x: 4 }}
+                className="group-hover:opacity-100 group-hover:x-0 opacity-0 transition-all duration-300 mt-8 flex items-center gap-2"
               >
-                <motion.div
-                  className="inline-flex items-center gap-2 text-[#00A8E8] font-semibold hover:text-[#34D399] transition-colors duration-300 text-sm lg:text-base"
-                  whileHover={{ x: 4 }}
-                >
-                  <span>Explore →</span>
-                </motion.div>
+                <span className="text-[11px] uppercase tracking-widest font-bold text-[#00A8E8]">Engage</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-[#00A8E8]">
+                  <path d="M5 12h14"></path>
+                  <path d="M12 5l7 7-7 7"></path>
+                </svg>
               </motion.div>
             )}
           </div>
@@ -185,11 +91,3 @@ export function FeatureCard({ number, title, description, Icon, index, onClick, 
     </motion.div>
   );
 }
-
-
-
-
-
-
-
-
