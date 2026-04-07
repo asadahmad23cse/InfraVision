@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchBackendJson, toNumber } from '@/lib/sustainabilityBackend';
+import { getFullDataLocal } from '@/lib/sustainabilityLocalData';
 
 interface WaterPrediction {
   year?: number;
@@ -30,21 +31,35 @@ export async function GET(req: NextRequest) {
     fetchBackendJson<FullDataResponse>('/data/full', { query: { zone } }),
   ]);
 
-  if (!forecastRes.ok) {
-    return NextResponse.json({ error: forecastRes.error || 'Unable to load water forecast' }, { status: forecastRes.status });
-  }
-  if (!dataRes.ok) {
-    return NextResponse.json({ error: dataRes.error || 'Unable to load water baseline data' }, { status: dataRes.status });
+  const errMsg = forecastRes.ok ? '' : (forecastRes.error || '');
+  const errMsg2 = dataRes.ok ? '' : (dataRes.error || '');
+  const backendUnavailable =
+    (!forecastRes.ok && (forecastRes.status === 502 || /fetch failed|ECONNREFUSED|connect/i.test(errMsg))) ||
+    (!dataRes.ok && (dataRes.status === 502 || /fetch failed|ECONNREFUSED|connect/i.test(errMsg2)));
+
+  if (!forecastRes.ok || !dataRes.ok) {
+    if (!backendUnavailable) {
+      if (!forecastRes.ok) {
+        return NextResponse.json({ error: forecastRes.error || 'Unable to load water forecast' }, { status: forecastRes.status });
+      }
+      return NextResponse.json({ error: dataRes.error || 'Unable to load water baseline data' }, { status: dataRes.status });
+    }
   }
 
-  const rows = (dataRes.data?.data || []).slice().sort((a, b) => toNumber(a.year) - toNumber(b.year));
+  const rows = backendUnavailable
+    ? (await getFullDataLocal(zone)).slice().sort((a, b) => toNumber(a.year) - toNumber(b.year))
+    : (dataRes.data?.data || []).slice().sort((a, b) => toNumber(a.year) - toNumber(b.year));
+
   const latest = (rows[rows.length - 1] || {}) as Record<string, unknown>;
   const latestYear = toNumber(latest.year, 2022);
   const latestSupply = toNumber(latest.water_supply_mgd);
   const baselineDemand = toNumber(latest.water_demand_mgd);
 
-  const prediction = (forecastRes.data?.predictions || [])[0] || {};
-  const demandForecast = toNumber(prediction.demand_forecast, baselineDemand);
+  const prediction = (forecastRes.ok ? (forecastRes.data?.predictions || []) : [])[0] || {};
+  const annualDemandGrowth = 0.02;
+  const demandForecast = backendUnavailable
+    ? baselineDemand * Math.pow(1 + annualDemandGrowth, Math.max(0, targetYear - latestYear))
+    : toNumber(prediction.demand_forecast, baselineDemand);
   const annualSupplyGrowth = 0.006;
   const supplyForecast = latestSupply * Math.pow(1 + annualSupplyGrowth, Math.max(0, targetYear - latestYear));
   const gapPct = demandForecast > 0 ? ((demandForecast - supplyForecast) / demandForecast) * 100 : 0;
