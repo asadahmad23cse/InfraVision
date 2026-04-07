@@ -461,8 +461,8 @@ export function SmartCityFeatures({ onInfrastructureAnalyze, onRoadHousingPlanni
           </motion.div>
 
           <div className="relative max-w-5xl mx-auto">
-            {/* Minimalist vertical line */}
-            <div className="absolute left-[28px] md:left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-white/10 to-transparent transform md:-translate-x-1/2"></div>
+            {/* Minimalist vertical line with glowing pulse */}
+            <div className="absolute left-[28px] md:left-1/2 top-0 bottom-0 w-[2px] bg-gradient-to-b from-transparent via-[#00A8E8]/20 to-transparent transform md:-translate-x-1/2 rounded-full shadow-[0_0_15px_rgba(0,168,232,0.5)]"></div>
             
             <div className="space-y-20">
               {[
@@ -487,26 +487,27 @@ export function SmartCityFeatures({ onInfrastructureAnalyze, onRoadHousingPlanni
               ].map((step, index) => (
                 <motion.div
                   key={index}
-                  initial={{ opacity: 0, y: 30 }}
+                  initial={{ opacity: 0, y: 40 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.8, delay: index * 0.2 }}
-                  className={`flex flex-col md:flex-row items-start md:items-center gap-8 md:gap-16 ${index % 2 === 1 ? 'md:flex-row-reverse' : ''}`}
+                  viewport={{ once: true, margin: "-100px" }}
+                  transition={{ duration: 0.8, delay: index * 0.2, type: 'spring', stiffness: 100 }}
+                  className={`flex flex-col md:flex-row items-start md:items-center gap-8 md:gap-16 group ${index % 2 === 1 ? 'md:flex-row-reverse' : ''}`}
                 >
-                  <div className={`md:w-1/2 ${index % 2 === 1 ? 'md:text-left' : 'md:text-right'} pl-16 md:pl-0`}>
-                    <div className="inline-block px-3 py-1 mb-4 rounded border border-white/[0.05] bg-white/[0.02] text-[10px] font-mono tracking-widest text-[#00A8E8] uppercase">
+                  <div className={`md:w-1/2 ${index % 2 === 1 ? 'md:text-left' : 'md:text-right'} pl-16 md:pl-0 transition-transform duration-500 group-hover:-translate-y-2`}>
+                    <div className="inline-block px-4 py-1.5 mb-4 rounded-full border border-white/[0.05] bg-white/[0.02] backdrop-blur-md text-[10px] font-mono tracking-widest text-[#00A8E8] uppercase shadow-[0_0_20px_rgba(0,168,232,0.1)]">
                       Phase {step.number}
                     </div>
-                    <h3 className="text-2xl md:text-3xl font-medium text-white/90 mb-4 tracking-tight">{step.title}</h3>
-                    <p className={`text-white/40 text-sm leading-relaxed max-w-sm ${index % 2 === 0 ? 'md:ml-auto' : ''}`}>{step.description}</p>
+                    <h3 className="text-2xl md:text-4xl font-light text-white mb-4 tracking-tight group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-[#00A8E8] transition-all duration-500">{step.title}</h3>
+                    <p className={`text-white/40 text-[15px] leading-relaxed max-w-sm ${index % 2 === 0 ? 'md:ml-auto' : ''}`}>{step.description}</p>
                   </div>
 
                   <div className="absolute left-0 md:static md:w-auto flex justify-center w-14">
                     <motion.div
-                      className="w-14 h-14 rounded-2xl bg-[#0f0f11] border border-white/10 flex items-center justify-center text-white relative z-10 shadow-[0_0_30px_rgba(0,168,232,0.15)]"
-                      whileHover={{ scale: 1.1, borderColor: 'rgba(0,168,232,0.5)' }}
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-[24px] bg-gradient-to-br from-[#111113] to-[#050505] border border-white/10 flex items-center justify-center text-white relative z-10 shadow-[0_0_30px_rgba(0,168,232,0.15)] group-hover:scale-110 group-hover:border-[#00a8e8]/50 group-hover:shadow-[0_0_50px_rgba(0,168,232,0.3)] transition-all duration-500 overflow-hidden"
+                      whileHover={{ scale: 1.15, rotate: 5 }}
                     >
-                      <step.icon className="w-5 h-5 text-[#00A8E8]" />
+                      <div className="absolute inset-0 bg-gradient-to-tr from-[#00A8E8]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <step.icon className="w-6 h-6 sm:w-8 sm:h-8 text-[#00A8E8] relative z-10 drop-shadow-[0_0_10px_rgba(0,168,232,0.5)] group-hover:text-white transition-colors duration-500" />
                     </motion.div>
                   </div>
 
@@ -758,20 +759,22 @@ export function SmartCityFeatures({ onInfrastructureAnalyze, onRoadHousingPlanni
             ].map((testimonial, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-8 hover:bg-white/[0.02] flex flex-col justify-between transition-colors duration-500 relative group"
+                initial={{ opacity: 0, y: 40, scale: 0.95 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                whileHover={{ y: -12, scale: 1.02 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ duration: 0.6, delay: index * 0.1, type: "spring", stiffness: 200, damping: 20 }}
+                className="bg-[#0a0a0c]/80 backdrop-blur-3xl border border-white/5 rounded-3xl p-8 hover:bg-[#0c0c0f] hover:border-white/20 hover:shadow-[0_0_50px_rgba(0,168,232,0.1)] flex flex-col justify-between transition-all duration-300 relative group overflow-hidden"
               >
-                <div className="absolute top-0 right-8 w-1/2 h-[1px] bg-gradient-to-r from-transparent via-[#00A8E8]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div>
-                  <div className="mb-6 flex gap-1">
+                <div className="absolute top-0 right-0 w-1/2 h-[2px] bg-gradient-to-r from-transparent via-[#00A8E8]/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-[1px]" />
+                <div className="absolute bottom-0 left-0 w-full h-[150px] bg-gradient-to-t from-[#00A8E8]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                <div className="relative z-10">
+                  <div className="mb-8 flex gap-1.5">
                     {[1,2,3,4,5].map((_, i) => (
-                      <div key={i} className="w-1.5 h-1.5 rounded-full bg-[#00A8E8]/70" />
+                      <div key={i} className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-[#00A8E8] to-[#34D399] shadow-[0_0_8px_rgba(0,168,232,0.6)]" />
                     ))}
                   </div>
-                  <p className="text-white/60 mb-8 leading-relaxed font-light text-sm">"{testimonial.content}"</p>
+                  <p className="text-white/70 mb-10 leading-relaxed font-light text-[15px] group-hover:text-white transition-colors duration-300">"{testimonial.content}"</p>
                 </div>
                 <div className="flex items-center justify-between border-t border-white/5 pt-6">
                   <div className="space-y-1">
@@ -789,36 +792,43 @@ export function SmartCityFeatures({ onInfrastructureAnalyze, onRoadHousingPlanni
       </section>
 
       {/* Ultra-Premium CTA */}
-      <section className="relative py-32 bg-[#050505] overflow-hidden border-t border-white/[0.02]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,168,232,0.05)_0%,transparent_50%)] pointer-events-none" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-[-120%] w-[800px] h-px bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+      <section className="relative py-40 bg-[#050505] overflow-hidden border-t border-white/[0.02]">
+        {/* Massive Ambient Core Glow */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+           <div className="w-[800px] h-[800px] bg-[radial-gradient(circle_at_center,rgba(0,168,232,0.08)_0%,transparent_60%)] rounded-full blur-[100px] animate-pulse"></div>
+           <div className="absolute w-[600px] h-[600px] bg-[radial-gradient(circle_at_center,rgba(52,211,153,0.05)_0%,transparent_60%)] rounded-full blur-[80px]"></div>
+        </div>
         
-        <div className="relative max-w-4xl mx-auto px-6 text-center z-10">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-[-140%] w-full max-w-5xl h-[2px] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+        
+        <div className="relative max-w-4xl mx-auto px-6 text-center z-10 backdrop-blur-sm rounded-[40px] py-16 border border-white/[0.02] bg-white/[0.01] shadow-[0_0_100px_rgba(0,0,0,0.5)_inset]">
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.8 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.02] mb-8"
+            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+            className="inline-flex items-center gap-3 px-4 py-2 rounded-full border border-white/10 bg-[#00A8E8]/5 mb-8 backdrop-blur-xl shadow-[0_0_20px_rgba(0,168,232,0.1)]"
           >
-            <div className="w-2 h-2 rounded-full bg-[#34D399] shadow-[0_0_10px_#34D399] animate-pulse" />
-            <span className="text-[10px] uppercase tracking-widest font-mono text-white/70">System Ready</span>
+            <div className="w-2.5 h-2.5 rounded-full bg-[#34D399] shadow-[0_0_12px_#34D399] animate-pulse" />
+            <span className="text-xs uppercase tracking-[0.2em] font-mono text-[#34D399] font-bold">System Ready For Deployment</span>
           </motion.div>
 
           <motion.h2 
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-5xl lg:text-6xl font-light text-white mb-6 tracking-tight"
+            transition={{ duration: 0.8, delay: 0.1 }}
+            className="text-5xl lg:text-[80px] font-light text-white mb-8 tracking-tighter leading-[1.1]"
           >
-            Initialize Your <br/> <span className="font-medium text-transparent bg-clip-text bg-gradient-to-r from-white to-white/40">Digital Twin</span>
+            Initialize Your <br/> <span className="font-medium text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-[#00A8E8]">Digital Twin</span>
           </motion.h2>
           
           <motion.p 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="text-lg text-white/40 mb-12 max-w-2xl mx-auto font-light"
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-lg lg:text-xl text-white/40 mb-14 max-w-2xl mx-auto font-light leading-relaxed"
           >
             Deploy InfraVision into your operational stack today. Gain deterministic insights and protect your infrastructure against volatile climate anomalies.
           </motion.p>
@@ -827,24 +837,25 @@ export function SmartCityFeatures({ onInfrastructureAnalyze, onRoadHousingPlanni
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.3 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="flex flex-col sm:flex-row gap-6 justify-center items-center"
           >
             <Button 
               size="lg"
-              className="bg-white text-black hover:bg-gray-200 hover:scale-[1.02] active:scale-[0.98] px-10 py-6 rounded-xl shadow-[0_0_30px_rgba(255,255,255,0.1)] font-bold tracking-wide transition-all duration-300 flex items-center h-[52px]"
+              className="bg-white text-black hover:bg-gray-200 hover:scale-[1.05] active:scale-[0.98] px-12 py-8 rounded-2xl shadow-[0_0_40px_rgba(255,255,255,0.15)] hover:shadow-[0_0_60px_rgba(255,255,255,0.25)] font-bold tracking-widest uppercase text-xs transition-all duration-300 flex items-center group"
               suppressHydrationWarning
+              onClick={() => { window.location.href = '/sustainability-intelligence'; }}
             >
-              Access Platform <ArrowRight className="ml-2 w-4 h-4" />
+              Access Platform <ArrowRight className="ml-3 w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
             </Button>
             
             <Button 
               size="lg"
               variant="outline"
-              className="bg-[#0f0f11] hover:bg-white/5 border-white/10 hover:border-white/20 text-white px-8 py-6 rounded-xl font-medium transition-all duration-300 flex items-center h-[52px]"
+              className="bg-[#0f0f11]/50 backdrop-blur-lg hover:bg-white/10 border-white/10 hover:border-white/20 text-white px-10 py-8 rounded-2xl font-bold uppercase tracking-widest text-xs transition-all duration-300 hover:scale-[1.02] flex items-center"
               suppressHydrationWarning
             >
-              Read Developer Docs
+              System API Docs
             </Button>
           </motion.div>
         </div>
