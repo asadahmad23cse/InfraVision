@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchBackendJson, toNumber } from '@/lib/sustainabilityBackend';
+import { getLocalEnergyForecast } from '@/lib/forecastLocalData';
 
 interface EnergyPrediction {
   year?: number;
@@ -31,11 +32,31 @@ export async function GET(req: NextRequest) {
     fetchBackendJson<FullDataResponse>('/data/full', { query: { zone } }),
   ]);
 
-  if (!forecastRes.ok) {
-    return NextResponse.json({ error: forecastRes.error || 'Unable to load energy forecast' }, { status: forecastRes.status });
-  }
-  if (!dataRes.ok) {
-    return NextResponse.json({ error: dataRes.error || 'Unable to load energy baseline data' }, { status: dataRes.status });
+  if (!forecastRes.ok || !dataRes.ok) {
+    const errMsg = `${forecastRes.error || ''} ${dataRes.error || ''}`;
+    const backendUnavailable =
+      forecastRes.status === 502 ||
+      dataRes.status === 502 ||
+      /fetch failed|ECONNREFUSED|connect|aborted/i.test(errMsg);
+    if (backendUnavailable) {
+      try {
+        const local = await getLocalEnergyForecast(zone, renewableTarget);
+        return NextResponse.json(local);
+      } catch (e) {
+        const emsg = e instanceof Error ? e.message : 'Local energy forecast failed';
+        return NextResponse.json({ error: emsg }, { status: 500 });
+      }
+    }
+    if (!forecastRes.ok) {
+      return NextResponse.json(
+        { error: forecastRes.error || 'Unable to load energy forecast' },
+        { status: forecastRes.status },
+      );
+    }
+    return NextResponse.json(
+      { error: dataRes.error || 'Unable to load energy baseline data' },
+      { status: dataRes.status },
+    );
   }
 
   const baselineRows = (dataRes.data?.data || []).slice().sort((a, b) => toNumber(a.year) - toNumber(b.year));

@@ -100,7 +100,13 @@ export async function getLocalScenarioCompare(body: {
 
   const start = body.start_year ?? 2025;
   const end = body.end_year ?? 2035;
-  const liveScenario = body.scenarios?.find((s) => s.label === 'Live Policy') ?? body.scenarios?.[0];
+  const scenariosIn = body.scenarios ?? [];
+  const liveScenario =
+    scenariosIn.find((s) => !/^baseline$/i.test(String(s.label || '').trim())) ?? scenariosIn[0];
+  const policyLabel =
+    liveScenario && !/^baseline$/i.test(String(liveScenario.label || '').trim())
+      ? String(liveScenario.label || 'Live Policy')
+      : 'Live Policy';
   const ints = liveScenario?.interventions ?? {};
   const policySum =
     (ints.solar_increase ?? 0) +
@@ -130,7 +136,7 @@ export async function getLocalScenarioCompare(body: {
       total_ghg: round(baselineGhg, 2),
     });
     city_timeseries.push({
-      label: 'Live Policy',
+      label: policyLabel,
       year: y,
       avg_score: round(liveScore, 2),
       total_ghg: round(liveGhg, 2),
@@ -141,7 +147,7 @@ export async function getLocalScenarioCompare(body: {
     scenarios: [
       { label: 'Baseline', interventions: {}, simulation: {} },
       {
-        label: 'Live Policy',
+        label: policyLabel,
         interventions: liveScenario?.interventions ?? {},
         simulation: {},
       },

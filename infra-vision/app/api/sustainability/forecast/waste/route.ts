@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchBackendJson, toNumber } from '@/lib/sustainabilityBackend';
+import { getLocalWasteForecast } from '@/lib/forecastLocalData';
 
 interface WastePrediction {
   ce_index?: number;
@@ -23,7 +24,19 @@ export async function GET(req: NextRequest) {
     query: { zone, start_year: targetYear, end_year: targetYear },
   });
   if (!forecastRes.ok) {
-    return NextResponse.json({ error: forecastRes.error || 'Unable to load waste forecast' }, { status: forecastRes.status });
+    const msg = forecastRes.error || 'Unable to load waste forecast';
+    const backendUnavailable =
+      forecastRes.status === 502 || /fetch failed|ECONNREFUSED|connect|aborted/i.test(msg);
+    if (backendUnavailable) {
+      try {
+        const local = await getLocalWasteForecast(zone, recyclingIncrease);
+        return NextResponse.json(local);
+      } catch (e) {
+        const emsg = e instanceof Error ? e.message : 'Local waste forecast failed';
+        return NextResponse.json({ error: emsg }, { status: 500 });
+      }
+    }
+    return NextResponse.json({ error: msg }, { status: forecastRes.status });
   }
 
   const prediction = (forecastRes.data?.predictions || [])[0] || {};

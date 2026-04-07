@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchBackendJson, toNumber } from '@/lib/sustainabilityBackend';
+import { getLocalScenarioCompare } from '@/lib/policyTwinLocalData';
 
 interface ScenarioCompareResponse {
   scenarios?: ScenarioResult[];
@@ -58,26 +59,40 @@ export async function POST(req: NextRequest) {
     public_transport: clampPercent(body.public_transport),
   };
 
+  const compareBody = {
+    scenarios: [{ label: 'Policy Mix', interventions: p }],
+    start_year: 2025,
+    end_year: 2030,
+  };
   const compareRes = await fetchBackendJson<ScenarioCompareResponse>('/api/simulation/compare', {
     method: 'POST',
-    body: {
-      scenarios: [{ label: 'Policy Mix', interventions: p }],
-      start_year: 2025,
-      end_year: 2030,
-    },
+    body: compareBody,
   });
-  if (!compareRes.ok || !compareRes.data) {
-    return NextResponse.json(
-      { error: compareRes.error || 'Unable to simulate policy impact' },
-      { status: compareRes.status || 502 },
-    );
+  let compareData: ScenarioCompareResponse | null = compareRes.ok && compareRes.data ? compareRes.data : null;
+  if (!compareData) {
+    const msg = compareRes.error || 'Unable to simulate policy impact';
+    const backendUnavailable =
+      (compareRes.status || 502) === 502 || /fetch failed|ECONNREFUSED|connect|aborted/i.test(msg);
+    if (backendUnavailable) {
+      try {
+        compareData = await getLocalScenarioCompare(compareBody);
+      } catch {
+        return NextResponse.json({ error: msg }, { status: compareRes.status || 502 });
+      }
+    } else {
+      return NextResponse.json({ error: msg }, { status: compareRes.status || 502 });
+    }
   }
 
-  const citySeries = compareRes.data.city_timeseries || [];
+  if (!compareData) {
+    return NextResponse.json({ error: 'Unable to simulate policy impact' }, { status: 502 });
+  }
+
+  const citySeries = compareData.city_timeseries || [];
   const baselinePoint = pickCityPoint(citySeries, 'Baseline');
   const policyPoint = pickCityPoint(citySeries, 'Policy Mix');
 
-  const scenarios = compareRes.data.scenarios || [];
+  const scenarios = compareData.scenarios || [];
   const baselineScenario = scenarios.find((s) => s.label === 'Baseline');
   const policyScenario = scenarios.find((s) => s.label === 'Policy Mix');
   const baselineAvg = scenarioAverages(baselineScenario);
