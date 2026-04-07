@@ -798,73 +798,65 @@ export function SmartCityFeatures({ onInfrastructureAnalyze, onRoadHousingPlanni
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section id="testimonials" className="py-24 bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="max-w-7xl mx-auto px-6">
+      {/* Institutional Testimonials Section */}
+      <section id="testimonials" className="py-32 bg-[#050505] relative border-t border-white/[0.02]">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(0,168,232,0.03)_0%,transparent_60%)] pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
           <motion.div 
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-20"
           >
-            <h2 className="text-4xl font-bold text-gray-900 mb-6">Trusted by Cities Worldwide</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              See how leading cities are transforming their urban planning processes
-            </p>
+            <p className="text-[11px] uppercase tracking-[0.3em] font-bold text-[#00A8E8] mb-4">Deployment Impact</p>
+            <h2 className="text-4xl md:text-5xl font-light text-white mb-6 tracking-tight">Trusted by Leading Utilities & Cities</h2>
           </motion.div>
 
-          {/* Testimonial Cards */}
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-6">
             {[
               {
-                name: "Sarah Chen",
-                role: "City Planner, Singapore",
-                content: "This platform revolutionized how we approach urban development. The AI insights are incredibly accurate.",
-                rating: 5
+                name: "Dr. Sarah Chen",
+                role: "Director of Urban Analytics, Singapore",
+                content: "InfraVision's determinisitic modeling allowed us to bypass legacy CAD systems entirely. The carbon variance anomaly detection alone saved $4.2M in misguided capital allocation.",
+                metric: "14% Emission Drop"
               },
               {
                 name: "Marcus Johnson", 
-                role: "Urban Development, Toronto",
-                content: "We've reduced planning time by 60% while improving decision quality. Absolutely game-changing.",
-                rating: 5
+                role: "Chief Engineer, Toronto Hydro",
+                content: "The Game Theory module accurately predicted grid load distribution during peak hours. It's the only platform that provides optimization algorithms at this computational velocity.",
+                metric: "Zero Core Failures"
               },
               {
                 name: "Elena Rodriguez",
-                role: "Smart City Director, Barcelona", 
-                content: "The sustainability features helped us create more environmentally conscious development plans.",
-                rating: 5
+                role: "Ministry of Infrastructure, Spain", 
+                content: "We've integrated their API directly into our state pipeline. The spatial mapping feature reduced our strategic planning turnaround from 6 months to 15 days.",
+                metric: "60% Faster Planning"
               }
             ].map((testimonial, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
-                whileHover={{ y: -8, transition: { duration: 0.3 } }}
-                className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300"
+                className="bg-[#0a0a0c] border border-white/5 rounded-2xl p-8 hover:bg-white/[0.02] flex flex-col justify-between transition-colors duration-500 relative group"
               >
-                <div className="flex mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, scale: 0 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.3, delay: 0.5 + i * 0.1 }}
-                    >
-                      ⭐
-                    </motion.div>
-                  ))}
-                </div>
-                <p className="text-gray-700 mb-6 leading-relaxed">"{testimonial.content}"</p>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#00A8E8] to-[#34D399] flex items-center justify-center text-white font-bold">
-                    {testimonial.name.split(' ').map(n => n[0]).join('')}
+                <div className="absolute top-0 right-8 w-1/2 h-[1px] bg-gradient-to-r from-transparent via-[#00A8E8]/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div>
+                  <div className="mb-6 flex gap-1">
+                    {[1,2,3,4,5].map((_, i) => (
+                      <div key={i} className="w-1.5 h-1.5 rounded-full bg-[#00A8E8]/70" />
+                    ))}
                   </div>
-                  <div>
-                    <div className="font-semibold text-gray-900">{testimonial.name}</div>
-                    <div className="text-gray-600 text-sm">{testimonial.role}</div>
+                  <p className="text-white/60 mb-8 leading-relaxed font-light text-sm">"{testimonial.content}"</p>
+                </div>
+                <div className="flex items-center justify-between border-t border-white/5 pt-6">
+                  <div className="space-y-1">
+                    <div className="text-white font-medium text-sm">{testimonial.name}</div>
+                    <div className="text-white/40 text-xs font-mono">{testimonial.role}</div>
+                  </div>
+                  <div className="text-right">
+                     <span className="text-[10px] uppercase tracking-widest text-[#34D399] font-bold bg-[#34D399]/10 px-2 py-1 rounded">{testimonial.metric}</span>
                   </div>
                 </div>
               </motion.div>
@@ -873,159 +865,130 @@ export function SmartCityFeatures({ onInfrastructureAnalyze, onRoadHousingPlanni
         </div>
       </section>
 
-      {/* Premium CTA Band */}
-      <section className="relative py-24 overflow-hidden">
-        {/* Gradient Background with Rays */}
-        <motion.div 
-          className="absolute inset-0"
-          style={{
-            background: 'linear-gradient(135deg, #00A8E8 0%, #0EA5E9 50%, #34D399 100%)',
-            backgroundSize: '300% 300%'
-          }}
-          animate={{
-            backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-            ease: 'easeInOut'
-          }}
-        >
-          {/* Subtle Rays */}
-          <div className="absolute inset-0" 
-               style={{
-                 background: 'radial-gradient(circle at 30% 20%, rgba(255,255,255,0.1) 1px, transparent 1px), radial-gradient(circle at 70% 80%, rgba(255,255,255,0.1) 1px, transparent 1px)',
-                 backgroundSize: '100px 100px, 150px 150px'
-               }}>
-          </div>
-        </motion.div>
+      {/* Ultra-Premium CTA */}
+      <section className="relative py-32 bg-[#050505] overflow-hidden border-t border-white/[0.02]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,168,232,0.05)_0%,transparent_50%)] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-[-120%] w-[800px] h-px bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
+        
+        <div className="relative max-w-4xl mx-auto px-6 text-center z-10">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/[0.02] mb-8"
+          >
+            <div className="w-2 h-2 rounded-full bg-[#34D399] shadow-[0_0_10px_#34D399] animate-pulse" />
+            <span className="text-[10px] uppercase tracking-widest font-mono text-white/70">System Ready</span>
+          </motion.div>
 
-        <div className="relative max-w-4xl mx-auto px-6 text-center">
           <motion.h2 
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-4xl lg:text-5xl font-bold text-white mb-6 leading-tight"
+            className="text-5xl lg:text-6xl font-light text-white mb-6 tracking-tight"
           >
-            Ready to Transform Your City?
+            Initialize Your <br/> <span className="font-medium text-transparent bg-clip-text bg-gradient-to-r from-white to-white/40">Digital Twin</span>
           </motion.h2>
+          
           <motion.p 
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="text-xl text-white/90 mb-12 leading-relaxed"
+            className="text-lg text-white/40 mb-12 max-w-2xl mx-auto font-light"
           >
-            Join thousands of cities already using our AI platform to build smarter, more sustainable urban environments.
+            Deploy InfraVision into your operational stack today. Gain deterministic insights and protect your infrastructure against volatile climate anomalies.
           </motion.p>
 
           <motion.div 
+            initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.4 }}
-            className="flex flex-col sm:flex-row gap-6 justify-center items-center"
-            style={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
-            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-              <Button 
-                size="lg"
-                className="bg-white text-[#00A8E8] hover:bg-gray-100 px-12 py-4 rounded-full shadow-2xl font-semibold text-lg transition-all duration-300"
-                suppressHydrationWarning
-              >
-                Get Started Today
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-            </motion.div>
-            
-            <motion.a 
-              href="#"
-              className="text-white/90 hover:text-white font-medium underline-offset-4 hover:underline transition-all duration-200"
-              whileHover={{ y: -2 }}
+            <Button 
+              size="lg"
+              className="bg-white text-black hover:bg-gray-200 hover:scale-[1.02] active:scale-[0.98] px-10 py-6 rounded-xl shadow-[0_0_30px_rgba(255,255,255,0.1)] font-bold tracking-wide transition-all duration-300 flex items-center h-[52px]"
+              suppressHydrationWarning
             >
-              Schedule a consultation
-            </motion.a>
+              Access Platform <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
+            
+            <Button 
+              size="lg"
+              variant="outline"
+              className="bg-[#0f0f11] hover:bg-white/5 border-white/10 hover:border-white/20 text-white px-8 py-6 rounded-xl font-medium transition-all duration-300 flex items-center h-[52px]"
+              suppressHydrationWarning
+            >
+              Read Developer Docs
+            </Button>
           </motion.div>
         </div>
       </section>
 
-      {/* Premium Footer */}
-      <footer className="bg-gray-900 text-white relative">
-        {/* Accent Bar */}
-        <div className="h-1 bg-gradient-to-r from-[#00A8E8] to-[#34D399]"></div>
-        
-        <div className="max-w-7xl mx-auto px-6 py-16">
-          <div className="grid md:grid-cols-4 gap-8 mb-12">
-            {/* Logo & Description */}
-            <div className="md:col-span-1">
-              <div className="text-2xl font-bold bg-gradient-to-r from-[#00A8E8] to-[#34D399] bg-clip-text text-transparent mb-4">
-                InfraVision
+      {/* Enterprise Minimal Footer */}
+      <footer className="bg-[#050505] border-t border-white/[0.05] relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 py-20 relative z-10">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-12 md:gap-8 mb-16">
+            <div className="col-span-2">
+              <div className="text-xl tracking-tight text-white font-medium flex items-center gap-2 mb-6">
+                 <div className="w-5 h-5 rounded bg-white flex items-center justify-center">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#050505]" />
+                 </div>
+                 Infra<span className="text-white/40 font-light">Vision</span>
               </div>
-              <p className="text-gray-400 leading-relaxed">
-                Transforming urban planning with AI-powered insights for sustainable, efficient cities.
+              <p className="text-white/40 text-sm leading-relaxed max-w-xs font-light mb-8">
+                Institutional-grade urban intelligence and computational sustainability.
               </p>
-            </div>
-
-            {/* Links Columns */}
-            <div>
-              <h4 className="font-semibold mb-4">Platform</h4>
-              <div className="space-y-2">
-                {['Features', 'Analytics', 'Integrations', 'API'].map((item) => (
-                  <a key={item} href="#" className="block text-gray-400 hover:text-white transition-colors">
-                    {item}
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4">Resources</h4>
-              <div className="space-y-2">
-                {['Documentation', 'Case Studies', 'Blog', 'Support'].map((item) => (
-                  <a key={item} href="#" className="block text-gray-400 hover:text-white transition-colors">
-                    {item}
-                  </a>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-4">Company</h4>
-              <div className="space-y-2">
-                {['About', 'Careers', 'Contact', 'Privacy'].map((item) => (
-                  <a key={item} href="#" className="block text-gray-400 hover:text-white transition-colors">
-                    {item}
-                  </a>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Newsletter Signup */}
-          <div className="border-t border-gray-800 pt-12 mb-8">
-            <div className="max-w-md mx-auto text-center">
-              <h4 className="font-semibold mb-4">Stay Updated</h4>
+              
+              {/* Architecture Badges */}
               <div className="flex gap-3">
-                <input 
-                  type="email" 
-                  placeholder="Enter your email"
-                  className="flex-1 px-4 py-3 rounded-full bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#00A8E8]"
-                  suppressHydrationWarning
-                />
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-6 py-3 bg-gradient-to-r from-[#00A8E8] to-[#34D399] rounded-full font-medium hover:shadow-lg transition-all duration-300"
-                  suppressHydrationWarning
-                >
-                  Subscribe
-                </motion.button>
+                 <div className="px-2 py-1 rounded bg-[#0a0a0c] border border-white/5 text-[9px] font-mono text-white/30 truncate">SOC-2 Type II COMPLIANT</div>
+                 <div className="px-2 py-1 rounded bg-[#0a0a0c] border border-white/5 text-[9px] font-mono text-white/30 truncate">99.999% SLA</div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-mono text-[10px] uppercase text-white/30 tracking-widest mb-6">Platform</h4>
+              <div className="space-y-4">
+                {['Intelligence Engine', 'Data Ingestion', 'Game Theory Modeler', 'API Setup'].map((item) => (
+                  <a key={item} href="#" className="block text-sm text-white/60 hover:text-white transition-colors duration-200">
+                    {item}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-mono text-[10px] uppercase text-white/30 tracking-widest mb-6">Developers</h4>
+              <div className="space-y-4">
+                {['Documentation', 'SDK Reference', 'Architecture Repo', 'Status & Uptime'].map((item) => (
+                  <a key={item} href="#" className="block text-sm text-white/60 hover:text-white transition-colors duration-200">
+                    {item}
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-mono text-[10px] uppercase text-white/30 tracking-widest mb-6">Company</h4>
+              <div className="space-y-4">
+                {['About Us', 'Security', 'Research Papers', 'Contact Sales'].map((item) => (
+                  <a key={item} href="#" className="block text-sm text-white/60 hover:text-white transition-colors duration-200">
+                    {item}
+                  </a>
+                ))}
               </div>
             </div>
           </div>
 
-          {/* Copyright */}
-          <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 InfraVision. All rights reserved.</p>
+          <div className="border-t border-white/[0.05] pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-white/30 text-xs font-mono">&copy; 2026 INFRAVISION INC. ALL RIGHTS RESERVED.</p>
+            <div className="flex gap-6">
+               <a href="#" className="text-white/30 hover:text-white text-xs font-mono transition-colors">Privacy Policy</a>
+               <a href="#" className="text-white/30 hover:text-white text-xs font-mono transition-colors">Terms of Service</a>
+            </div>
           </div>
         </div>
       </footer>
