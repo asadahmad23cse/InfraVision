@@ -78,7 +78,8 @@ export async function getLocalStressTestResponse(body: {
 }
 
 /**
- * Minimal scenario comparison for the Policy Twin chart (Baseline vs Live Policy).
+ * Full multi-scenario comparison — all selected scenarios simulated independently.
+ * Returns city_timeseries with one row per (label × year) and simulation with zone data.
  */
 export async function getLocalScenarioCompare(body: {
   scenarios?: Array<{ label: string; interventions: Record<string, number> }>;
@@ -87,76 +88,75 @@ export async function getLocalScenarioCompare(body: {
 }) {
   const rows = await loadSustainabilityRows();
   const byZone = latestRowByZone(rows);
-  let sumScore = 0;
-  let sumGhg = 0;
-  let n = 0;
-  for (const r of byZone.values()) {
-    sumScore += r.sustainability_score;
-    sumGhg += r.ghg_emissions_mtco2;
-    n += 1;
-  }
-  const baseAvg = n ? sumScore / n : 55;
-  const baseGhg = n ? sumGhg : 40;
+  const zones = [...byZone.values()];
+
+  const baseAvgScore = zones.length ? zones.reduce((s, z) => s + z.sustainability_score, 0) / zones.length : 55;
+  const baseTotalGhg = zones.reduce((s, z) => s + z.ghg_emissions_mtco2, 0) || 40;
+  const baseRenewable = zones.length ? zones.reduce((s, z) => s + z.renewable_share_percent, 0) / zones.length : 12;
 
   const start = body.start_year ?? 2025;
   const end = body.end_year ?? 2035;
-  const scenariosIn = body.scenarios ?? [];
-  const liveScenario =
-    scenariosIn.find((s) => !/^baseline$/i.test(String(s.label || '').trim())) ?? scenariosIn[0];
-  const policyLabel =
-    liveScenario && !/^baseline$/i.test(String(liveScenario.label || '').trim())
-      ? String(liveScenario.label || 'Live Policy')
-      : 'Live Policy';
-  const ints = liveScenario?.interventions ?? {};
-  const policySum =
-    (ints.solar_increase ?? 0) +
-    (ints.waste_improvement ?? 0) +
-    (ints.green_expansion ?? 0) +
-    (ints.water_conservation ?? 0) +
-    (ints.ev_adoption ?? 0) +
-    (ints.public_transport ?? 0);
-
   const span = Math.max(1, end - start);
-  const city_timeseries: Array<{ label: string; year: number; avg_score: number; total_ghg: number }> = [];
+  const scenariosIn = body.scenarios ?? [];
 
-  for (let y = start; y <= end; y += 1) {
-    const t = y - start;
-    const progress = t / span;
-    const stressDrag = 0.12 * progress;
-    const baselineScore = Math.max(28, baseAvg - stressDrag * 10);
-    const policyLift = Math.min(22, policySum * 14 * progress);
-    const liveScore = Math.min(96, baselineScore + policyLift);
-    const baselineGhg = Math.max(4, baseGhg * (1 + 0.015 * t));
-    const liveGhg = Math.max(3, baselineGhg * (1 - Math.min(0.45, policySum * 0.12 * progress)));
+  // Always include baseline + all user-selected non-baseline scenarios
+  const allScenarios: Array<{ label: string; interventions: Record<string, number> }> = [
+    { label: 'Baseline', interventions: { solar_increase: 0, waste_improvement: 0, green_expansion: 0, water_conservation: 0, ev_adoption: 0, public_transport: 0 } },
+    ...scenariosIn.filter(s => !/^baseline$/i.test((s.label ?? '').trim())),
+  ];
 
-    city_timeseries.push({
-      label: 'Baseline',
-      year: y,
-      avg_score: round(baselineScore, 2),
-      total_ghg: round(baselineGhg, 2),
-    });
-    city_timeseries.push({
-      label: policyLabel,
-      year: y,
-      avg_score: round(liveScore, 2),
-      total_ghg: round(liveGhg, 2),
-    });
+  const city_timeseries: Array<{ label: string; year: number; avg_score: number; total_ghg: number; renewable_pct: number; waste_pct: number }> = [];
+  const scenarioResults: Array<{ label: string; interventions: Record<string, number>; simulation: Record<string, Record<string, unknown>> }> = [];
+
+  for (const scenario of allScenarios) {
+    const ints = scenario.interventions;
+    const intSum = Object.values(ints).reduce((a, b) => a + b, 0);
+    const solarB  = ints.solar_increase ?? 0;
+    const wasteB  = ints.waste_improvement ?? 0;
+    const evB     = ints.ev_adoption ?? 0;
+    const transitB = ints.public_transport ?? 0;
+    const waterB  = ints.water_conservation ?? 0;
+
+    const simYears: Record<string, Record<string, unknown>> = {};
+
+    for (let y = start; y <= end; y++) {
+      const t = y - start;
+      const prog = t / span;
+
+      const baseScore = Math.max(28, baseAvgScore - 0.12 * prog * 10);
+      const avgScore  = round(Math.min(94, baseScore + Math.min(28, intSum * 3.5 * prog)), 2);
+
+      const baseGhg  = baseTotalGhg * Math.pow(1.015, t);
+      const ghgCut   = Math.min(0.55, (solarB * 0.18 + evB * 0.16 + transitB * 0.12 + wasteB * 0.06) * prog);
+      const totalGhg = round(Math.max(3, baseGhg * (1 - ghgCut)), 2);
+
+      const renewable = round(Math.min(60, baseRenewable + solarB * 22 * prog), 1);
+      const wastePct  = round(Math.min(98, 65 + wasteB * 28 * prog), 1);
+
+      city_timeseries.push({ label: scenario.label, year: y, avg_score: avgScore, total_ghg: totalGhg, renewable_pct: renewable, waste_pct: wastePct });
+
+      const zoneData: Record<string, unknown> = {};
+      for (const z of zones) {
+        zoneData[z.zone] = {
+          year: y, zone: z.zone,
+          sustainability_score: round(Math.min(94, (z.sustainability_score || baseAvgScore) * (avgScore / baseAvgScore)), 2),
+          ghg_emissions_mtco2: round(totalGhg / Math.max(1, zones.length), 2),
+          renewable_share_percent: renewable,
+          waste_processed_pct: wastePct,
+          water_stress_index: round(Math.max(0, 0.25 - waterB * 0.15 * prog), 3),
+        };
+      }
+      simYears[String(y)] = zoneData;
+    }
+
+    scenarioResults.push({ label: scenario.label, interventions: ints, simulation: simYears });
   }
 
-  return {
-    scenarios: [
-      { label: 'Baseline', interventions: {}, simulation: {} },
-      {
-        label: policyLabel,
-        interventions: liveScenario?.interventions ?? {},
-        simulation: {},
-      },
-    ],
-    city_timeseries,
-  };
+  return { scenarios: scenarioResults, city_timeseries };
 }
 
 /** SHAP-style waterfall from latest zone row when ML service is offline. */
+
 export async function getLocalMlExplain(zone: string, year: number) {
   const rows = await loadSustainabilityRows();
   const zoneRows = rows.filter((r) => r.zone === zone).sort((a, b) => b.year - a.year);
