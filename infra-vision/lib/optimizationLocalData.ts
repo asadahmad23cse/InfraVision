@@ -179,6 +179,15 @@ export function getLocalOptimizationSolve(
   };
 }
 
+const LABELS: Record<OptVarKey, string> = {
+  solar_increase: 'Solar & Renewable',
+  waste_improvement: 'Waste Management',
+  green_expansion: 'Green Expansion',
+  water_conservation: 'Water Conservation',
+  ev_adoption: 'EV & Transit',
+  public_transport: 'Public Transport',
+};
+
 export function getLocalOptimizationForUi(
   budgetCr: number,
   targetGhgReduction: number,
@@ -187,10 +196,21 @@ export function getLocalOptimizationForUi(
   const res = getLocalOptimizationSolve(budgetCr, targetGhgReduction, minScoreLift);
   const mix = res.optimal_mix;
   const impact = res.projected_impact;
+
+  const breakdown = VARS.map((v) => ({
+    key: v,
+    label: LABELS[v],
+    allocated_units: round(mix[v], 2),
+    capex_cr: round(mix[v] * UNIT_COSTS[v], 0),
+    score_lift: round(mix[v] * SCORE_LIFTS[v], 2),
+    ghg_reduction: round(mix[v] * GHG_REDUCTIONS[v], 2),
+  }));
+
   return {
     solar: mix.solar_increase,
     waste: mix.waste_improvement,
     ev: mix.ev_adoption,
+    breakdown,
     score: impact.score_lift_points,
     optimal_score: res.optimal_score,
     cost: impact.total_cost_cr,

@@ -301,10 +301,20 @@ export interface OptimizationRequest {
   min_score_lift: number;
 }
 
+export interface OptimizationBreakdownItem {
+  key: string;
+  label: string;
+  allocated_units: number;
+  capex_cr: number;
+  score_lift: number;
+  ghg_reduction: number;
+}
+
 export interface OptimizationUiResponse {
   solar: number;
   waste: number;
   ev: number;
+  breakdown?: OptimizationBreakdownItem[];
   score: number;
   optimal_score: number;
   cost: number;

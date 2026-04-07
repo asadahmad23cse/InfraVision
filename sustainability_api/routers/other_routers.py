@@ -34,9 +34,9 @@ def solve_optimization(req: OptimizationRequest):
 def optimize_for_ui(req: OptimizationRequest):
     """
     Returns exact flat JSON required by the premium UI dashboard:
-    { solar, waste, ev, score, cost, ghg_reduction, optimal_score }
+    { solar, waste, ev, breakdown, score, cost, ghg_reduction, optimal_score }
     """
-    from optimization.lp_solver import optimize_policy
+    from optimization.lp_solver import optimize_policy, UNIT_COSTS, GHG_REDUCTIONS, SCORE_LIFTS
     res = optimize_policy(
         budget_cr=req.budget_cr,
         target_ghg_reduction=req.target_ghg_reduction,
@@ -44,10 +44,33 @@ def optimize_for_ui(req: OptimizationRequest):
     )
     mix = res.get("optimal_mix", {})
     impact = res.get("projected_impact", {})
+
+    LABELS = {
+        "solar_increase": "Solar & Renewable",
+        "waste_improvement": "Waste Management",
+        "green_expansion": "Green Expansion",
+        "water_conservation": "Water Conservation",
+        "ev_adoption": "EV & Transit",
+        "public_transport": "Public Transport",
+    }
+    ORDER = ["solar_increase","waste_improvement","green_expansion","water_conservation","ev_adoption","public_transport"]
+    breakdown = []
+    for key in ORDER:
+        alloc = float(mix.get(key, 0))
+        breakdown.append({
+            "key": key,
+            "label": LABELS[key],
+            "allocated_units": round(alloc, 2),
+            "capex_cr": round(alloc * UNIT_COSTS.get(key, 0), 0),
+            "score_lift": round(alloc * SCORE_LIFTS.get(key, 0), 2),
+            "ghg_reduction": round(alloc * GHG_REDUCTIONS.get(key, 0), 2),
+        })
+
     return {
         "solar": mix.get("solar_increase", 0),
         "waste": mix.get("waste_improvement", 0),
         "ev": mix.get("ev_adoption", 0),
+        "breakdown": breakdown,
         "score": impact.get("score_lift_points", 0),
         "optimal_score": res.get("optimal_score", impact.get("score_lift_points", 0)),
         "cost": impact.get("total_cost_cr", 0),
