@@ -110,7 +110,7 @@ export default function SustainabilityLayout({
       </aside>
 
       {/* Main content - added framer-motion ready wrapper styling */}
-      <main className="flex-1 ml-64 min-h-screen relative overflow-hidden">
+      <main className="flex-1 ml-64 min-h-screen relative overflow-hidden pt-[48px]">
         {/* Subtle background noise/grid */}
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.03] mix-blend-overlay pointer-events-none"></div>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-violet-900/20 via-[#0B1220] to-[#0B1220] pointer-events-none"></div>
