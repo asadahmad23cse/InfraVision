@@ -337,8 +337,7 @@ export default function SustainabilityOverviewPage() {
           return acc;
         }, {});
 
-        setTrendData(
-          Object.entries(byYear)
+        const sortedTrends = Object.entries(byYear)
             .map(([yk, v]) => {
               const vTyped = v as {
                 year: number;
@@ -360,8 +359,10 @@ export default function SustainabilityOverviewPage() {
                 score: vTyped.count ? vTyped.score / vTyped.count : 0,
               };
             })
-            .sort((a, b) => a.year - b.year),
-        );
+            .sort((a, b) => a.year - b.year);
+            
+        // Filter to show only the 15-year window ending at the selected year, removing any historical noise
+        setTrendData(sortedTrends.filter(t => t.year <= year && t.year > year - 15));
       } catch (e) {
         console.error(e);
       } finally {
@@ -455,69 +456,76 @@ export default function SustainabilityOverviewPage() {
     overview.renewable_share_percent >= 12 ? 'healthy' : overview.renewable_share_percent >= 6 ? 'degraded' : 'critical';
 
   return (
-    <div className="min-h-screen text-gray-100" style={{ backgroundColor: BG }}>
-      <div className="pointer-events-none fixed inset-0 opacity-[0.35]">
-        <div
-          className="h-full w-full"
-          style={{
-            backgroundImage: `radial-gradient(ellipse 80% 50% at 50% -20%, ${NEON_VIOLET}22, transparent), radial-gradient(ellipse 60% 40% at 100% 50%, ${NEON_CYAN}12, transparent)`,
-          }}
-        />
+    <div className="min-h-screen text-gray-100 bg-[#020617]">
+      {/* ── Background Orbs ── */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-blue-500/20 blur-[120px] mix-blend-screen opacity-60 animate-[spin_20s_linear_infinite]" />
+        <div className="absolute top-[20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-indigo-500/10 blur-[130px] mix-blend-screen opacity-50" />
+        <div className="absolute bottom-[-20%] left-[20%] w-[800px] h-[800px] rounded-full bg-emerald-500/15 blur-[150px] mix-blend-screen opacity-40 animate-[spin_30s_linear_infinite_reverse]" />
       </div>
 
-      <div className="relative mx-auto max-w-[1600px] px-4 py-6 sm:px-6 sm:py-8">
-        <header className="mb-6 flex flex-col gap-4 rounded-2xl border border-white/[0.08] bg-[#0a0f18]/90 p-5 shadow-[0_0_0_1px_rgba(34,211,238,0.06)] backdrop-blur-sm sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-300/80">
-              <HeartPulse className="h-4 w-4 text-cyan-400" />
-              MLOps · Sustainability mesh
+      <div className="relative mx-auto max-w-[1600px] px-6 py-10 z-10">
+
+        {/* ── Header Glass Panel ── */}
+        <header className="mb-10 flex flex-col gap-6 rounded-[32px] border border-white/[0.15] bg-white/[0.02] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.2)] backdrop-blur-[64px] sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex gap-6 items-center">
+            <div className="h-16 w-16 rounded-[20px] bg-gradient-to-br from-white/20 to-white/5 flex items-center justify-center border border-white/20 shadow-inner">
+              <Target className="h-8 w-8 text-white/90" />
             </div>
-            <h1 className="mt-2 bg-gradient-to-r from-white via-cyan-100 to-violet-200 bg-clip-text text-2xl font-bold tracking-tight text-transparent sm:text-3xl">
-              Overview
-            </h1>
-            <p className="mt-1 max-w-xl text-sm text-white/45">Neon telemetry over deep black · zone aggregation · interactive trajectory</p>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-white/50 mb-1">Vision Intelligence</p>
+              <h1 className="text-4xl font-extrabold tracking-tight text-white/90 bg-clip-text">
+                Sustainability Overview
+              </h1>
+            </div>
           </div>
-          <div className="flex flex-col gap-1.5 sm:items-end">
-            <label className="text-[10px] font-semibold uppercase tracking-wider text-white/35">Snapshot year</label>
-            <select
-              value={year}
-              onChange={(e) => setYear(Number(e.target.value))}
-              className="w-full min-w-[140px] cursor-pointer rounded-lg border border-cyan-500/30 bg-black/60 px-3 py-2.5 text-sm font-medium text-cyan-100 outline-none ring-cyan-400/20 focus:ring-2 sm:w-auto"
-            >
-              {Array.from({ length: 16 }, (_, i) => 2015 + i).map((y) => (
-                <option key={y} value={y} className="bg-[#0a0f18]">
-                  {y}
-                </option>
-              ))}
-            </select>
+          <div className="flex flex-col gap-2 sm:items-end">
+            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">Temporal View</label>
+            <div className="relative">
+              <select
+                value={year}
+                onChange={(e) => setYear(Number(e.target.value))}
+                className="w-full min-w-[160px] cursor-pointer appearance-none rounded-2xl border border-white/20 bg-black/20 px-5 py-3.5 text-sm font-semibold text-white/90 outline-none backdrop-blur-xl hover:bg-white/10 transition-colors focus:ring-2 ring-white/30 sm:w-auto"
+              >
+                {Array.from({ length: 16 }, (_, i) => 2015 + i).map((y) => (
+                  <option key={y} value={y} className="bg-[#111]">{y} Fiscal</option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-white/50">
+                <svg width="12" height="8" viewBox="0 0 12 8" fill="none"><path d="M1 1.5L6 6.5L11 1.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </div>
+            </div>
           </div>
         </header>
 
         <motion.section
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="mb-6 rounded-xl border border-violet-500/20 bg-gradient-to-r from-violet-500/10 via-transparent to-cyan-500/10 p-4"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 rounded-[24px] border border-blue-300/20 bg-gradient-to-r from-blue-500/10 to-indigo-500/5 p-6 backdrop-blur-[40px] shadow-lg flex gap-4 items-start"
         >
-          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-violet-200/90">
-            <Activity className="h-4 w-4" />
-            Runbook insight
+          <div className="p-3 bg-blue-500/20 rounded-2xl border border-blue-400/30">
+            <Activity className="h-5 w-5 text-blue-300" />
           </div>
-          <p className="mt-2 text-sm leading-relaxed text-white/65">
-            {overview.city_sustainability_score < 50
-              ? 'SLO pressure: composite below guardrail. Investigate water gap and waste diversion pipelines; scale remediation on worst zones.'
-              : 'Steady state within envelope: renewables supporting decarbonization curve. Watch water subsystems in high-stress districts.'}
-          </p>
+          <div>
+            <h3 className="text-sm font-bold text-blue-200 mb-1">Synthesized System Insight</h3>
+            <p className="text-[13px] leading-relaxed text-blue-100/70 font-medium tracking-wide">
+              {overview.city_sustainability_score < 50
+                ? 'The composite index is running below optimal thresholds. Anomalies detected in water pipelines and localized GHG spikes.'
+                : 'System operating within safe margins. Renewable energy adoption is mitigating overall carbon intensity effectively.'}
+            </p>
+          </div>
         </motion.section>
 
-        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {/* ── KPI Glass Widgets ── */}
+        <div className="mb-10 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
           <SystemHealthWidget
             serviceId="svc/composite"
-            title="Composite mesh"
+            title="Composite Index"
             subtitle="City-wide sustainability index"
-            valueLabel={overview.city_sustainability_score.toFixed(2)}
+            valueLabel={overview.city_sustainability_score.toFixed(1)}
             health={compositeHealth}
             utilization={Math.min(100, overview.city_sustainability_score * 1.05)}
-            sparkColor={NEON_CYAN}
+            sparkColor="#60a5fa"
             trendKey="score"
             trendData={trendData}
             higherIsGood
@@ -526,12 +534,12 @@ export default function SustainabilityOverviewPage() {
           />
           <SystemHealthWidget
             serviceId="svc/emissions"
-            title="GHG pipeline"
+            title="GHG Footprint"
             subtitle="Aggregate MtCO₂e (inverse SLO)"
             valueLabel={`${overview.ghg_emissions_mtco2} Mt`}
             health={ghgHealth}
             utilization={Math.min(100, (overview.ghg_emissions_mtco2 / Math.max(maxGhg, 1)) * 100)}
-            sparkColor={NEON_ROSE}
+            sparkColor="#fb7185"
             trendKey="ghg"
             trendData={trendData}
             higherIsGood={false}
@@ -540,12 +548,12 @@ export default function SustainabilityOverviewPage() {
           />
           <SystemHealthWidget
             serviceId="svc/hydrology"
-            title="Water deficit"
+            title="Water Deficit"
             subtitle="Supply–demand delta (MGD)"
             valueLabel={`${Math.round(overview.water_gap_mgd)} MGD`}
             health={waterHealth}
             utilization={waterUtil}
-            sparkColor={NEON_VIOLET}
+            sparkColor="#818cf8"
             trendKey="water_gap"
             trendData={trendData}
             higherIsGood={false}
@@ -554,12 +562,12 @@ export default function SustainabilityOverviewPage() {
           />
           <SystemHealthWidget
             serviceId="svc/renewables"
-            title="Clean energy mix"
+            title="Clean Energy"
             subtitle="Renewable share %"
             valueLabel={`${overview.renewable_share_percent}%`}
             health={renHealth}
             utilization={renUtil}
-            sparkColor={NEON_GREEN}
+            sparkColor="#34d399"
             trendKey="renewable"
             trendData={trendData}
             higherIsGood
@@ -568,173 +576,121 @@ export default function SustainabilityOverviewPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-          <motion.section
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.08 }}
-            className="lg:col-span-8"
-          >
-            <div className="rounded-2xl border border-cyan-500/20 bg-[#0a0f18]/95 p-4 shadow-[0_0_60px_rgba(34,211,238,0.08)] backdrop-blur-sm sm:p-5">
-              <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-200/80">Longitudinal ecosystem trajectory</h2>
-                  <p className="text-[11px] text-white/40">Mean composite score · all zones · thresholds overlaid</p>
-                </div>
-                <div className="flex flex-wrap gap-3 text-[10px] font-mono">
-                  <span className="flex items-center gap-1.5 text-rose-300/90">
-                    <span className="h-0 w-6 border-t-2 border-dashed border-rose-400/80" />
-                    40 crit
-                  </span>
-                  <span className="flex items-center gap-1.5 text-amber-200/90">
-                    <span className="h-0 w-6 border-t-2 border-dashed border-amber-400/80" />
-                    60 warn
-                  </span>
-                  <span className="flex items-center gap-1.5 text-emerald-300/90">
-                    <span className="h-0 w-6 border-t-2 border-dashed border-emerald-400/80" />
-                    80 tgt
-                  </span>
-                  <span className="flex items-center gap-1.5 text-violet-300/90">
-                    <span className="h-0 w-6 border-t border-dashed border-violet-400/80" />
-                    sel yr
-                  </span>
-                </div>
-              </div>
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
 
-              <div className="h-[380px] w-full rounded-xl border border-white/[0.06] bg-black/50">
-                {trendData.length === 0 ? (
-                  <div className="flex h-full items-center justify-center text-sm text-white/35">No series</div>
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={trendData} margin={{ top: 16, right: 12, left: 4, bottom: 20 }}>
-                      <defs>
-                        <linearGradient id="mlopsAreaTop" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor={NEON_CYAN} stopOpacity={0.55} />
-                          <stop offset="45%" stopColor={NEON_VIOLET} stopOpacity={0.22} />
-                          <stop offset="100%" stopColor={NEON_VIOLET} stopOpacity={0} />
-                        </linearGradient>
-                        <linearGradient id="mlopsStroke" x1="0" y1="0" x2="1" y2="0">
-                          <stop offset="0%" stopColor={NEON_CYAN} />
-                          <stop offset="50%" stopColor={NEON_VIOLET} />
-                          <stop offset="100%" stopColor="#f472b6" />
-                        </linearGradient>
-                        <filter id="mlopsGlow" x="-40%" y="-40%" width="180%" height="180%">
-                          <feGaussianBlur stdDeviation="3" result="blur" />
-                          <feMerge>
-                            <feMergeNode in="blur" />
-                            <feMergeNode in="SourceGraphic" />
-                          </feMerge>
-                        </filter>
-                      </defs>
-                      <CartesianGrid stroke="rgba(148,163,184,0.12)" strokeDasharray="4 6" vertical />
-                      <XAxis
-                        dataKey="year"
-                        type="number"
-                        domain={['dataMin', 'dataMax']}
-                        ticks={xTicks}
-                        tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'ui-monospace' }}
-                        tickMargin={14}
-                        axisLine={{ stroke: 'rgba(148,163,184,0.25)' }}
-                        tickLine={{ stroke: 'rgba(148,163,184,0.25)' }}
-                        allowDecimals={false}
-                        height={40}
-                      />
-                      <YAxis
-                        tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'ui-monospace' }}
-                        axisLine={{ stroke: 'rgba(148,163,184,0.25)' }}
-                        tickLine={{ stroke: 'rgba(148,163,184,0.25)' }}
-                        domain={['dataMin - 10', 'dataMax + 10']}
-                        width={40}
-                      />
-                      <Tooltip
-                        content={renderTooltip}
-                        cursor={{ stroke: 'rgba(34,211,238,0.35)', strokeWidth: 1, strokeDasharray: '4 4' }}
-                        isAnimationActive={false}
-                      />
-                      <ReferenceLine y={40} stroke="#fb7185" strokeDasharray="6 5" strokeOpacity={0.85} />
-                      <ReferenceLine y={60} stroke="#fbbf24" strokeDasharray="6 5" strokeOpacity={0.85} />
-                      <ReferenceLine y={80} stroke="#4ade80" strokeDasharray="6 5" strokeOpacity={0.85} />
-                      <ReferenceLine
-                        x={year}
-                        stroke="#a78bfa"
-                        strokeDasharray="4 4"
-                        strokeWidth={1.5}
-                        strokeOpacity={0.95}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="score"
-                        stroke="url(#mlopsStroke)"
-                        strokeWidth={2.5}
-                        fill="url(#mlopsAreaTop)"
-                        filter="url(#mlopsGlow)"
-                        activeDot={{
-                          r: 6,
-                          fill: NEON_CYAN,
-                          stroke: '#fff',
-                          strokeWidth: 2,
-                          style: { filter: 'drop-shadow(0 0 10px rgba(34,211,238,0.9))' },
-                        }}
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                )}
+          {/* ── Chart Panel ── */}
+          <motion.section
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+            className="lg:col-span-8 rounded-[32px] border border-white/[0.12] bg-white/[0.03] p-8 shadow-[0_8px_40px_rgba(0,0,0,0.25)] backdrop-blur-[64px]"
+          >
+            <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-xl font-bold tracking-tight text-white/90">Ecosystem Trajectory</h2>
+                <p className="text-xs text-white/50 tracking-wide mt-1">15-year composite score evolution normalized</p>
               </div>
+              <div className="flex gap-4">
+                <div className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] font-bold text-white/60 tracking-widest uppercase shadow-inner">
+                  <span className="inline-block w-2 h-2 rounded-full bg-blue-400 mr-2 shadow-[0_0_8px_#60a5fa]" /> Score Model
+                </div>
+              </div>
+            </div>
+
+            <div className="h-[400px] w-full">
+              {trendData.length === 0 ? (
+                <div className="flex h-full items-center justify-center text-sm text-white/35">No data available</div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="visionGlow" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#60a5fa" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="#60a5fa" stopOpacity={0.0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid stroke="rgba(255,255,255,0.06)" strokeDasharray="3 3" vertical={false} />
+                    <XAxis
+                      dataKey="year"
+                      type="number"
+                      domain={['dataMin', 'dataMax']}
+                      ticks={xTicks}
+                      tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 500 }}
+                      axisLine={false}
+                      tickLine={false}
+                      tickMargin={15}
+                      allowDecimals={false}
+                    />
+                    <YAxis
+                      tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 500 }}
+                      axisLine={false}
+                      tickLine={false}
+                      domain={['dataMin - 5', 'dataMax + 5']}
+                      width={60}
+                      tickFormatter={(val) => Math.round(val).toString()}
+                    />
+                    <Tooltip content={renderTooltip} cursor={{ stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1 }} />
+
+                    <ReferenceLine y={40} stroke="rgba(2fb7185,0.3)" strokeDasharray="4 4" />
+                    <ReferenceLine y={80} stroke="rgba(52,211,153,0.3)" strokeDasharray="4 4" />
+
+                    <Area
+                      type="monotone"
+                      dataKey="score"
+                      stroke="#60a5fa"
+                      strokeWidth={4}
+                      fill="url(#visionGlow)"
+                      activeDot={{
+                        r: 7,
+                        fill: '#fff',
+                        stroke: '#3b82f6',
+                        strokeWidth: 3,
+                        style: { filter: 'drop-shadow(0 0 10px rgba(96,165,250,0.8))' },
+                      }}
+                      style={{ filter: 'drop-shadow(0 8px 16px rgba(96,165,250,0.3))' }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </motion.section>
 
+          {/* ── Zone Matrix Panel ── */}
           <motion.aside
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.12 }}
-            className="lg:col-span-4"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.15 }}
+            className="lg:col-span-4 rounded-[32px] border border-white/[0.12] bg-white/[0.03] p-6 shadow-[0_8px_40px_rgba(0,0,0,0.25)] backdrop-blur-[64px]"
           >
-            <div className="rounded-2xl border border-white/[0.08] bg-[#0a0f18]/95 p-4 backdrop-blur-sm">
-              <h2 className="text-xs font-bold uppercase tracking-[0.2em] text-white/50">Zone risk matrix</h2>
-              <p className="text-[11px] text-white/35">Live-sorted by composite</p>
-              <div className="mt-4 grid grid-cols-[minmax(0,1fr)_48px_48px_40px_44px] gap-px rounded-lg bg-white/[0.06] text-[9px] font-semibold uppercase tracking-wider text-white/40">
-                <div className="rounded-tl-lg bg-[#0d121c] px-2 py-2">Zone</div>
-                <div className="bg-[#0d121c] py-2 text-center text-emerald-400/90">Bid</div>
-                <div className="bg-[#0d121c] py-2 text-center text-rose-400/90">Ask</div>
-                <div className="bg-[#0d121c] py-2 text-center">H₂O</div>
-                <div className="rounded-tr-lg bg-[#0d121c] py-2 text-center">Wst</div>
-              </div>
-              <div className="custom-scrollbar max-h-[min(360px,50vh)] overflow-y-auto rounded-b-lg border border-t-0 border-white/[0.06] lg:max-h-[420px]">
-                {orderBookRows.map((row, i) => (
-                  <div
-                    key={row.zone}
-                    className="grid grid-cols-[minmax(0,1fr)_48px_48px_40px_44px] gap-px border-b border-white/[0.04] text-[11px] font-mono tabular-nums"
-                    style={{ backgroundColor: i % 2 === 0 ? 'rgba(0,0,0,0.35)' : 'rgba(10,15,24,0.6)' }}
-                  >
-                    <div className="min-w-0 px-2 py-2">
-                      <p className="truncate font-semibold text-white">{row.zone}</p>
-                      <p className="text-[9px] text-white/35">
-                        <span className={row.netVsMkt >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
-                          {row.netVsMkt >= 0 ? '▲' : '▼'}
-                          {row.netVsMkt >= 0 ? '+' : ''}
-                          {row.netVsMkt.toFixed(1)} μ
-                        </span>
-                      </p>
-                    </div>
-                    <div className="flex items-center bg-black/30 px-1">
-                      <div className="h-7 w-full overflow-hidden rounded-sm bg-black/60">
-                        <div className="h-full bg-emerald-500/35" style={{ width: `${row.bidPct}%` }} />
-                      </div>
-                    </div>
-                    <div className="flex items-center bg-black/30 px-1">
-                      <div className="h-7 w-full overflow-hidden rounded-sm bg-black/60">
-                        <div className="h-full bg-rose-500/35" style={{ width: `${row.askPct}%` }} />
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-center bg-black/20">
+            <h2 className="text-sm font-bold text-white/80 mb-1">Zone Disparity</h2>
+            <p className="text-[11px] text-white/40 uppercase tracking-widest mb-5 font-semibold">Live Sort vs Market Avg</p>
+
+            <div className="flex justify-between items-center px-4 py-2 mb-2">
+              <span className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Sectors</span>
+              <span className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Differential</span>
+            </div>
+
+            <div className="flex flex-col gap-3 max-h-[460px] overflow-y-auto custom-scrollbar pr-2 pb-2">
+              {orderBookRows.map((row) => (
+                <div
+                  key={row.zone}
+                  className="flex justify-between items-center p-4 rounded-[20px] bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.08] transition-colors group"
+                >
+                  <div>
+                    <p className="font-bold text-white/90 text-sm tracking-wide">{row.zone}</p>
+                    <div className="flex gap-2 items-center mt-1">
                       <RiskGlyph level={row.water_risk} />
-                    </div>
-                    <div className="flex items-center justify-center bg-black/20">
                       <RiskGlyph level={row.waste_risk} />
                     </div>
                   </div>
-                ))}
-              </div>
+                  <div className="text-right">
+                    <span className={`font-mono text-base font-bold ${row.netVsMkt >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
+                      {row.netVsMkt >= 0 ? '+' : ''}{row.netVsMkt.toFixed(1)}
+                    </span>
+                    <p className="text-[9px] text-white/30 uppercase font-bold tracking-widest mt-0.5 group-hover:text-white/50 transition-colors pt-1">pts relative</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </motion.aside>
         </div>
