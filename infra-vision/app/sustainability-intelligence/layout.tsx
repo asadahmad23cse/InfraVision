@@ -47,40 +47,40 @@ export default function SustainabilityLayout({
   return (
     <div className="min-h-screen bg-[#0B1220] text-gray-100 flex selection:bg-cyan-500/30">
       {/* Sidebar - Glassmorphism */}
-      <aside className="w-64 bg-white/5 backdrop-blur-3xl border-r border-white/10 flex flex-col fixed left-0 top-[45px] bottom-0 z-30 shadow-2xl shadow-black/50">
-        <div className="p-5 border-b border-white/10">
-          <h2 className="text-lg font-bold text-white flex items-center gap-3">
-            <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <TreePine className="w-5 h-5 text-white" />
-            </span>
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-              InfraVision
-            </span>
-          </h2>
+      <aside className="w-64 bg-[#050505]/70 backdrop-blur-3xl border-r border-white/[0.04] flex flex-col fixed left-0 top-[45px] bottom-0 z-30 shadow-[4px_0_24px_rgba(0,0,0,0.5)]">
+        <div className="px-5 py-4 border-b border-white/[0.04]">
+          <p className="text-[9px] uppercase tracking-[0.2em] text-white/30 font-bold mb-1">Target</p>
+          <div className="flex items-center gap-2.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#00A8E8] shadow-[0_0_8px_#00A8E8] animate-pulse" />
+            <h2 className="text-sm font-semibold text-white/90 tracking-tight">
+              Intelligence Suite
+            </h2>
+          </div>
         </div>
-        <nav className="flex-1 overflow-y-auto p-3 custom-scrollbar">
+        <nav className="flex-1 overflow-y-auto p-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="mb-2 px-3 pt-2">
+             <p className="text-[10px] font-bold text-white/20 uppercase tracking-[0.2em]">Dashboards</p>
+          </div>
           {navItems.map(({ href, icon: Icon, label }) => {
             const isActive = pathname === href;
             return (
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1.5 transition-all duration-300 group ${isActive
-                    ? 'bg-gradient-to-r from-emerald-500/20 to-cyan-500/5 text-emerald-400 border border-emerald-500/20 shadow-md shadow-emerald-500/5'
-                    : 'text-gray-400 hover:bg-white/5 hover:text-gray-100 border border-transparent'
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-all duration-200 relative group ${isActive
+                    ? 'bg-white/[0.04] text-white'
+                    : 'text-white/40 hover:bg-white/[0.02] hover:text-white/80 border border-transparent'
                   }`}
               >
-                <Icon className={`w-5 h-5 flex-shrink-0 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
-                <span className="text-sm font-medium tracking-wide">{label}</span>
+                {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-[#00A8E8] rounded-r-full shadow-[0_0_10px_rgba(0,168,232,0.6)]" />}
+                <Icon className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${isActive ? 'text-[#00A8E8] drop-shadow-[0_0_8px_rgba(0,168,232,0.4)] scale-110' : 'opacity-70 group-hover:opacity-100 group-hover:scale-110'}`} />
+                <span className={`text-[12px] font-medium tracking-wide ${isActive ? 'text-white' : ''}`}>{label}</span>
               </Link>
             );
           })}
 
-          {/* AI Engine Section */}
-          <div className="mt-5 mb-3 px-4 flex items-center gap-3">
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-violet-500/50 to-transparent"></div>
-            <p className="text-[10px] font-bold text-violet-400 uppercase tracking-widest">AI Engine</p>
-            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-violet-500/50 to-transparent"></div>
+          <div className="mt-8 mb-2 px-3">
+             <p className="text-[10px] font-bold text-white/20 uppercase tracking-[0.2em]">Core Engines</p>
           </div>
           {aiNavItems.map(({ href, icon: Icon, label }) => {
             const isActive = pathname === href || pathname.startsWith(href);
@@ -88,20 +88,24 @@ export default function SustainabilityLayout({
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1.5 transition-all duration-300 group ${isActive
-                    ? 'bg-gradient-to-r from-violet-500/20 to-fuchsia-500/5 text-violet-400 border border-violet-500/20 shadow-md shadow-violet-500/5'
-                    : 'text-gray-400 hover:bg-white/5 hover:text-gray-100 border border-transparent'
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg mb-0.5 transition-all duration-200 relative group ${isActive
+                    ? 'bg-white/[0.04] text-white'
+                    : 'text-white/40 hover:bg-white/[0.02] hover:text-white/80 border border-transparent'
                   }`}
               >
-                <Icon className={`w-5 h-5 flex-shrink-0 transition-transform duration-300 ${isActive ? 'scale-110 drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]' : 'group-hover:scale-110 group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.3)]'}`} />
-                <span className="text-sm font-medium tracking-wide">{label}</span>
+                {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 bg-white rounded-r-full shadow-[0_0_10px_rgba(255,255,255,0.6)]" />}
+                <Icon className={`w-4 h-4 flex-shrink-0 transition-transform duration-200 ${isActive ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.4)] scale-110' : 'opacity-70 group-hover:opacity-100 group-hover:scale-110'}`} />
+                <span className={`text-[12px] font-medium tracking-wide ${isActive ? 'text-white' : ''}`}>{label}</span>
               </Link>
             );
           })}
         </nav>
-        <div className="p-4 border-t border-white/10 text-xs text-gray-500 bg-black/20 flex justify-between items-center backdrop-blur-md">
-          <span>Delhi Smart City</span>
-          <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-bold tracking-wider ring-1 ring-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.2)]">PRO</span>
+        <div className="p-4 border-t border-white/[0.04] bg-black/20 flex justify-between items-center backdrop-blur-md">
+          <div className="flex flex-col">
+            <span className="text-[9px] font-bold text-white/30 uppercase tracking-widest mb-0.5">Deployment</span>
+            <span className="text-xs text-white/80 font-medium tracking-tight">Delhi Grid Nodes</span>
+          </div>
+          <span className="px-1.5 py-0.5 rounded bg-white/[0.08] text-white/90 text-[9px] font-bold tracking-widest border border-white/10 shadow-[0_0_8px_rgba(255,255,255,0.05)]">PRO</span>
         </div>
       </aside>
 
