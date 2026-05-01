@@ -6,6 +6,13 @@ export type SectorAllocation = {
   impactScore?: number;
 };
 
+export type ExternalContext = {
+  current_temp?: string | number;
+  avg_traffic_index?: string | number;
+  industrial_status?: string;
+  [key: string]: unknown;
+};
+
 export const HIGH_SIGNAL_STRICT_RULE =
   "Strict Rule: Do not use words like 'Sure', 'Here is', or 'I think'. Start directly with the insight. Max 2 lines only.";
 
@@ -61,4 +68,55 @@ export function getCostImpactJustification(input: {
       : "No secondary sector was required to meet the target efficiently.";
 
   return [firstLine, secondLine].join("\n");
+}
+
+export function buildCausalAnomalyPrompt(input: {
+  metric: string;
+  zone: string;
+  externalContext: ExternalContext;
+}) {
+  return [
+    "Act as an Urban Climate Expert.",
+    HIGH_SIGNAL_STRICT_RULE,
+    `We detected a spike in ${input.metric} in ${input.zone}.`,
+    `External Context: ${JSON.stringify(input.externalContext)}.`,
+    "Task: In max 2 lines, identify the Root Cause. Link the data spike to one external factor, such as high heat leading to peak AC demand or traffic congestion in narrow roads.",
+  ].join("\n");
+}
+
+export function getCausalAnomalyInsight(input: {
+  metric: string;
+  zone: string;
+  externalContext: ExternalContext;
+}) {
+  const tempRaw = input.externalContext.current_temp;
+  const temp =
+    typeof tempRaw === "number"
+      ? tempRaw
+      : typeof tempRaw === "string"
+        ? Number(tempRaw.replace(/[^\d.-]/g, ""))
+        : NaN;
+  const trafficRaw = input.externalContext.avg_traffic_index;
+  const traffic =
+    typeof trafficRaw === "number"
+      ? trafficRaw
+      : typeof trafficRaw === "string"
+        ? Number(trafficRaw.replace(/[^\d.-]/g, ""))
+        : NaN;
+  const industry = String(input.externalContext.industrial_status ?? "").toLowerCase();
+
+  let cause = "external demand pressure";
+  let link = "resource use intensified faster than normal baseline capacity.";
+  if (Number.isFinite(temp) && temp >= 42) {
+    cause = "extreme heat";
+    link = "peak cooling demand likely pushed electricity use and GHG upward.";
+  } else if (Number.isFinite(traffic) && traffic >= 8) {
+    cause = "severe traffic congestion";
+    link = "slow road speeds increase idling emissions and transport energy losses.";
+  } else if (industry.includes("peak") || industry.includes("high")) {
+    cause = "peak industrial activity";
+    link = "industrial load is the most plausible driver behind the metric spike.";
+  }
+
+  return `${input.zone} ${input.metric} spike is most likely caused by ${cause}.\n${link}`;
 }
