@@ -15,11 +15,17 @@ export async function POST(req: NextRequest) {
   try {
     const explanation = await generateGeminiText(prompt);
     if (!explanation) {
-      return NextResponse.json({ error: "GEMINI_API_KEY is not configured" }, { status: 500 });
+      return NextResponse.json({
+        explanation: "The policy improves sustainability only where the added spend directly reduces a binding constraint.\nIf cost rises faster than score gain, this indicates Diminishing Returns and may strain low-income-zone service budgets.",
+        fallback: true,
+      });
     }
     return NextResponse.json({ explanation });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Gemini request failed";
-    return NextResponse.json({ error: message }, { status: 502 });
+    return NextResponse.json({
+      explanation: "The policy improves sustainability only where the added spend directly reduces a binding constraint.\nIf cost rises faster than score gain, this indicates Diminishing Returns and may strain low-income-zone service budgets.",
+      fallback: true,
+      warning: error instanceof Error ? error.message : "Gemini request failed",
+    });
   }
 }

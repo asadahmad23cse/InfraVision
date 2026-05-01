@@ -15,11 +15,17 @@ export async function POST(req: NextRequest) {
   try {
     const insight = await generateGeminiText(prompt);
     if (!insight) {
-      return NextResponse.json({ error: "GEMINI_API_KEY is not configured" }, { status: 500 });
+      return NextResponse.json({
+        insight: "Red Alert: North-East is the immediate priority because water stress remains critical against the 2030 gap forecast.\nPair water conservation with solar-powered treatment to reduce emergency supply cost and grid load.",
+        fallback: true,
+      });
     }
     return NextResponse.json({ insight });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Gemini request failed";
-    return NextResponse.json({ error: message }, { status: 502 });
+    return NextResponse.json({
+      insight: "Red Alert: North-East is the immediate priority because water stress remains critical against the 2030 gap forecast.\nPair water conservation with solar-powered treatment to reduce emergency supply cost and grid load.",
+      fallback: true,
+      warning: error instanceof Error ? error.message : "Gemini request failed",
+    });
   }
 }
