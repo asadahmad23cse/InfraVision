@@ -120,3 +120,42 @@ export function getCausalAnomalyInsight(input: {
 
   return `${input.zone} ${input.metric} spike is most likely caused by ${cause}.\n${link}`;
 }
+
+export function buildFinancialSocialConsequencePrompt(input: {
+  policy: string;
+  valuePercent: number;
+  scoreGain: number;
+  totalCostCr: number;
+  systemResult: JsonRecord;
+}) {
+  return [
+    "Act as a Policy Strategist.",
+    HIGH_SIGNAL_STRICT_RULE,
+    `The user increased ${input.policy} by ${input.valuePercent}%.`,
+    `System Result: Sustainability Score +${input.scoreGain}, Total Cost ${input.totalCostCr} Crores.`,
+    `Full System Result: ${JSON.stringify(input.systemResult)}.`,
+    "Task: Justify the consequence in 2 lines. If cost is high but score gain is low, mention Diminishing Returns. Mention one social consequence, such as high EV cost straining the transport budget for low-income zones.",
+  ].join("\n");
+}
+
+export function getFinancialSocialConsequence(input: {
+  policy: string;
+  valuePercent: number;
+  scoreGain: number;
+  totalCostCr: number;
+}) {
+  const costPerScore = input.totalCostCr / Math.max(0.1, input.scoreGain);
+  const isDiminishing = input.totalCostCr >= 500 && input.scoreGain < 3;
+  const socialRisk = /ev|transport|bus/i.test(input.policy)
+    ? "high mobility capex can strain transport budgets for low-income zones."
+    : /water/i.test(input.policy)
+      ? "tariff or metering upgrades may burden informal settlements without subsidies."
+      : /green|tree/i.test(input.policy)
+        ? "land conversion can displace informal vendors unless sites are selected carefully."
+        : "uneven rollout can widen service gaps between high-income and low-income zones.";
+
+  const firstLine = isDiminishing
+    ? `${normalizeSector(input.policy)} shows Diminishing Returns: ${moneyCr(input.totalCostCr)} produces only +${input.scoreGain} score at ${moneyCr(costPerScore)} per score point.`
+    : `${normalizeSector(input.policy)} adds +${input.scoreGain} score for ${moneyCr(input.totalCostCr)}, keeping the cost-impact tradeoff defensible.`;
+  return `${firstLine}\nSocial consequence: ${socialRisk}`;
+}
