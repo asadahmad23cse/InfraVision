@@ -13,6 +13,14 @@ export type ExternalContext = {
   [key: string]: unknown;
 };
 
+export type ZoneRiskSnapshot = {
+  zone: string;
+  waterGapMgd?: number;
+  ghgMtco2?: number;
+  sustainabilityScore?: number;
+  emergencyCostCr?: number;
+};
+
 export const HIGH_SIGNAL_STRICT_RULE =
   "Strict Rule: Do not use words like 'Sure', 'Here is', or 'I think'. Start directly with the insight. Max 2 lines only.";
 
@@ -158,4 +166,37 @@ export function getFinancialSocialConsequence(input: {
     ? `${normalizeSector(input.policy)} shows Diminishing Returns: ${moneyCr(input.totalCostCr)} produces only +${input.scoreGain} score at ${moneyCr(costPerScore)} per score point.`
     : `${normalizeSector(input.policy)} adds +${input.scoreGain} score for ${moneyCr(input.totalCostCr)}, keeping the cost-impact tradeoff defensible.`;
   return `${firstLine}\nSocial consequence: ${socialRisk}`;
+}
+
+export function buildExecutiveBriefPrompt(input: {
+  cityWideData: JsonRecord;
+  budgetSpentCr: number;
+  externalFactors: ExternalContext;
+}) {
+  return [
+    "Act as the Chief Sustainability Officer.",
+    HIGH_SIGNAL_STRICT_RULE,
+    `Analyze the city-wide data: ${JSON.stringify(input.cityWideData)}.`,
+    `Context: Budget Spent: ${input.budgetSpentCr}, External Factors: ${JSON.stringify(input.externalFactors)}.`,
+    "Task: Give a Red Alert insight in 2 lines. Identify the zone with the worst Cost-of-Inaction, for example ignoring water gap in North Delhi will cost 3x more in emergency supply next year.",
+  ].join("\n");
+}
+
+export function getExecutiveRedAlertBrief(input: {
+  budgetSpentCr: number;
+  zones: ZoneRiskSnapshot[];
+  externalFactors?: ExternalContext;
+}) {
+  const worst = [...input.zones].sort((a, b) => {
+    const aCost = a.emergencyCostCr ?? (a.waterGapMgd ?? 0) * 1.8 + (a.ghgMtco2 ?? 0) * 12 - (a.sustainabilityScore ?? 50);
+    const bCost = b.emergencyCostCr ?? (b.waterGapMgd ?? 0) * 1.8 + (b.ghgMtco2 ?? 0) * 12 - (b.sustainabilityScore ?? 50);
+    return bCost - aCost;
+  })[0];
+  const temp = input.externalFactors?.current_temp ? ` under ${input.externalFactors.current_temp} heat stress` : "";
+  if (!worst) {
+    return `Red Alert: city risk cannot be ranked because zone snapshots are missing${temp}.\nBudget spent ${moneyCr(input.budgetSpentCr)} needs verified zone-level cost-of-inaction data.`;
+  }
+
+  const waterCost = Math.max(1, Math.round((worst.waterGapMgd ?? 0) * 1.8));
+  return `Red Alert: ${worst.zone} has the worst Cost-of-Inaction${temp}, driven by water gap and emissions pressure.\nIgnoring it can push emergency supply exposure toward ${moneyCr(waterCost)}, making delayed action costlier than planned prevention.`;
 }
