@@ -13,6 +13,15 @@ import {
   type SectorAllocation,
   type ZoneRiskSnapshot,
 } from "@/lib/sustainabilityHighSignal";
+import { generateGeminiText } from "@/lib/geminiServer";
+
+async function withGemini(prompt: string, fallback: string) {
+  try {
+    return (await generateGeminiText(prompt)) || fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
@@ -20,20 +29,19 @@ export async function POST(req: NextRequest) {
 
   if (mode === "cost-impact") {
     const allocations = (body.allocations ?? []) as SectorAllocation[];
-    return NextResponse.json({
-      prompt: buildCostImpactJustifierPrompt({
+    const prompt = buildCostImpactJustifierPrompt({
         optimizerOutput: body.optimizerOutput ?? {},
         costMetadata: body.costMetadata ?? {},
         budgetCr: Number(body.budgetCr ?? 0),
         allocations,
         ignoredSectors: body.ignoredSectors ?? [],
-      }),
-      insight: getCostImpactJustification({
+      });
+    const fallback = getCostImpactJustification({
         budgetCr: Number(body.budgetCr ?? 0),
         allocations,
         ignoredSectors: body.ignoredSectors ?? [],
-      }),
-    });
+      });
+    return NextResponse.json({ prompt, insight: await withGemini(prompt, fallback) });
   }
 
   if (mode === "causal-anomaly") {
@@ -42,10 +50,8 @@ export async function POST(req: NextRequest) {
       zone: String(body.zone ?? "Unknown Zone"),
       externalContext: body.externalContext ?? {},
     };
-    return NextResponse.json({
-      prompt: buildCausalAnomalyPrompt(input),
-      insight: getCausalAnomalyInsight(input),
-    });
+    const prompt = buildCausalAnomalyPrompt(input);
+    return NextResponse.json({ prompt, insight: await withGemini(prompt, getCausalAnomalyInsight(input)) });
   }
 
   if (mode === "financial-social") {
@@ -56,25 +62,22 @@ export async function POST(req: NextRequest) {
       totalCostCr: Number(body.totalCostCr ?? 0),
       systemResult: body.systemResult ?? {},
     };
-    return NextResponse.json({
-      prompt: buildFinancialSocialConsequencePrompt(input),
-      insight: getFinancialSocialConsequence(input),
-    });
+    const prompt = buildFinancialSocialConsequencePrompt(input);
+    return NextResponse.json({ prompt, insight: await withGemini(prompt, getFinancialSocialConsequence(input)) });
   }
 
   if (mode === "executive-brief") {
-    return NextResponse.json({
-      prompt: buildExecutiveBriefPrompt({
+    const prompt = buildExecutiveBriefPrompt({
         cityWideData: body.cityWideData ?? {},
         budgetSpentCr: Number(body.budgetSpentCr ?? 0),
         externalFactors: body.externalFactors ?? {},
-      }),
-      insight: getExecutiveRedAlertBrief({
+      });
+    const fallback = getExecutiveRedAlertBrief({
         budgetSpentCr: Number(body.budgetSpentCr ?? 0),
         zones: (body.zones ?? []) as ZoneRiskSnapshot[],
         externalFactors: body.externalFactors ?? {},
-      }),
-    });
+      });
+    return NextResponse.json({ prompt, insight: await withGemini(prompt, fallback) });
   }
 
   if (mode === "synergy") {
@@ -84,10 +87,8 @@ export async function POST(req: NextRequest) {
       demandType: String(body.demandType ?? "resource demand"),
       resourceMetadata: body.resourceMetadata ?? {},
     };
-    return NextResponse.json({
-      prompt: buildSynergyOptimizerPrompt(input),
-      insight: getSynergyOptimizationInsight(input),
-    });
+    const prompt = buildSynergyOptimizerPrompt(input);
+    return NextResponse.json({ prompt, insight: await withGemini(prompt, getSynergyOptimizationInsight(input)) });
   }
 
   return NextResponse.json(
