@@ -200,3 +200,37 @@ export function getExecutiveRedAlertBrief(input: {
   const waterCost = Math.max(1, Math.round((worst.waterGapMgd ?? 0) * 1.8));
   return `Red Alert: ${worst.zone} has the worst Cost-of-Inaction${temp}, driven by water gap and emissions pressure.\nIgnoring it can push emergency supply exposure toward ${moneyCr(waterCost)}, making delayed action costlier than planned prevention.`;
 }
+
+export function buildSynergyOptimizerPrompt(input: {
+  zone: string;
+  wasteType: string;
+  demandType: string;
+  resourceMetadata: JsonRecord;
+}) {
+  return [
+    "Act as a Circular Economy Expert.",
+    HIGH_SIGNAL_STRICT_RULE,
+    `${input.zone} has high ${input.wasteType} and high ${input.demandType}.`,
+    `Resource Metadata: ${JSON.stringify(input.resourceMetadata)}.`,
+    "Task: Propose one synergy in 2 lines. Focus on Cost Saving, for example using treated water for industrial cooling here will save the city Z Crores annually.",
+  ].join("\n");
+}
+
+export function getSynergyOptimizationInsight(input: {
+  zone: string;
+  wasteType: string;
+  demandType: string;
+  resourceMetadata: JsonRecord;
+}) {
+  const wasteToEnergyRate = Number(input.resourceMetadata.waste_to_energy_rate ?? 0);
+  const treatedWaterSave = Number(input.resourceMetadata.treated_water_cost_save ?? 0);
+  if (/energy/i.test(input.demandType) && wasteToEnergyRate > 0) {
+    const savings = Math.round(wasteToEnergyRate * 12 * 10) / 10;
+    return `${input.zone} should route ${input.wasteType} into waste-to-energy supply for local peak demand.\nThis can save about ${moneyCr(savings)} annually by replacing grid purchases and landfill handling.`;
+  }
+  if (/water/i.test(input.demandType) && treatedWaterSave > 0) {
+    const savings = Math.round(treatedWaterSave * 10) / 10;
+    return `${input.zone} should reuse treated water for industrial cooling and horticulture instead of fresh supply.\nThis can save about ${moneyCr(savings)} annually while reducing pressure on potable water networks.`;
+  }
+  return `${input.zone} should convert ${input.wasteType} into an input for the highest-demand department.\nThe synergy lowers disposal cost and offsets new ${input.demandType} procurement.`;
+}
