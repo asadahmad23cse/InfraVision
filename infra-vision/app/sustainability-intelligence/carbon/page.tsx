@@ -22,7 +22,9 @@ export default function CarbonPage() {
       try {
         const [full, zonesRes] = await Promise.all([getFullData(), getZones()]);
         setZones(zonesRes.zones || []);
-        setZoneData(full.data || []);
+        // Filter out ancient data, focus on modern era (2000+)
+        const filteredData = (full.data || []).filter((r: any) => Number(r.year) >= 2000);
+        setZoneData(filteredData);
       } catch (e) {
         console.error(e);
       } finally {

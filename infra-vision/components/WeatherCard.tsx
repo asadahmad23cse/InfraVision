@@ -18,8 +18,8 @@ export default function WeatherCard() {
       .then((res) => res.json())
       .then(setWeather)
       .catch(() => setWeather({
-        temperature_c: 32,
-        condition: 'Clear',
+        temperature_c: 37,
+        condition: 'Haze',
         impact: 'High heat increasing energy load by 12%',
       }));
   }, []);

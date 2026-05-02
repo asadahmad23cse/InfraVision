@@ -33,49 +33,50 @@ def solve_optimization(req: OptimizationRequest):
 @opt_router.post("/optimize")
 def optimize_for_ui(req: OptimizationRequest):
     """
-    Returns exact flat JSON required by the premium UI dashboard:
-    { solar, waste, ev, breakdown, score, cost, ghg_reduction, optimal_score }
+    Returns exact detailed JSON required by the premium UI dashboard,
+    including mathematical metadata, ROI ranking, and sector explainability.
     """
-    from optimization.lp_solver import optimize_policy, UNIT_COSTS, GHG_REDUCTIONS, SCORE_LIFTS
-    res = optimize_policy(
-        budget_cr=req.budget_cr,
-        target_ghg_reduction=req.target_ghg_reduction,
-        min_score_lift=req.min_score_lift,
-    )
-    mix = res.get("optimal_mix", {})
-    impact = res.get("projected_impact", {})
+    from optimization.lp_solver import optimizer
+    res = optimizer.optimize(total_budget_m=req.budget_cr)
+    
+    if "error" in res:
+        raise HTTPException(status_code=400, detail=res["error"])
 
-    LABELS = {
-        "solar_increase": "Solar & Renewable",
-        "waste_improvement": "Waste Management",
-        "green_expansion": "Green Expansion",
-        "water_conservation": "Water Conservation",
-        "ev_adoption": "EV & Transit",
-        "public_transport": "Public Transport",
+    # Mapping internal sector names to UI keys
+    KEY_MAP = {
+        "Solar": "solar_increase",
+        "Water": "water_conservation",
+        "Waste": "waste_improvement",
+        "EV_Infra": "ev_adoption",
+        "Green_Space": "green_expansion",
+        "Transport": "public_transport"
     }
-    ORDER = ["solar_increase","waste_improvement","green_expansion","water_conservation","ev_adoption","public_transport"]
+
     breakdown = []
-    for key in ORDER:
-        alloc = float(mix.get(key, 0))
+    for alloc in res["allocations"]:
+        key = KEY_MAP.get(alloc["sector"], "other")
         breakdown.append({
             "key": key,
-            "label": LABELS[key],
-            "allocated_units": round(alloc, 2),
-            "capex_cr": round(alloc * UNIT_COSTS.get(key, 0), 0),
-            "score_lift": round(alloc * SCORE_LIFTS.get(key, 0), 2),
-            "ghg_reduction": round(alloc * GHG_REDUCTIONS.get(key, 0), 2),
+            "label": alloc["sector"],
+            "capex_cr": alloc["allocation_m"],
+            "score_lift": alloc["score_gain"],
+            "ghg_reduction": alloc["ghg_reduction"],
+            "marginal_return_per_m": alloc["marginal_return_per_m"],
+            "contribution_pct": alloc["contribution_pct"],
+            "effectiveness_rank": alloc["effectiveness_rank"],
+            "is_primary_driver": alloc["is_primary_driver"]
         })
 
     return {
-        "solar": mix.get("solar_increase", 0),
-        "waste": mix.get("waste_improvement", 0),
-        "ev": mix.get("ev_adoption", 0),
-        "breakdown": breakdown,
-        "score": impact.get("score_lift_points", 0),
-        "optimal_score": res.get("optimal_score", impact.get("score_lift_points", 0)),
-        "cost": impact.get("total_cost_cr", 0),
-        "ghg_reduction": impact.get("ghg_reduction_mtco2", 0),
-        "status": res.get("status", "optimal")
+        "status": res["status"],
+        "optimal_score": res["summary"]["total_score_gain"],
+        "score": res["summary"]["total_score_gain"],
+        "ghg_reduction": res["summary"]["total_ghg_reduction"],
+        "cost": res["total_budget_m"],
+        "mathematical_core": res["mathematical_core"],
+        "summary": res["summary"],
+        "top_drivers": res["top_drivers"],
+        "breakdown": breakdown
     }
 
 

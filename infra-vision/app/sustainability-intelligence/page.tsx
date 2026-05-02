@@ -14,10 +14,11 @@ import {
   ReferenceLine,
 } from 'recharts';
 import { Droplets, Zap, Flame, Target, Activity, Cpu, HeartPulse } from 'lucide-react';
-import { getOverview, getFullData, type OverviewResponse, type SustainabilityRow } from '@/lib/sustainabilityApi';
+import { getOverview, getFullData, getSocialContext, type OverviewResponse, type SustainabilityRow } from '@/lib/sustainabilityApi';
 import WeatherCard from '@/components/WeatherCard';
 import PerformanceMetrics from '@/components/PerformanceMetrics';
 import SocialIntelligenceCard from '@/components/SocialIntelligenceCard';
+import ResearchIntelligencePanel from '@/components/ResearchIntelligencePanel';
 
 const BG = '#030508';
 const PANEL = '#0a0f18';
@@ -376,12 +377,11 @@ export default function SustainabilityOverviewPage() {
     load();
   }, [year]);
 
-  // Fetch social context when a zone might be relevant (simplified to a default or first zone for overview)
+  // Fetch social context using the standardized API client
   useEffect(() => {
-    fetch(`http://localhost:8000/api/social/context?zone=Central Delhi`)
-      .then(res => res.json())
+    getSocialContext('Central Delhi')
       .then(data => setSocialContext(data))
-      .catch(err => console.error(err));
+      .catch(err => console.error("Social Context Fetch Error:", err));
   }, []);
 
   const zoneChartData = useMemo(() => {
@@ -530,6 +530,9 @@ export default function SustainabilityOverviewPage() {
             <WeatherCard />
           </div>
         </motion.section>
+
+        {/* Research Intelligence Panel (Added for Professor Defense) */}
+        <ResearchIntelligencePanel />
 
         {/* ── KPI Glass Widgets ── */}
         <div className="mb-10 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">

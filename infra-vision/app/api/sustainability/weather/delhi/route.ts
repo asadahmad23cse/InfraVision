@@ -15,8 +15,8 @@ export async function GET() {
   if (result.ok && result.data) {
     const data = result.data;
     return NextResponse.json({
-      temperature_c: data.temperature_c ?? data.temp ?? 32,
-      condition: data.condition ?? 'Clear',
+      temperature_c: data.temperature_c ?? data.temp ?? 38.5,
+      condition: data.condition ?? 'Haze',
       humidity: data.humidity,
       city: data.city ?? 'Delhi',
       source: data.source ?? 'backend',
@@ -34,8 +34,8 @@ export async function GET() {
       if (res.ok) {
         const data = await res.json();
         return NextResponse.json({
-          temperature_c: data.main?.temp ?? 32,
-          condition: data.weather?.[0]?.main ?? 'Clear',
+          temperature_c: data.main?.temp ?? 38.5,
+          condition: data.weather?.[0]?.main ?? 'Haze',
           humidity: data.main?.humidity,
           city: 'Delhi',
           source: 'openweather',
@@ -48,8 +48,8 @@ export async function GET() {
   }
 
   return NextResponse.json({
-    temperature_c: 32,
-    condition: 'Clear',
+    temperature_c: 38.5,
+    condition: 'Haze',
     city: 'Delhi',
     source: 'local-fallback',
     impact: 'High heat increasing energy load by 12%',

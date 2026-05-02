@@ -82,7 +82,9 @@ export default function WaterStressPage() {
       try {
         const [full, zonesRes] = await Promise.all([getFullData(), getZones()]);
         setZones(zonesRes.zones || []);
-        setZoneData(full.data || []);
+        // Filter out ancient historical data to keep the focus on modern trends (2000+)
+        const filteredData = (full.data || []).filter((r: any) => toNum(r.year) >= 2000);
+        setZoneData(filteredData);
 
         let alertsList: AlertRecord[] = [];
         try {

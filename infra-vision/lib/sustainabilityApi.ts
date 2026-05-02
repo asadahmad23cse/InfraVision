@@ -321,25 +321,37 @@ export interface OptimizationRequest {
   min_score_lift: number;
 }
 
-export interface OptimizationBreakdownItem {
+export interface OptimizationBreakdown {
   key: string;
   label: string;
-  allocated_units: number;
   capex_cr: number;
   score_lift: number;
   ghg_reduction: number;
+  marginal_return_per_m: number;
+  contribution_pct: number;
+  effectiveness_rank: number;
+  is_primary_driver: boolean;
 }
 
 export interface OptimizationUiResponse {
-  solar: number;
-  waste: number;
-  ev: number;
-  breakdown?: OptimizationBreakdownItem[];
-  score: number;
+  status: string;
   optimal_score: number;
-  cost: number;
+  score: number;
   ghg_reduction: number;
-  status: 'optimal' | 'partial' | 'fallback' | string;
+  cost: number;
+  mathematical_core: {
+    objective: string;
+    constraints: string;
+    logic: string;
+  };
+  summary: {
+    total_score_gain: number;
+    total_ghg_reduction: number;
+    reasoning: string;
+    cost_effectiveness_summary: string;
+  };
+  top_drivers: string[];
+  breakdown: OptimizationBreakdown[];
 }
 
 export interface OptimizationSolveResponse {
@@ -402,12 +414,19 @@ export interface ModelPerformanceMetric {
   model: string;
   accuracy: number;
   mae: number;
+  rmse: number;
+  r2_score: number;
   unit: string;
+  validation: string;
 }
 
 export interface ModelPerformanceResponse {
   metrics: ModelPerformanceMetric[];
-  validation_method: string;
+  scientific_summary: {
+    methodology: string;
+    causality_check: string;
+    audit_status: string;
+  };
   confidence_score: number;
   source?: string;
 }
