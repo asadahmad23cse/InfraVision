@@ -121,6 +121,14 @@ export async function getOptimizationPareto(budgetCr: number, steps = 8) {
   return fetchApi<{ pareto_points: ParetoPoint[] }>(`/optimization/pareto?budget_cr=${budgetCr}&steps=${steps}`);
 }
 
+export async function getDelhiWeather() {
+  return fetchApi<DelhiWeatherResponse>('/weather/delhi');
+}
+
+export async function getModelPerformance() {
+  return fetchApi<ModelPerformanceResponse>('/ml/performance');
+}
+
 // Types
 export interface SustainabilityRow {
   zone: string;
@@ -367,4 +375,27 @@ export interface ParetoPoint {
   score_lift: number;
   ghg_reduction: number;
   cost?: number;
+}
+
+export interface DelhiWeatherResponse {
+  temperature_c: number;
+  condition: string;
+  humidity?: number;
+  city?: string;
+  source?: string;
+  impact?: string;
+}
+
+export interface ModelPerformanceMetric {
+  model: string;
+  accuracy: number;
+  mae: number;
+  unit: string;
+}
+
+export interface ModelPerformanceResponse {
+  metrics: ModelPerformanceMetric[];
+  validation_method: string;
+  confidence_score: number;
+  source?: string;
 }

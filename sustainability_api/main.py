@@ -16,13 +16,15 @@ from database import init_db
 from routers.ml_router import router as ml_router
 from routers.simulation_router import router as sim_router
 from routers.other_routers import opt_router, rec_router, alerts_router
+from routers.ai_router import router as ai_router
 from config import ALL_ZONES
 
 # ─── Legacy compatibility router (keep old endpoints working) ────
 from fastapi import APIRouter
 import pandas as pd
 from pathlib import Path
-from config import DATA_DIR
+from config import DATA_DIR, ALL_ZONES
+import httpx
 
 legacy = APIRouter(tags=["Legacy"])
 
@@ -160,6 +162,7 @@ app.include_router(sim_router)
 app.include_router(opt_router)
 app.include_router(rec_router)
 app.include_router(alerts_router)
+app.include_router(ai_router)
 app.include_router(legacy)   # old endpoints still work
 
 
@@ -169,7 +172,7 @@ def root():
         "service": "InfraVision Sustainability Intelligence API v2",
         "status": "running",
         "endpoints": {
-            "ml": "/api/ml/forecast/water|energy|waste|carbon, /api/ml/score, /api/ml/explain",
+            "ml": "/api/ml/forecast/water|energy|waste|carbon, /api/ml/score, /api/ml/explain, /api/ml/performance",
             "simulation": "/api/simulation/graph, /api/simulation/compare, /api/simulation/stress",
             "optimization": "/api/optimization/solve, /api/optimization/pareto",
             "recommendation": "/api/recommendation/zone/{zone}, /api/recommendation/all",
@@ -182,3 +185,24 @@ def root():
 @app.get("/health", tags=["Health"])
 def health():
     return {"status": "healthy", "version": "2.0.0"}
+
+@app.get("/api/weather/delhi", tags=["Data"])
+async def get_delhi_weather():
+    api_key = os.getenv("OPENWEATHER_API_KEY")
+    if not api_key:
+        return {"temperature_c": 32, "condition": "Clear", "source": "fallback"}
+    async with httpx.AsyncClient() as client:
+        try:
+            url = f"https://api.openweathermap.org/data/2.5/weather?q=Delhi&appid={api_key}&units=metric"
+            resp = await client.get(url, timeout=8)
+            resp.raise_for_status()
+            data = resp.json()
+            return {
+                "temperature_c": data["main"]["temp"],
+                "condition": data["weather"][0]["main"],
+                "humidity": data["main"]["humidity"],
+                "city": "Delhi",
+                "source": "openweather",
+            }
+        except Exception:
+            return {"temperature_c": 32, "condition": "Cloudy", "city": "Delhi", "source": "fallback"}

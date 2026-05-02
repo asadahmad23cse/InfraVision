@@ -15,6 +15,8 @@ import {
 } from 'recharts';
 import { Droplets, Zap, Flame, Target, Activity, Cpu, HeartPulse } from 'lucide-react';
 import { getOverview, getFullData, type OverviewResponse, type SustainabilityRow } from '@/lib/sustainabilityApi';
+import WeatherCard from '@/components/WeatherCard';
+import PerformanceMetrics from '@/components/PerformanceMetrics';
 
 const BG = '#030508';
 const PANEL = '#0a0f18';
@@ -514,6 +516,9 @@ export default function SustainabilityOverviewPage() {
                 : 'System operating within safe margins. Renewable energy adoption is mitigating overall carbon intensity effectively.'}
             </p>
           </div>
+          <div className="ml-auto">
+            <WeatherCard />
+          </div>
         </motion.section>
 
         {/* ── KPI Glass Widgets ── */}
@@ -670,7 +675,7 @@ export default function SustainabilityOverviewPage() {
               <span className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em]">Differential</span>
             </div>
 
-            <div className="flex flex-col gap-3 max-h-[460px] overflow-y-auto custom-scrollbar pr-2 pb-2">
+            <div className="flex flex-col gap-3 max-h-[460px] overflow-y-auto custom-scrollbar pr-2 pb-2 mb-6">
               {orderBookRows.map((row) => (
                 <div
                   key={row.zone}
@@ -691,6 +696,10 @@ export default function SustainabilityOverviewPage() {
                   </div>
                 </div>
               ))}
+            </div>
+
+            <div className="mt-auto">
+               <PerformanceMetrics />
             </div>
           </motion.aside>
         </div>
