@@ -402,12 +402,19 @@ export interface ModelPerformanceMetric {
   model: string;
   accuracy: number;
   mae: number;
+  rmse: number;
+  r2_score: number;
   unit: string;
+  validation: string;
 }
 
 export interface ModelPerformanceResponse {
   metrics: ModelPerformanceMetric[];
-  validation_method: string;
+  scientific_summary: {
+    methodology: string;
+    causality_check: string;
+    audit_status: string;
+  };
   confidence_score: number;
   source?: string;
 }
