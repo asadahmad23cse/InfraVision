@@ -479,7 +479,7 @@ export default function SustainabilityOverviewPage() {
       <div className="relative mx-auto max-w-[1600px] px-6 py-10 z-10">
 
         {/* ── Header Glass Panel ── */}
-        <header className="mb-10 flex flex-col gap-6 rounded-[32px] border border-white/[0.15] bg-white/[0.02] p-8 shadow-[0_8px_32px_rgba(0,0,0,0.2)] backdrop-blur-[64px] sm:flex-row sm:items-center sm:justify-between">
+        <header className="mb-6 flex flex-col gap-6 rounded-[24px] lg:rounded-[32px] border border-white/[0.15] bg-white/[0.02] p-4 lg:p-8 shadow-[0_8px_32px_rgba(0,0,0,0.2)] backdrop-blur-[64px] lg:flex-row lg:items-center lg:justify-between">
           <div className="flex gap-6 items-center">
             <div className="h-16 w-16 rounded-[20px] bg-gradient-to-br from-white/20 to-white/5 flex items-center justify-center border border-white/20 shadow-inner">
               <Target className="h-8 w-8 text-white/90" />
@@ -513,7 +513,7 @@ export default function SustainabilityOverviewPage() {
         <motion.section
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8 rounded-[24px] border border-blue-300/20 bg-gradient-to-r from-blue-500/10 to-indigo-500/5 p-6 backdrop-blur-[40px] shadow-lg flex gap-4 items-start"
+          className="mb-8 rounded-[24px] border border-blue-300/20 bg-gradient-to-r from-blue-500/10 to-indigo-500/5 p-4 lg:p-6 backdrop-blur-[40px] shadow-lg flex flex-col lg:flex-row gap-4 items-start"
         >
           <div className="p-3 bg-blue-500/20 rounded-2xl border border-blue-400/30">
             <Activity className="h-5 w-5 text-blue-300" />
@@ -526,7 +526,7 @@ export default function SustainabilityOverviewPage() {
                 : 'System operating within safe margins. Renewable energy adoption is mitigating overall carbon intensity effectively.'}
             </p>
           </div>
-          <div className="ml-auto">
+          <div className="lg:ml-auto w-full lg:w-auto">
             <WeatherCard />
           </div>
         </motion.section>
@@ -601,7 +601,7 @@ export default function SustainabilityOverviewPage() {
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 }}
-            className="lg:col-span-8 rounded-[32px] border border-white/[0.12] bg-white/[0.03] p-8 shadow-[0_8px_40px_rgba(0,0,0,0.25)] backdrop-blur-[64px]"
+            className="lg:col-span-8 rounded-[24px] lg:rounded-[32px] border border-white/[0.12] bg-white/[0.03] p-4 lg:p-8 shadow-[0_8px_40px_rgba(0,0,0,0.25)] backdrop-blur-[64px]"
           >
             <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -678,7 +678,7 @@ export default function SustainabilityOverviewPage() {
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.15 }}
-            className="lg:col-span-4 rounded-[32px] border border-white/[0.12] bg-white/[0.03] p-6 shadow-[0_8px_40px_rgba(0,0,0,0.25)] backdrop-blur-[64px]"
+            className="lg:col-span-4 rounded-[24px] lg:rounded-[32px] border border-white/[0.12] bg-white/[0.03] p-4 lg:p-6 shadow-[0_8px_40px_rgba(0,0,0,0.25)] backdrop-blur-[64px]"
           >
             <h2 className="text-sm font-bold text-white/80 mb-1">Zone Disparity</h2>
             <p className="text-[11px] text-white/40 uppercase tracking-widest mb-5 font-semibold">Live Sort vs Market Avg</p>

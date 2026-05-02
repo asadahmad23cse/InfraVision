@@ -59,16 +59,18 @@ export default function SustainabilityLayout({
     <div className="min-h-screen bg-[#010103] text-gray-100 flex selection:bg-[#00A8E8]/30 overflow-x-hidden">
       
       {/* Mobile Top Bar */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-black/40 backdrop-blur-xl border-b border-white/5 z-[60] flex items-center justify-between px-4">
-        <div className="flex items-center gap-2">
-           <div className="w-2 h-2 rounded-full bg-[#00A8E8] shadow-[0_0_8px_#00A8E8]" />
-           <span className="text-xs font-black tracking-widest uppercase text-white/90">InfraVision</span>
+      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-[#020202]/60 backdrop-blur-2xl border-b border-white/[0.04] z-[60] flex items-center justify-between px-6">
+        <div className="flex items-center gap-3">
+           <div className="w-6 h-6 rounded-[4px] bg-gradient-to-br from-white to-gray-300 flex items-center justify-center shadow-[0_0_15px_rgba(255,255,255,0.2)]">
+              <div className="w-2 h-2 rounded-full bg-[#050505]" />
+           </div>
+           <span className="text-sm font-bold tracking-tight text-white/90">Infra<span className="text-white/40 font-light">Vision</span></span>
         </div>
         <button 
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2 hover:bg-white/5 rounded-lg transition-colors text-white"
+          className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-all text-white border border-white/5"
         >
-          {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
       </header>
 
@@ -174,7 +176,7 @@ export default function SustainabilityLayout({
       <main className={`
         flex-1 min-h-screen relative overflow-hidden transition-all duration-500
         ${isSidebarOpen ? 'lg:ml-64' : 'lg:ml-64'} 
-        ml-0 pt-14 lg:pt-[48px]
+        ml-0 pt-16 lg:pt-[48px]
       `}>
         {/* Luxurious Volumetric Ambient Background */}
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.04] mix-blend-overlay pointer-events-none z-0"></div>
