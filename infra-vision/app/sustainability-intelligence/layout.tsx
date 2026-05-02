@@ -21,7 +21,14 @@ import {
   Menu,
   X,
   ChevronRight,
+  Home,
+  Layers
 } from 'lucide-react';
+
+const globalNavItems = [
+  { href: '/', icon: Home, label: 'Home' },
+  { href: '/ai-features', icon: Layers, label: 'Platform Architecture' },
+];
 
 const navItems = [
   { href: '/sustainability-intelligence', icon: LayoutDashboard, label: 'Overview' },
@@ -117,6 +124,28 @@ export default function SustainabilityLayout({
 
         <nav className="flex-1 overflow-y-auto p-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <div className="mb-3 px-3 pt-2">
+            <p className="text-[10px] font-bold text-white/20 uppercase tracking-[0.2em]">Main Navigation</p>
+          </div>
+          {globalNavItems.map(({ href, icon: Icon, label }) => {
+            const isActive = pathname === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`flex items-center justify-between px-4 py-2.5 rounded-xl mb-1 transition-all duration-300 relative group overflow-hidden ${isActive
+                  ? 'text-white bg-white/5'
+                  : 'text-white/40 hover:bg-white/[0.02] hover:text-white/80'
+                  }`}
+              >
+                <div className="flex items-center gap-3 relative z-10">
+                  <Icon className={`w-4 h-4 transition-transform duration-300 ${isActive ? 'text-[#00A8E8]' : 'opacity-70 group-hover:scale-110'}`} />
+                  <span className={`text-[12px] font-semibold tracking-wide ${isActive ? 'text-white' : 'font-medium'}`}>{label}</span>
+                </div>
+              </Link>
+            );
+          })}
+
+          <div className="mt-6 mb-3 px-3 pt-2">
             <p className="text-[10px] font-bold text-white/20 uppercase tracking-[0.2em]">Dashboards</p>
           </div>
           {navItems.map(({ href, icon: Icon, label }) => {
