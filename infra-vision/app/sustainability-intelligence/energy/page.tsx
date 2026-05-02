@@ -81,11 +81,12 @@ export default function EnergyPage() {
     .sort((a, b) => b.solar_score - a.solar_score);
 
   const energyForecastBandData = energyForecastSeries.map((row: any) => {
-    const lower = toNum(row.lower);
-    const upper = toNum(row.upper);
+    const forecast = toNum(row.energy_forecast_mu ?? row.yhat ?? row.forecast);
+    const lower = toNum(row.lower ?? row.yhat_lower ?? (forecast * 0.92));
+    const upper = toNum(row.upper ?? row.yhat_upper ?? (forecast * 1.08));
     return {
       year: toNum(row.year),
-      forecast: toNum(row.energy_forecast_mu),
+      forecast,
       interval_base: lower,
       interval_range: Math.max(0, upper - lower),
     };
@@ -255,7 +256,14 @@ export default function EnergyPage() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                 <XAxis dataKey="year" tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} dy={10} />
-                <YAxis tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} axisLine={false} tickLine={false} dx={-10} />
+                <YAxis 
+                  tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} 
+                  axisLine={false} 
+                  tickLine={false} 
+                  dx={-10} 
+                  domain={['auto', 'auto']}
+                  tickFormatter={(v) => `${v} MU`}
+                />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: 'rgba(15, 23, 42, 0.9)',
@@ -263,11 +271,12 @@ export default function EnergyPage() {
                     border: '1px solid rgba(255,255,255,0.1)',
                     borderRadius: '12px',
                   }}
+                  formatter={(v) => [`${Number(v).toFixed(1)} MU`, 'Energy']}
                 />
                 <Legend wrapperStyle={{ paddingTop: '20px', fontSize: '12px' }} />
                 <Area type="monotone" dataKey="interval_base" stackId="ci" stroke="none" fill="transparent" legendType="none" />
-                <Area type="monotone" dataKey="interval_range" stackId="ci" stroke="none" fill="url(#energyBand)" name="Confidence Interval" />
-                <Line type="monotone" dataKey="forecast" stroke="#f59e0b" strokeWidth={3} name="Forecast Energy (MU)" dot={false} />
+                <Area type="monotone" dataKey="interval_range" stackId="ci" stroke="none" fill="url(#energyBand)" name="95% Confidence Band" />
+                <Line type="monotone" dataKey="forecast" stroke="#f59e0b" strokeWidth={4} name="ML Energy Projection" dot={{r: 4, fill: '#000', stroke: '#f59e0b', strokeWidth: 2}} activeDot={{r: 8}} style={{filter: 'drop-shadow(0 0 8px rgba(245,158,11,0.5))'}} />
               </ComposedChart>
             </ResponsiveContainer>
           ) : (

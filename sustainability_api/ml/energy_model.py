@@ -89,27 +89,25 @@ def forecast_energy(zone: str, zone_df: pd.DataFrame, target_years: list[int]) -
 
     for year in target_years:
         pop_m = (base_pop * (1.018 ** (year - 2022))) / 1e6
-        solar = base_solar * (1.12 ** max(0, (year - 2022)))  # 12% solar growth
-        solar_pct = solar / base_energy * 100
+        solar = base_solar * (1.12 ** max(0, (year - 2022)))
+        solar_pct = solar / max(1, base_energy) * 100
         temp = 28.0 + (year - 2022) * 0.04
         renewable = min(30, base_renewable + (year - 2022) * 0.8)
         year_norm = (year - 2015) / 15.0
         lag_demand = base_energy * (1.015 ** (year - 2022 - 1))
 
         if model:
-            import numpy as np
             X = np.array([[year_norm, pop_m, solar_pct, temp, renewable, lag_demand]])
             pred = float(model.predict(X)[0])
         else:
             pred = base_energy * (1.015 ** (year - 2022))
 
         # Confidence: ±8%
-        uncertainty = pred * 0.08
         results.append({
             "year": year,
             "energy_forecast_mu": round(pred, 1),
-            "lower": round(pred - uncertainty, 1),
-            "upper": round(pred + uncertainty, 1),
+            "lower": round(pred * 0.92, 1),
+            "upper": round(pred * 1.08, 1),
             "solar_capacity_mw": round(solar, 1),
             "renewable_share_pct": round(renewable, 2),
         })
