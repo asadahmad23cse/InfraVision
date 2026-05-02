@@ -17,6 +17,7 @@ from routers.ml_router import router as ml_router
 from routers.simulation_router import router as sim_router
 from routers.other_routers import opt_router, rec_router, alerts_router
 from routers.ai_router import router as ai_router
+from routers.social_router import router as social_router
 from config import ALL_ZONES
 
 # ─── Legacy compatibility router (keep old endpoints working) ────
@@ -163,6 +164,7 @@ app.include_router(opt_router)
 app.include_router(rec_router)
 app.include_router(alerts_router)
 app.include_router(ai_router)
+app.include_router(social_router)
 app.include_router(legacy)   # old endpoints still work
 
 

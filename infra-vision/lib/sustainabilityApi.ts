@@ -129,6 +129,18 @@ export async function getModelPerformance() {
   return fetchApi<ModelPerformanceResponse>('/ml/performance');
 }
 
+export async function getSocialContext(zone: string) {
+  return fetchApi<SocialContextResponse>(`/social/context?zone=${encodeURIComponent(zone)}`);
+}
+
+export async function getSimulationExplainer(inputs: Record<string, number>, result: PolicyResult) {
+  return fetchApi<PolicyExplainerResponse>('/sustainability/simulation-explainer', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_inputs: inputs, system_result: result }),
+  });
+}
+
 // Types
 export interface SustainabilityRow {
   zone: string;
@@ -398,4 +410,22 @@ export interface ModelPerformanceResponse {
   validation_method: string;
   confidence_score: number;
   source?: string;
+}
+
+export interface SocialContextResponse {
+  zone: string;
+  population_density: string;
+  income_level: string;
+  infrastructure_score: number;
+  risk_level: string;
+  insight: string;
+  root_cause: string;
+  policy_hint: string;
+}
+
+export interface PolicyExplainerResponse {
+  policy: string;
+  explanation: string;
+  trade_off: string;
+  social_impact: string;
 }

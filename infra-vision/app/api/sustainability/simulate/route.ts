@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
       (compareRes.status || 502) === 502 || /fetch failed|ECONNREFUSED|connect|aborted/i.test(msg);
     if (backendUnavailable) {
       try {
-        compareData = await getLocalScenarioCompare(compareBody);
+        compareData = (await getLocalScenarioCompare(compareBody)) as ScenarioCompareResponse;
       } catch {
         return NextResponse.json({ error: msg }, { status: compareRes.status || 502 });
       }

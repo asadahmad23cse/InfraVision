@@ -1,3 +1,13 @@
+---
+title: InfraVision
+emoji: 🏙️
+colorFrom: green
+colorTo: blue
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # InfraVision - Smart City Analytics Platform
 
 A Next.js 14 full-stack dashboard with Prisma, Tailwind CSS, TypeScript, and AI-powered city infrastructure analysis.

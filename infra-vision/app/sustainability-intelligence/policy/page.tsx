@@ -6,7 +6,8 @@ import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip, Legend
 } from 'recharts';
 import { Sliders, Sparkles, Loader2, Play, GitMerge, FileCheck  } from 'lucide-react';
-import { getOverview, simulatePolicy, type OverviewResponse, type PolicyParams, type PolicyResult } from '@/lib/sustainabilityApi';
+import { getOverview, simulatePolicy, getSimulationExplainer, type OverviewResponse, type PolicyParams, type PolicyResult, type PolicyExplainerResponse } from '@/lib/sustainabilityApi';
+import PolicyImpactCard from '@/components/PolicyImpactCard';
 
 const SLIDERS: { key: keyof PolicyParams; label: string; max: number; icon: string; color: string }[] = [
   { key: 'solar_increase', label: 'Solar CapEx Expansion', max: 100, icon: '☀️', color: 'from-amber-400 to-orange-500' },
@@ -28,6 +29,7 @@ export default function PolicySimulatorPage() {
   });
   const [result, setResult] = useState<PolicyResult | null>(null);
   const [baseline, setBaseline] = useState<OverviewResponse | null>(null);
+  const [explainer, setExplainer] = useState<PolicyExplainerResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasRun, setHasRun] = useState(false);
 
@@ -41,6 +43,9 @@ export default function PolicySimulatorPage() {
     try {
       const r = await simulatePolicy(params);
       setResult(r);
+      // Fetch AI reasoning
+      const exp = await getSimulationExplainer(params as any, r);
+      setExplainer(exp);
     } catch (e) {
       console.error(e);
     } finally {
@@ -143,56 +148,64 @@ export default function PolicySimulatorPage() {
                   </div>
                 </div>
               ) : result ? (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 lg:grid-cols-3 gap-5">
-                  <div className="p-4 bg-gradient-to-br from-emerald-500/10 to-transparent border border-emerald-500/20 rounded-2xl">
-                    <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-1">Carbon Deflation</p>
-                    <p className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-lime-300">-{result.ghg_reduction_mtco2.toFixed(1)} <span className="text-xs font-normal text-emerald-400/50">MT</span></p>
-                  </div>
-                  <div className="p-4 bg-gradient-to-br from-cyan-500/10 to-transparent border border-cyan-500/20 rounded-2xl">
-                    <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-1">Water Salvaged</p>
-                    <p className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-300">+{result.water_savings_mgd.toFixed(1)} <span className="text-xs font-normal text-cyan-400/50">MGD</span></p>
-                  </div>
-                  <div className="p-4 bg-gradient-to-br from-violet-500/10 to-transparent border border-violet-500/20 rounded-2xl">
-                    <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-1">Landfill Diverted</p>
-                    <p className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-300">+{result.waste_diverted_tpd.toFixed(0)} <span className="text-xs font-normal text-violet-400/50">TPD</span></p>
-                  </div>
-                  <div className="p-4 bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/20 rounded-2xl">
-                    <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-1">Agg. Score Delta</p>
-                    <p className="text-2xl font-black text-amber-400">+{result.sustainability_score_delta.toFixed(1)} <span className="text-xs font-normal text-amber-400/50">pts</span></p>
-                  </div>
-                  <div className="p-4 bg-black/40 border border-white/5 rounded-2xl">
-                    <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-1">Capital Required</p>
-                    <p className="text-2xl font-black text-white">₹{result.cost_estimate_cr.toFixed(0)} <span className="text-xs font-normal text-white/50">Cr</span></p>
-                  </div>
-                  <div className="p-4 bg-gradient-to-br from-white/10 to-transparent border border-white/10 rounded-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full blur-xl"></div>
-                    <p className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-1">Calculated ROI</p>
-                    <p className="text-2xl font-black text-white z-10 relative">{result.roi_score.toFixed(2)}</p>
-                  </div>
-                  <div className="col-span-2 lg:col-span-3 rounded-2xl border border-cyan-400/20 bg-cyan-500/5 p-5">
-                    <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-200/60">Impact Snapshot</p>
-                        <h3 className="text-base font-bold text-white">Before vs After Policy Run</h3>
-                      </div>
-                      <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-200">
-                        Confidence Score: 92% based on historical validation
-                      </span>
+                <div className="space-y-6">
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 lg:grid-cols-3 gap-5">
+                    <div className="p-4 bg-gradient-to-br from-emerald-500/10 to-transparent border border-emerald-500/20 rounded-2xl">
+                      <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-1">Carbon Deflation</p>
+                      <p className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-lime-300">-{result.ghg_reduction_mtco2.toFixed(1)} <span className="text-xs font-normal text-emerald-400/50">MT</span></p>
                     </div>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div className="rounded-xl bg-black/30 p-4">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">Before</p>
-                        <p className="mt-2 text-sm text-white/70">Score: <span className="font-mono font-bold text-white">{(baseline?.city_sustainability_score ?? 60.2).toFixed(1)}</span></p>
-                        <p className="text-sm text-white/70">Water Gap: <span className="font-mono font-bold text-white">{Math.round(baseline?.water_gap_mgd ?? 594)} MGD</span></p>
+                    <div className="p-4 bg-gradient-to-br from-cyan-500/10 to-transparent border border-cyan-500/20 rounded-2xl">
+                      <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-1">Water Salvaged</p>
+                      <p className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-300">+{result.water_savings_mgd.toFixed(1)} <span className="text-xs font-normal text-cyan-400/50">MGD</span></p>
+                    </div>
+                    <div className="p-4 bg-gradient-to-br from-violet-500/10 to-transparent border border-violet-500/20 rounded-2xl">
+                      <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-1">Landfill Diverted</p>
+                      <p className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-300">+{result.waste_diverted_tpd.toFixed(0)} <span className="text-xs font-normal text-violet-400/50">TPD</span></p>
+                    </div>
+                    <div className="p-4 bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/20 rounded-2xl">
+                      <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-1">Agg. Score Delta</p>
+                      <p className="text-2xl font-black text-amber-400">+{result.sustainability_score_delta.toFixed(1)} <span className="text-xs font-normal text-amber-400/50">pts</span></p>
+                    </div>
+                    <div className="p-4 bg-black/40 border border-white/5 rounded-2xl">
+                      <p className="text-white/40 text-[10px] font-bold uppercase tracking-widest mb-1">Capital Required</p>
+                      <p className="text-2xl font-black text-white">₹{result.cost_estimate_cr.toFixed(0)} <span className="text-xs font-normal text-white/50">Cr</span></p>
+                    </div>
+                    <div className="p-4 bg-gradient-to-br from-white/10 to-transparent border border-white/10 rounded-2xl relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full blur-xl"></div>
+                      <p className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-1">Calculated ROI</p>
+                      <p className="text-2xl font-black text-white z-10 relative">{result.roi_score.toFixed(2)}</p>
+                    </div>
+                    <div className="col-span-2 lg:col-span-3 rounded-2xl border border-cyan-400/20 bg-cyan-500/5 p-5">
+                      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-200/60">Impact Snapshot</p>
+                          <h3 className="text-base font-bold text-white">Before vs After Policy Run</h3>
+                        </div>
+                        <span className="rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-emerald-200">
+                          Confidence Score: 92% based on historical validation
+                        </span>
                       </div>
-                      <div className="rounded-xl bg-cyan-500/10 p-4">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-200/60">After</p>
-                        <p className="mt-2 text-sm text-white/70">Score: <span className="font-mono font-bold text-cyan-200">{((baseline?.city_sustainability_score ?? 60.2) + result.sustainability_score_delta).toFixed(1)}</span></p>
-                        <p className="text-sm text-white/70">Water Gap: <span className="font-mono font-bold text-cyan-200">{Math.max(0, Math.round((baseline?.water_gap_mgd ?? 594) - result.water_savings_mgd))} MGD</span></p>
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="rounded-xl bg-black/30 p-4">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-white/35">Before</p>
+                          <p className="mt-2 text-sm text-white/70">Score: <span className="font-mono font-bold text-white">{(baseline?.city_sustainability_score ?? 60.2).toFixed(1)}</span></p>
+                          <p className="text-sm text-white/70">Water Gap: <span className="font-mono font-bold text-white">{Math.round(baseline?.water_gap_mgd ?? 594)} MGD</span></p>
+                        </div>
+                        <div className="rounded-xl bg-cyan-500/10 p-4">
+                          <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-200/60">After</p>
+                          <p className="mt-2 text-sm text-white/70">Score: <span className="font-mono font-bold text-cyan-200">{((baseline?.city_sustainability_score ?? 60.2) + result.sustainability_score_delta).toFixed(1)}</span></p>
+                          <p className="text-sm text-white/70">Water Gap: <span className="font-mono font-bold text-cyan-200">{Math.max(0, Math.round((baseline?.water_gap_mgd ?? 594) - result.water_savings_mgd))} MGD</span></p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
+                  </motion.div>
+                  
+                  {explainer && (
+                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+                      <PolicyImpactCard impact={explainer} />
+                    </motion.div>
+                  )}
+                </div>
               ) : (
                 <div className="h-[200px] flex items-center justify-center border-2 border-dashed border-white/5 rounded-2xl">
                   <p className="text-white/30 text-sm">Awaiting simulation trigger...</p>
