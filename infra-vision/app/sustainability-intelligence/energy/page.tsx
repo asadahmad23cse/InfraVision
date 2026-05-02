@@ -81,11 +81,12 @@ export default function EnergyPage() {
     .sort((a, b) => b.solar_score - a.solar_score);
 
   const energyForecastBandData = energyForecastSeries.map((row: any) => {
-    const lower = toNum(row.lower);
-    const upper = toNum(row.upper);
+    const forecast = toNum(row.energy_forecast_mu ?? row.yhat ?? row.forecast);
+    const lower = toNum(row.lower ?? row.yhat_lower ?? (forecast * 0.92));
+    const upper = toNum(row.upper ?? row.yhat_upper ?? (forecast * 1.08));
     return {
       year: toNum(row.year),
-      forecast: toNum(row.energy_forecast_mu),
+      forecast,
       interval_base: lower,
       interval_range: Math.max(0, upper - lower),
     };

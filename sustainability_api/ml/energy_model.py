@@ -97,23 +97,23 @@ def forecast_energy(zone: str, zone_df: pd.DataFrame, target_years: list[int]) -
         lag_demand = base_energy * (1.015 ** (year - 2022 - 1))
 
         if model:
-            import numpy as np
             X = np.array([[year_norm, pop_m, solar_pct, temp, renewable, lag_demand]])
             pred = float(model.predict(X)[0])
         else:
             pred = base_energy * (1.015 ** (year - 2022))
+        preds.append(pred)
 
-        # Confidence: ±8%
-        uncertainty = pred * 0.08
-        results.append({
-            "year": year,
-            "energy_forecast_mu": round(pred, 1),
-            "lower": round(pred - uncertainty, 1),
-            "upper": round(pred + uncertainty, 1),
-            "solar_capacity_mw": round(solar, 1),
-            "renewable_share_pct": round(renewable, 2),
-        })
-    return results
+    return [{
+        "year": year,
+        "energy_forecast_mu": round(pred, 1),
+        "lower": round(pred * 0.92, 1),
+        "upper": round(pred * 1.08, 1),
+        "solar_capacity_mw": round(base_solar * (1.12 ** max(0, (year - 2022))), 1),
+        "renewable_share_pct": round(min(30, base_renewable + (year - 2022) * 0.8), 2),
+                                     28.0 + (y - 2022) * 0.04, 
+                                     min(30, base_renewable + (y - 2022) * 0.8), 
+                                     base_energy * (1.015 ** (y - 2022 - 1))]]))[0]) if model 
+         else base_energy * (1.015 ** (y - 2022)) for y in target_years])]
 
 
 def get_energy_feature_importance() -> dict[str, float]:
