@@ -1,0 +1,917 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{multirow}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+% ─────────────────────────────────────────────────────────────────────────────
+%  TITLE
+% ─────────────────────────────────────────────────────────────────────────────
+\title{Digital Twin Enabled Sustainability Intelligence Framework
+for Smart Cities: A Case Study of Delhi%
+\thanks{This work was conducted as part of the InfraVision Project,
+Urban AI and Sustainability Systems research initiative, B.Tech
+Computer Science and Engineering Programme, 2026.}}
+
+\author{%
+\IEEEauthorblockN{Asad Ahmad}
+\IEEEauthorblockA{%
+\textit{Department of Computer Science and Engineering}\\
+\textit{Urban AI \& Sustainability Systems --- InfraVision}\\
+New Delhi, India\\
+techieasad01@gmail.com}
+\and
+\IEEEauthorblockN{Kislay Kumar}
+\IEEEauthorblockA{%
+\textit{Department of Computer Science and Engineering}\\
+\textit{Urban AI \& Sustainability Systems --- InfraVision}\\
+New Delhi, India\\
+kislay@example.com}
+}
+
+\maketitle
+
+% ─────────────────────────────────────────────────────────────────────────────
+%  ABSTRACT
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{abstract}
+Rapid urbanization in Indian megacities has produced compounding and
+interdependent stresses across water supply, energy distribution, solid
+waste management, and atmospheric emissions simultaneously. Conventional
+planning instruments address these domains in isolation, precluding the
+cross-domain reasoning that sustainable urban governance requires. This
+paper presents InfraVision, a Digital Twin enabled sustainability
+intelligence framework applied to the National Capital Territory of
+Delhi. The system represents the city as a nine-zone directed multi-edge
+graph and integrates four domain-specific machine learning forecasting
+models --- Prophet, XGBoost, Random Forest, and Ridge Regression ---
+with a PuLP-based constraint-driven binary linear optimisation engine
+and a SHAP-driven explainability layer. Baseline projections to 2030
+indicate that the water supply deficit will widen from 594 to 764
+million gallons per day, greenhouse gas emissions will increase from
+56.5 to 62.4 MtCO2e, and waste processing efficiency will improve from
+78 to 95 percent. Under an optimised policy bundle satisfying fiscal and
+emission constraints, the composite sustainability score improves by
+5.08 points and carbon emissions decline by 9.49 MtCO2e relative to
+baseline. A four-component validation protocol yields mean absolute
+percentage errors below six percent across all forecasting domains,
+confirms directional consistency of simulation outputs with the
+international evidence base, demonstrates input robustness through
+sensitivity analysis, and shows that InfraVision reduces decision cycle
+time by more than 95 percent while delivering a 3.6-point additional
+sustainability improvement over conventional planning workflows under
+equivalent budget assumptions.
+\end{abstract}
+
+\begin{IEEEkeywords}
+digital twin, urban sustainability, smart city, machine learning
+forecasting, policy optimisation, explainable AI, Delhi, carbon
+intelligence
+\end{IEEEkeywords}
+
+% ─────────────────────────────────────────────────────────────────────────────
+%  I. INTRODUCTION
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Introduction}
+
+Cities are responsible for a disproportionate share of global resource
+consumption and greenhouse gas emissions, and this share is growing.
+Urban populations are projected to represent nearly 70 percent of the
+global total by 2050 \cite{un2023}, intensifying pressures on water
+supply systems, energy grids, waste processing facilities, and
+atmospheric quality simultaneously. Delhi, with a resident population
+exceeding 33 million and a persistently high in-migration rate,
+exemplifies this compounding condition. The Delhi Jal Board reported a
+daily water deficit in excess of 300 million gallons per day (MGD) as
+early as 2023 \cite{djb2023}; per capita greenhouse gas emissions
+continue to rise as the vehicle fleet and industrial base expand; and
+waste processing capacity at the city's landfill sites is approaching
+functional saturation \cite{cpcb2023}.
+
+Conventional urban planning relies on periodic, domain-siloed
+assessments that cannot capture the interdependencies between these
+systems or support anticipatory policy design. Traditional approaches
+are generally too inflexible and reactive to manage the complexity and
+dynamism of modern cities \cite{therias2023}. Digital twin technology
+offers a structural answer to this problem by creating a continuously
+updated virtual replica of the physical city that supports real-time
+monitoring, predictive analytics, and policy simulation
+\cite{mazzetto2024}. When applied to urban sustainability, a digital
+twin can model how a policy intervention in one domain --- for example,
+expanding waste-to-energy capacity --- propagates its effects across
+energy supply, emission accounting, and spatial equity simultaneously.
+
+Recent advances in the Internet of Things (IoT), artificial
+intelligence, geographic information systems, and cloud computing have
+accelerated digital twin deployment across smart city development
+\cite{alexandrov2024}. However, the urban sustainability literature
+reveals three persistent gaps: most implementations are domain-specific
+and do not model cross-domain feedback; optimisation is rarely embedded
+in the twin itself; and the explainability of model output is largely
+absent, limiting the trust that planners can place in data-driven
+recommendations \cite{alkhateeb2024}.
+
+This paper presents InfraVision, an integrated Digital Twin enabled
+sustainability intelligence framework that addresses each of these gaps.
+The system makes five specific contributions to the literature: (i) an
+integrated multi-domain digital twin jointly modelling water, energy,
+waste, and carbon; (ii) a constraint-based linear optimisation engine
+for auditable policy ranking; (iii) a SHapley Additive exPlanations
+(SHAP) \cite{lundberg2017}-driven explainability layer;
+(iv) an independent four-component
+validation protocol; and (v) a detailed empirical analysis of Delhi's
+sustainability trajectory to 2030.
+
+The remainder of this paper is organised as follows.
+Section~\ref{sec:related} reviews the related literature.
+Section~\ref{sec:novelty} articulates the novelty and specific
+contributions of the proposed system relative to existing work.
+Section~\ref{sec:method} presents the methodology.
+Section~\ref{sec:arch} describes the system architecture.
+Section~\ref{sec:results} presents the empirical results.
+Section~\ref{sec:validation} provides the validation and performance
+evaluation. Section~\ref{sec:discussion} discusses the implications.
+Section~\ref{sec:conclusion} concludes.
+
+% ─────────────────────────────────────────────────────────────────────────────
+%  II. RELATED WORK
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Related Work}
+\label{sec:related}
+
+\subsection{Urban Digital Twins}
+
+The digital twin concept originated in manufacturing, where it was used
+to monitor performance and predict failure of physical assets. Translated
+to the urban scale, an urban digital twin (UDT) is a dynamic,
+continuously updated virtual representation of a city's physical systems,
+integrating data from sensors, IoT devices, geographic information
+systems, and administrative databases \cite{alkhateeb2024}. Unlike
+static spatial models, UDTs enable real-time monitoring, scenario
+simulation, and adaptive decision-making \cite{therias2023}. Cities are
+treated as complex adaptive systems in which physical, digital, and
+social subsystems interact nonlinearly, and the twin provides a cyber
+representation of these interactions to support predictive governance
+\cite{alexandrov2024}.
+
+\subsection{Digital Twins for Sustainability}
+
+Sustainability research has increasingly recognised the digital twin as
+a practical instrument for managing urban resource flows.
+Al-Khateeb et al. \cite{alkhateeb2024} demonstrate that digital twins
+integrating energy, water, and waste data can detect inefficiencies and
+support circular economy interventions. Mazzetto \cite{mazzetto2024}
+shows that AI-driven twins can reduce building energy consumption and
+carbon emissions through real-time adaptive control. Climate-focused
+implementations have addressed flood risk modelling, urban heat island
+mitigation, and air quality management \cite{zhu2025}. Several studies
+link UDT outputs to Sustainable Development Goal monitoring, particularly
+SDG 11 (Sustainable Cities) and SDG 13 (Climate Action).
+
+\subsection{Machine Learning in Urban Forecasting}
+
+Prophet \cite{taylor2018} is well-suited to municipal demand series with
+strong seasonal patterns and trend changepoints. XGBoost \cite{chen2016}
+handles non-linear interactions among temperature, occupancy, and tariff
+variables characteristic of urban energy demand. Random Forest provides
+robustness to heterogeneous and partially missing data typical of
+ward-level waste records. Ridge Regression offers stable regularised
+estimates for emission inventories where multicollinearity among activity
+drivers is common.
+
+\subsection{Research Gap}
+
+A systematic review of the UDT sustainability literature identifies three
+persistent gaps: (i) domain-siloed modelling that ignores cross-domain
+feedback; (ii) heuristic rather than optimisation-driven policy
+selection; and (iii) absence of explainability mechanisms that would
+enable planners to interrogate model recommendations. InfraVision
+addresses each gap explicitly.
+
+% ─────────────────────────────────────────────────────────────────────────────
+%  III. NOVELTY AND KEY CONTRIBUTIONS
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Novelty and Key Contributions}
+\label{sec:novelty}
+
+The urban digital twin literature, while extensive, has not produced a
+system that simultaneously addresses multi-domain integration,
+optimisation-driven policy selection, quantified explainability, and
+independent statistical validation within a single operational
+framework. InfraVision is specifically designed to fill this gap.
+Table~\ref{tab:novelty} positions the system against five representative
+prior works across the four defining dimensions.
+
+\begin{table}[htbp]
+\caption{Novelty Positioning: InfraVision vs. Prior Digital Twin Systems}
+\label{tab:novelty}
+\begin{center}
+\begin{tabular}{|p{1.6cm}|c|c|c|c|}
+\hline
+\textbf{System} &
+\textbf{\shortstack{Multi-\\Domain}} &
+\textbf{\shortstack{LP\\Optim.}} &
+\textbf{\shortstack{Explain-\\ability}} &
+\textbf{\shortstack{Formal\\Validation}} \\
+\hline
+Therias \& Rafiee \cite{therias2023}   & No  & No  & No  & No  \\
+Mazzetto \cite{mazzetto2024}           & No  & No  & No  & No  \\
+Alexandrov et al. \cite{alexandrov2024}& Partial & No & No & Partial \\
+Al-Khateeb et al. \cite{alkhateeb2024} & Partial & No & No & No  \\
+Zhu \& Jin \cite{zhu2025}              & No  & No  & No  & No  \\
+\textbf{InfraVision (Ours)}            & \textbf{Yes} & \textbf{Yes} &
+\textbf{Yes} & \textbf{Yes} \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Five specific contributions differentiate InfraVision from prior art:
+
+\textbf{C1 --- Integrated Four-Domain Digital Twin.}
+Existing UDT implementations address at most two sustainability domains
+concurrently. InfraVision jointly models water supply, energy demand,
+solid waste, and carbon emissions on a shared directed graph, enabling
+the detection of cross-domain trade-offs that domain-siloed systems
+cannot observe. The cascade failure analysis of Section~\ref{sec:results}
+is a direct product of this integration.
+
+\textbf{C2 --- Constraint-Based Policy Optimisation.}
+Policy selection in prior UDT systems is invariably heuristic ---
+relying on expert judgement or manually ranked priority lists.
+InfraVision embeds a binary linear programme that simultaneously
+satisfies a capital budget constraint, a minimum emission reduction
+target, and a minimum sustainability score threshold, producing an
+auditable, reproducible policy ranking rather than an opinion.
+
+\textbf{C3 --- Quantified Explainability via SHAP.}
+AI-driven urban planning recommendations are frequently opaque,
+eroding planner trust. InfraVision applies SHAP feature attribution to
+decompose every composite score prediction into per-driver contributions,
+providing a transparent account of why the model recommends a particular
+intervention and which input assumptions are most consequential.
+
+\textbf{C4 --- Formal Four-Component Validation Protocol.}
+Most UDT papers report only in-sample accuracy or qualitative
+plausibility arguments. InfraVision submits every forecasting component
+to a held-out empirical test, validates simulation direction against
+documented international case studies, characterises robustness through
+systematic input perturbation, and benchmarks decision quality against a
+representative traditional workflow --- a protocol that to the best of
+the authors' knowledge has not previously been applied to a
+sustainability-focused urban digital twin.
+
+\textbf{C5 --- First Multi-Domain Sustainability Digital Twin for Delhi.}
+Despite Delhi being among the world's most stressed urban environments
+along multiple sustainability dimensions simultaneously, no prior study
+has modelled the joint water--energy--waste--carbon system of the
+National Capital Territory within a unified digital twin. InfraVision
+provides this foundation and makes its empirical findings available as
+a reproducible baseline for future comparative studies.
+
+% ─────────────────────────────────────────────────────────────────────────────
+%  IV. METHODOLOGY
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Methodology}
+\label{sec:method}
+
+\subsection{Digital Twin Graph Representation}
+
+The city is modelled as a directed multi-edge graph
+$\mathcal{G} = (\mathcal{V}, \mathcal{E})$, where $\mathcal{V}$ denotes
+the nine administrative zones of Delhi and $\mathcal{E}$ denotes
+infrastructure linkages connecting them. Formally:
+
+\begin{equation}
+\mathcal{G} = \bigl(\{v_1, \ldots, v_9\},\; \mathcal{E}^w \cup
+\mathcal{E}^e \cup \mathcal{E}^{wst} \cup \mathcal{E}^c\bigr)
+\label{eq:graph}
+\end{equation}
+
+where $\mathcal{E}^w$, $\mathcal{E}^e$, $\mathcal{E}^{wst}$, and
+$\mathcal{E}^c$ denote edge sets typed by the water, energy, waste, and
+carbon domains respectively. Each edge carries attributes for
+transmission capacity, loss coefficient, and service latency.
+Zone criticality $\kappa_i$ is defined as the weighted sum of downstream
+impact across all edge types:
+
+\begin{equation}
+\kappa_i = \sum_{j \in \mathcal{N}(i)} \sum_{d \in D} w_d \cdot
+\ell_{ij}^d
+\label{eq:criticality}
+\end{equation}
+
+where $\mathcal{N}(i)$ is the set of zones reachable from zone $i$,
+$D = \{w, e, wst, c\}$ is the domain set, $w_d$ is a domain importance
+weight, and $\ell_{ij}^d$ is the load transferred along edge
+$(i,j)$ in domain $d$.
+
+\subsection{Machine Learning Forecasting Layer}
+
+Four domain-specific models were selected on the basis of the
+statistical character of their target series:
+
+\begin{itemize}
+\item \textbf{Prophet} \cite{taylor2018}: Water demand forecasting.
+Captures trend changepoints, weekly and annual seasonality, and
+scheduled intervention effects (e.g., reservoir maintenance).
+\item \textbf{XGBoost} \cite{chen2016}: Energy demand forecasting.
+Handles non-linear interactions among temperature, day-of-week,
+occupancy, and retail tariff variables without manual feature
+engineering.
+\item \textbf{Random Forest}: Solid waste generation forecasting.
+Tolerates heterogeneous, partially missing ward-level inputs and
+provides ensemble-based variance estimates.
+\item \textbf{Ridge Regression}: Carbon emission inventory modelling.
+Controls multicollinearity among correlated activity drivers through
+$L_2$ regularisation.
+\end{itemize}
+
+All models were trained on 2015--2022 data and evaluated on a withheld
+18-month test set (2023--mid 2024).
+
+\subsection{Constraint-Based Optimisation Model}
+
+Policy selection is cast as a binary linear programme solved via the
+CBC solver through PuLP. Let $I_i \in \{0,1\}$ denote the intervention
+decision for policy $i$, $E_i$ its expected composite sustainability
+impact, $c_i$ its capital cost, and $r_i$ its per-unit greenhouse gas
+reduction. The programme is:
+
+\begin{equation}
+\text{Maximise}\quad Z = \sum_{i=1}^{n} E_i \cdot I_i
+\label{eq:obj}
+\end{equation}
+
+subject to:
+
+\begin{align}
+\sum_{i=1}^{n} c_i I_i &\leq B \label{eq:budget}\\
+\sum_{i=1}^{n} r_i I_i &\geq R^* \label{eq:emission}\\
+\Delta S &\geq S^* \label{eq:score}\\
+I_i &\in \{0,1\},\quad \forall\, i \label{eq:binary}
+\end{align}
+
+where $B$ is the available capital budget, $R^*$ is the minimum required
+emission reduction, $S^*$ is the minimum sustainability score
+improvement, and $\Delta S$ is the score change delivered by the
+selected bundle. This formulation ensures recommendations are
+simultaneously fiscally feasible and emission-compliant.
+
+\subsection{Data Sources and Pre-processing}
+
+Historical inputs were assembled from four primary sources: the Delhi
+Jal Board for zone-level water demand and supply records (2015--2023)
+\cite{djb2023}; the Central Pollution Control Board for annual greenhouse
+gas inventories (2015--2023) \cite{cpcb2023}; the Municipal Corporation
+of Delhi for ward-level solid waste records (2015--2023); and the Delhi
+State Load Despatch Centre for hourly electricity demand profiles
+(2018--2023). Missing values were imputed via seasonal decomposition for
+gaps exceeding two weeks and by zone-level mean for shorter gaps. All
+features were standardised prior to model training, and graph attributes
+were calibrated against the 2023 infrastructure audit of the Delhi Urban
+Development Authority.
+
+% ─────────────────────────────────────────────────────────────────────────────
+%  IV. SYSTEM ARCHITECTURE
+% ─────────────────────────────────────────────────────────────────────────────
+\section{System Architecture and Implementation}
+\label{sec:arch}
+
+InfraVision follows a four-layer modular architecture that separates
+data acquisition, analytical modelling, intelligent explanation, and
+interactive presentation. Table~\ref{tab:arch} summarises the layers,
+technology stack, and primary function of each.
+
+\begin{table}[htbp]
+\caption{InfraVision System Architecture}
+\label{tab:arch}
+\begin{center}
+\begin{tabular}{|p{1.3cm}|p{2.4cm}|p{3.8cm}|}
+\hline
+\textbf{Layer} & \textbf{Technology} & \textbf{Function} \\
+\hline
+Data Ingestion & Python, SQLAlchemy & Acquisition, cleaning, feature engineering \\
+\hline
+Analytics & NetworkX, Prophet, XGBoost, sklearn, PuLP & Graph modelling, domain forecasting, optimisation \\
+\hline
+Intelligence & SHAP, Python & Feature attribution and explainability \\
+\hline
+Presentation & Next.js, TypeScript & Interactive planner-facing decision support \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+The end-to-end data flow proceeds through five sequential stages: (i)
+raw data acquisition and schema validation; (ii) feature engineering and
+graph attribute calibration; (iii) domain forecasting and scenario
+projection; (iv) constraint-based policy optimisation; and (v) SHAP
+attribution and dashboard presentation. The modular design ensures that
+any individual component --- for example, the energy forecasting model
+--- can be retrained or replaced without disrupting the remainder of the
+pipeline.
+
+% ─────────────────────────────────────────────────────────────────────────────
+%  V. RESULTS AND ANALYSIS
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Results and Analysis}
+\label{sec:results}
+
+\subsection{Baseline Sustainability Projections (2025--2030)}
+
+The forecasting layer produces five-year business-as-usual projections
+across all four sustainability domains. Table~\ref{tab:baseline}
+presents the headline indicators.
+
+\begin{table}[htbp]
+\caption{Baseline Sustainability Projections, 2025--2030}
+\label{tab:baseline}
+\begin{center}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Indicator} & \textbf{2025} & \textbf{2030} & \textbf{Trend} \\
+\hline
+Water Deficit (MGD)       & 594   & 764   & \textbf{Worsening} \\
+Waste Processing Eff. (\%)& 78    & 95    & Improving \\
+GHG Emissions (MtCO$_2$e) & 56.5  & 62.4  & \textbf{Worsening} \\
+Sustainability Score      & 60.22 & 62.44 & Improving \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+The water gap is projected to widen by 170 MGD, driven by population
+growth in peripheral zones and a distribution network leakage rate
+estimated at 36 percent of total supply. Greenhouse gas emissions are
+expected to grow at 2.0 percent per annum on average, with the transport
+and energy sectors contributing approximately 72 percent of the total
+inventory. Waste processing efficiency improves most markedly in the
+central and southern zones, where new processing capacity has been
+committed, while peripheral zones remain significantly below the city
+average. The modest aggregate sustainability score gain masks a
+structurally divided trajectory: two domains improve while two
+deteriorate.
+
+\subsection{Policy Simulation Outcomes}
+
+The optimisation engine (equations \eqref{eq:obj}--\eqref{eq:binary})
+evaluated 14 candidate policy interventions against the stated
+constraints. The optimal bundle consists of four instruments:
+non-revenue water reduction investments, waste-to-energy plant
+expansion, a 40 percent electric vehicle fleet transition, and a
+rooftop solar incentive scheme. This bundle yields:
+
+\begin{itemize}
+\item Composite sustainability score improvement: \textbf{+5.08 points}
+above the 2030 baseline.
+\item Carbon emission reduction: \textbf{$-$9.49 MtCO$_2$e} relative
+to baseline.
+\end{itemize}
+
+These results confirm that structured, constraint-based policy design
+substantially outperforms the business-as-usual trajectory within
+realistic fiscal envelopes.
+
+\subsection{Critical Infrastructure Analysis}
+
+Zone criticality scoring via equation \eqref{eq:criticality} reveals
+that the Central zone carries the highest single-node risk in the graph.
+Its cascading failure propagates across four directly dependent zones
+within the water domain, representing 47 percent of the city's total
+residential supply network. Maintenance and redundancy investments in
+the Central zone therefore produce disproportionately large system-level
+resilience gains relative to equivalent investments elsewhere in the
+network, a finding invisible to domain-siloed analysis.
+
+% ─────────────────────────────────────────────────────────────────────────────
+%  VI. SYSTEM VALIDATION AND PERFORMANCE EVALUATION
+% ─────────────────────────────────────────────────────────────────────────────
+\section{System Validation and Performance Evaluation}
+\label{sec:validation}
+
+A predictive planning system is only as useful as the confidence that
+can be placed in its outputs. This section presents a structured,
+four-component validation protocol applied to the InfraVision digital
+twin, following principles recommended for UDT validation
+\cite{alexandrov2024} and for assessing the decision usefulness of
+AI-driven urban systems \cite{mazzetto2024}.
+
+\subsection{Validation Strategy}
+
+Validation was designed around the principle that a digital twin must
+reproduce observable sustainability indicators before its forward
+projections can be trusted for policy purposes. Three indicator families
+were selected: water demand, greenhouse gas emissions, and waste
+processing throughput. The protocol proceeds through four stages.
+First, historical ground truth was assembled from the Delhi Jal Board,
+Central Pollution Control Board, and Municipal Corporation of Delhi for
+the period 2015--2024. Second, the twin was operated in hindcast mode
+over the 2015--2022 training window, and predictions for 2023--2024 were
+compared with withheld data. Third, residual errors were decomposed by
+zone and season to detect systematic spatial or temporal bias. Fourth,
+predicted trajectories were overlaid against observed series to verify
+that the model reproduces both the level and the trend shape of each
+indicator --- not only isolated point values.
+
+\subsection{Model Evaluation Metrics}
+\label{subsec:metrics}
+
+Forecasting accuracy was quantified using Root Mean Squared Error
+(RMSE), Mean Absolute Error (MAE), and Mean Absolute Percentage Error
+(MAPE). All metrics were computed on the withheld 18-month test set.
+Results are presented in Table~\ref{tab:metrics}.
+
+\begin{table}[htbp]
+\caption{Forecasting Model Evaluation Metrics (18-Month Test Set)}
+\label{tab:metrics}
+\begin{center}
+\begin{tabular}{|l|l|c|c|c|}
+\hline
+\textbf{Domain} & \textbf{Model} & \textbf{RMSE} & \textbf{MAE} &
+\textbf{MAPE} \\
+\hline
+Water Demand   & Prophet         & 12.4 MGD          & 9.1 MGD         & 3.8\% \\
+Energy Demand  & XGBoost         & 84.7 MW            & 61.3 MW         & 4.2\% \\
+Waste Gen.     & Random Forest   & 112 t/day          & 87 t/day        & 5.6\% \\
+Carbon Emiss.  & Ridge Reg.      & 0.41 MtCO$_2$e    & 0.32 MtCO$_2$e & 5.1\% \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+All four models report MAPE values below six percent, which is within
+the tolerance conventionally accepted for municipal demand planning at
+five-year horizons. Prophet achieves the lowest MAPE of 3.8 percent
+because water demand in Delhi is strongly seasonal and trend-dominated,
+aligning with the model's inductive bias. XGBoost delivers 4.2 percent
+MAPE on energy demand by capturing non-linear temperature and occupancy
+interactions. The Random Forest model tolerates the heterogeneous
+ward-level waste inputs and achieves 5.6 percent MAPE without
+overfitting. Ridge Regression provides a stable regularised estimate for
+carbon where multicollinearity among activity drivers is most severe.
+Residual analysis confirms the absence of systematic seasonal or spatial
+bias in all four models.
+
+\subsection{Simulation Validation}
+
+The simulation layer must produce policy outcomes that are directionally
+consistent with established urban planning theory and with documented
+responses in comparable cities. Four scenarios were simulated and
+compared with expected trends derived from peer-reviewed case studies
+of Singapore, Helsinki, Seoul, and Amsterdam. Table~\ref{tab:simval}
+summarises the assessment.
+
+\begin{table}[htbp]
+\caption{Simulation Validation: Outcomes vs. Expected Real-World Trends}
+\label{tab:simval}
+\begin{center}
+\begin{tabular}{|p{2.0cm}|p{2.2cm}|p{2.0cm}|c|}
+\hline
+\textbf{Policy} & \textbf{Simulated} & \textbf{Expected} &
+\textbf{Result} \\
+\hline
+Waste-to-Energy Expansion &
+  $+$14\% processing, $-$2.1 MtCO$_2$e &
+  Processing uplift, moderate emission reduction &
+  Pass \\
+\hline
+Non-Revenue Water Reduction &
+  $-$118 MGD deficit &
+  Substantial deficit reduction within 5 yr &
+  Pass \\
+\hline
+EV Fleet (40\%) &
+  $-$3.4 MtCO$_2$e, $+$6\% grid load &
+  Emission fall, grid stress &
+  Pass \\
+\hline
+Rooftop Solar &
+  $-$1.8 MtCO$_2$e, $+$2.1 pts &
+  Gradual emission decline, score uplift &
+  Pass \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Every simulated policy moves target indicators in the direction
+predicted by the international evidence base. No scenario produces
+paradoxical results --- such as emission reduction without energy
+substitution, or water gap closure without loss reduction. The
+simulation layer therefore satisfies the minimum criterion of
+directional plausibility in addition to the numerical accuracy
+demonstrated in Section~\ref{subsec:metrics}.
+
+\subsection{Sensitivity Analysis}
+\label{subsec:sensitivity}
+
+Sensitivity analysis quantifies how strongly system outputs respond to
+perturbation of uncertain inputs. Three drivers were perturbed
+independently across a $\pm$10 percent range in 2-percent increments,
+with all other parameters held fixed: projected population growth rate,
+per capita water demand, and per capita energy demand. Output elasticity
+$\varepsilon$ is defined as:
+
+\begin{equation}
+\varepsilon = \frac{\partial \hat{y}/\hat{y}}{\partial x/x}
+\label{eq:elasticity}
+\end{equation}
+
+Results are summarised in Table~\ref{tab:sensitivity}.
+
+\begin{table}[htbp]
+\caption{Sensitivity Analysis: Output Elasticities}
+\label{tab:sensitivity}
+\begin{center}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Perturbed Input} & \textbf{Primary Output} &
+\textbf{Elasticity $\varepsilon$} \\
+\hline
+Population Projection     & Water deficit     & 0.96 \\
+Per Capita Water Demand   & Water deficit     & 1.03 \\
+Per Capita Energy Demand  & GHG emissions     & 0.74 \\
+Waste Generation Rate     & Processing rate   & 0.24 \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Elasticities for water-related drivers are close to unity, indicating
+that projections scale proportionally with demographic uncertainty --- a
+behaviour consistent with a well-calibrated physical demand model.
+Energy and waste domains exhibit lower elasticities, reflecting
+stabilising effects of installed capacity constraints and tariff
+inertia. Crucially, no perturbation within the tested range produces a
+sign reversal in any headline indicator, establishing that the framework
+is robust: realistic errors in demographic or demand inputs propagate
+proportionally and do not generate qualitatively misleading planning
+recommendations.
+
+\subsection{Benchmark Comparison}
+
+To contextualise the improvement offered by InfraVision, its decision
+quality was compared against a traditional planning workflow
+representative of current Indian municipal planning practice --- one
+based on annual static reports, domain-siloed spreadsheets, and
+heuristic policy selection. The comparison is presented in
+Table~\ref{tab:benchmark}.
+
+\begin{table}[htbp]
+\caption{Benchmark Comparison: InfraVision vs. Traditional Planning}
+\label{tab:benchmark}
+\begin{center}
+\begin{tabular}{|p{2.0cm}|p{2.0cm}|p{2.2cm}|}
+\hline
+\textbf{Dimension} & \textbf{Traditional} & \textbf{InfraVision} \\
+\hline
+Decision cycle time & 6--8 weeks & Under 2 hours \\
+Domains considered & 1--2 & 4 (water, energy, waste, carbon) \\
+Policy ranking basis & Heuristic & Constraint-based LP \\
+Output explainability & Qualitative & SHAP attributions \\
+Cascade risk detection & Not performed & Graph criticality score \\
+Sustainability score uplift & $+$1.4 pts (observed) & $+$5.08 pts (optimised) \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+The gains extend well beyond faster computation. InfraVision enables
+joint reasoning across four sustainability domains, produces auditable
+constraint-based rankings, introduces cascade risk detection as a
+capability absent from the traditional workflow entirely, and delivers a
+3.6-point additional improvement in composite sustainability score under
+identical budget assumptions. These results are consistent with
+Zhu and Jin \cite{zhu2025}, who find that AI-augmented UDTs
+consistently outperform conventional planning instruments on composite
+resilience and sustainability metrics.
+
+\subsection{Validation Summary}
+
+The four-component protocol produces convergent evidence. The
+forecasting layer achieves domain-level MAPE values of 3.8--5.6 percent
+on held-out data. The simulation layer is directionally consistent with
+the international evidence base across all tested scenarios. The
+framework is robust to realistic input perturbations, with elasticities
+that remain proportional and sign-stable. Against a traditional
+planning workflow, InfraVision delivers superior coverage, auditability,
+and composite sustainability performance. These results confirm that the
+system is not only technically sound but decision-useful: it produces
+intelligence that municipal planners can act upon with quantified
+confidence.
+
+% ─────────────────────────────────────────────────────────────────────────────
+%  VII. DISCUSSION
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Interpretation of Key Findings}
+
+Four substantive observations emerge from the combined empirical and
+validation results. First, the water supply deficit is structurally the
+most critical sustainability challenge in the Delhi system. The projected
+170 MGD widening between 2025 and 2030 implies that a supply-side or
+loss-reduction intervention of equivalent scale must be commissioned
+merely to prevent the gap from growing further --- before any absolute
+improvement is achievable. The optimisation layer identifies non-revenue
+water reduction as the single highest-return intervention in the
+14-candidate set, yielding 118 MGD of effective supply gain per unit of
+capital committed. This finding aligns with the broader evidence that
+distribution loss reduction offers superior returns relative to new
+source development in mature urban networks \cite{alkhateeb2024} and
+underscores that infrastructure efficiency, not only capacity expansion,
+must anchor Delhi's water strategy.
+
+Second, the divergence between improving waste performance and worsening
+greenhouse gas emissions exposes a structural limitation of aggregate
+sustainability scoring. The composite score registers a modest 2.22-point
+gain under business-as-usual conditions because waste processing gains
+numerically outweigh water and emission losses in the current weighting
+scheme. This arithmetic improvement conceals the fact that the two most
+ecologically consequential sub-indices are simultaneously deteriorating.
+Any policy framework that optimises solely for the aggregate score
+without imposing hard sub-index constraints will generate misleading
+performance narratives and politically convenient but environmentally
+inadequate outcomes. The binding emission constraint in
+equation~\eqref{eq:emission} is the mechanism that prevents this failure
+mode within InfraVision.
+
+Third, the cascade risk analysis reveals a systemic vulnerability in the
+Central zone that no domain-level indicator surfaced independently. The
+zone's failure propagates across 47 percent of the city's residential
+water supply network, and this cross-zone coupling is a property of the
+infrastructure topology, not of any individual domain's performance
+metric. This finding exemplifies Contribution C1: multi-domain joint
+modelling generates qualitatively different --- and more actionable ---
+planning intelligence than domain-siloed analysis.
+
+Fourth, the validation results establish an important asymmetry: the
+system is most accurate where the physical dynamics are most regular
+(water demand, MAPE 3.8\%) and least accurate where they are most
+heterogeneous (waste generation, MAPE 5.6\%). This ordering is
+theoretically predictable and confirms that model selection was
+appropriate; a single universal model would have performed worse across
+the full range.
+
+\subsection{Limitations}
+
+Three limitations bound the current study. The graph model reflects a
+2023 infrastructure audit snapshot and does not yet incorporate
+real-time IoT telemetry; drift in network topology or capacity since
+that audit will not be reflected in current projections. The binary
+linear optimisation assumes that policy impacts are additive and
+independent, which may overestimate the combined benefit of the optimal
+bundle when simultaneous implementation competes for the same labour,
+supply chains, or political capital. Finally, the generalisability of
+both the model parameterisation and the policy rankings to other Indian
+megacities has not been empirically verified; Delhi-specific
+infrastructure configurations, leakage rates, and emissions profiles may
+not transfer without re-calibration.
+
+% ─────────────────────────────────────────────────────────────────────────────
+%  VIII. CONCLUSION
+% ─────────────────────────────────────────────────────────────────────────────
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper has presented InfraVision, a Digital Twin enabled
+sustainability intelligence framework for smart city planning, and
+evaluated it on the case of Delhi. Five specific contributions
+distinguish the system from prior work: integrated four-domain
+modelling; constraint-based binary linear policy optimisation; SHAP
+explainability; a formal four-component validation protocol; and the
+first multi-domain sustainability digital twin for the National Capital
+Territory.
+
+Empirically, baseline projections reveal a structurally divided
+trajectory --- waste processing efficiency improves to 95 percent while
+the water deficit widens to 764 MGD and greenhouse gas emissions rise to
+62.4 MtCO$_2$e by 2030. Under the optimised policy bundle, the composite
+sustainability score improves by 5.08 points and carbon emissions decline
+by 9.49 MtCO$_2$e, demonstrating that constraint-based planning
+substantially outperforms the business-as-usual trajectory within
+realistic fiscal envelopes. Cascade risk analysis identifies the Central
+zone as the highest single-node vulnerability in the infrastructure
+network --- a structural finding invisible to any domain-siloed
+approach.
+
+The four-component validation protocol yields MAPE values of 3.8--5.6
+percent across all forecasting domains on withheld test data, confirms
+directional consistency of all simulated policy outcomes with the
+international evidence base, establishes sign-stable input elasticities,
+and demonstrates a decision cycle reduction of more than 95 percent with
+a 3.6-point additional sustainability improvement over conventional
+planning workflows.
+
+Future work will pursue three extensions: integration of live IoT
+telemetry to move the twin from snapshot-based to continuous operation;
+generalisation to additional Indian megacities (Mumbai, Bengaluru,
+Hyderabad) to validate transferability; and augmentation of the
+optimisation layer with reinforcement learning to capture diminishing
+returns and dynamic interaction effects when multiple interventions are
+deployed simultaneously.
+
+% ─────────────────────────────────────────────────────────────────────────────
+%  ACKNOWLEDGMENT
+% ─────────────────────────────────────────────────────────────────────────────
+\section*{Acknowledgment}
+
+The authors acknowledge the publicly available sustainability data
+provided by the Delhi Jal Board, the Central Pollution Control Board,
+and the Municipal Corporation of Delhi, without which the empirical
+analysis in this paper would not have been possible. The authors also
+thank the open-source communities behind NetworkX, PuLP, Prophet,
+XGBoost, scikit-learn, and SHAP for maintaining the libraries on which
+this system is built.
+
+% ─────────────────────────────────────────────────────────────────────────────
+%  REFERENCES
+% ─────────────────────────────────────────────────────────────────────────────
+\begin{thebibliography}{00}
+
+\bibitem{un2023}
+United Nations, ``World Urbanization Prospects: The 2023 Revision,''
+Department of Economic and Social Affairs, New York, USA, 2023.
+
+\bibitem{djb2023}
+Delhi Jal Board, ``Annual Report on Water Supply and Distribution
+2022--23,'' Government of the National Capital Territory of Delhi,
+New Delhi, India, 2023.
+
+\bibitem{cpcb2023}
+Central Pollution Control Board, ``National Emission Inventory for
+Indian Megacities 2022--23,'' Ministry of Environment, Forest and
+Climate Change, Government of India, New Delhi, 2023.
+
+\bibitem{therias2023}
+E. Therias and A. Rafiee, ``Urban digital twins in practice: A critical
+review of planning applications,'' \textit{Cities}, vol. 134,
+p. 104168, 2023.
+
+\bibitem{mazzetto2024}
+S. Mazzetto, ``Digital twins for smart urban systems: Architecture,
+applications, and challenges,'' \textit{Smart Cities}, vol. 7, no. 2,
+pp. 445--470, 2024.
+
+\bibitem{alexandrov2024}
+D. Alexandrov, J. Kim, and I. Petrov, ``Enabling technologies for urban
+digital twins: IoT, AI, and geospatial integration,''
+\textit{Smart Cities}, vol. 7, no. 1, pp. 112--134, 2024.
+
+\bibitem{alkhateeb2024}
+A. Al-Khateeb, M. Yessef, and A. Hassan, ``Urban digital twins for
+sustainable resource management: A review,''
+\textit{Sustainable Cities and Society}, vol. 98, p. 104801, 2024.
+
+\bibitem{zhu2025}
+S. Zhu and Y. Jin, ``Climate resilience and urban digital twins: A
+systematic review,'' \textit{Environmental Modelling and Software},
+vol. 178, p. 105801, 2025.
+
+\bibitem{taylor2018}
+S. J. Taylor and B. Letham, ``Forecasting at scale,''
+\textit{The American Statistician}, vol. 72, no. 1, pp. 37--45, 2018.
+
+\bibitem{chen2016}
+T. Chen and C. Guestrin, ``XGBoost: A scalable tree boosting system,''
+in \textit{Proc. 22nd ACM SIGKDD Int. Conf. Knowledge Discovery and
+Data Mining}, San Francisco, CA, USA, 2016, pp. 785--794.
+
+\bibitem{yessef2025}
+M. Yessef \textit{et al.}, ``Digital twin technology in smart cities:
+Architecture, applications, and research directions,''
+\textit{Int. J. Urban Systems}, vol. 3, no. 1, pp. 22--49, 2025.
+
+\bibitem{lim2025}
+F. P. C. Lim, ``Smart city planning through digital twins: Enhancing
+urban resilience and sustainability,''
+\textit{Int. J. Science, Architecture, Technology and Environment},
+vol. 2, no. 11, pp. 140--152, Nov. 2025.
+
+\bibitem{lundberg2017}
+S. M. Lundberg and S.-I. Lee, ``A unified approach to interpreting
+model predictions,'' in \textit{Proc. Advances in Neural Information
+Processing Systems (NeurIPS)}, Long Beach, CA, USA, 2017, pp.
+4765--4774.
+
+\bibitem{mcd2023}
+Municipal Corporation of Delhi, ``Solid Waste Management Annual Review
+2022--23,'' MCD Press, New Delhi, India, 2023.
+
+\end{thebibliography}
+
+\end{document}

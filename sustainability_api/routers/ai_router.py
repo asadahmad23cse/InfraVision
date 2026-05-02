@@ -6,6 +6,7 @@ import google.generativeai as genai
 import httpx
 from dotenv import load_dotenv
 from pydantic import BaseModel
+from routers.social_router import SOCIAL_CONTEXT_DB
 
 load_dotenv()
 
@@ -65,17 +66,28 @@ async def get_executive_insights(req: InsightRequest):
         else "Use weather only if it materially changes risk priority."
     )
 
+    # Identify zone for social context
+    zone_name = req.data_context.get("zone", "Central Delhi")
+    social = SOCIAL_CONTEXT_DB.get(zone_name, {})
+
     prompt = f"""
-    You are an Urban Sustainability Expert for the Delhi Government.
-    Strict Rule: Do not use words like 'Sure', 'Here is', or 'I think'. Start directly with the insight. Max 2 lines only.
-    Current Weather Context: {weather}
+    Act as a Decision Intelligence Engine for Delhi.
+    Current Weather: {weather}
+    Social Factors for {zone_name}: {social}
     Weather Rule: {heat_rule}
 
     Data Context: {req.data_context}
     Forecast (2030): {req.forecast_data}
 
     Task:
-    Identify the Red Alert zone, explain why by linking water stress with population or emissions, and provide one cross-sector advice.
+    Generate:
+    1. Root Cause Analysis (WHY issue exists based on social/infrastructure factors)
+    2. Risk Level (Low / Medium / High)
+    3. Actionable Recommendation (WHAT should be done)
+    4. Policy Trade-off (Cost vs Sustainability impact)
+
+    Strict Rule: If temperature > 40C, prioritize water stress automatically.
+    Tone: Professional, urgent, high-signal. Max 3-4 lines.
     """
 
     try:
@@ -91,12 +103,23 @@ async def get_simulation_explainer(req: SimulationRequest):
         raise HTTPException(status_code=500, detail="Gemini API Key not configured")
 
     prompt = f"""
-    Act as a Policy Strategist.
-    Strict Rule: Do not use words like 'Sure', 'Here is', or 'I think'. Start directly with the insight. Max 2 lines only.
-    User Inputs: {req.user_inputs}
-    System Result: {req.system_result}
+    Act as a Decision Intelligence Engine.
+    User Policy Inputs: {req.user_inputs}
+    System Results: {req.system_result}
 
-    Task: Justify the consequence. If cost is high but score gain is low, mention Diminishing Returns. Mention one social consequence.
+    Task:
+    Provide a Reasoning Layer for this simulation:
+    1. Explain WHY this specific impact occurred (Reasoning).
+    2. Identify the Policy Trade-off (e.g., Short-term cost vs Long-term gain).
+    3. Mention social consequence (Affordability/Equity).
+
+    Return JSON format only:
+    {{
+        "policy": "Primary Policy Name",
+        "explanation": "Reasoning text",
+        "trade_off": "Summary of cost vs gain",
+        "social_impact": "Impact on citizens (income/density considerations)"
+    }}
     """
 
     try:

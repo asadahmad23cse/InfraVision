@@ -17,6 +17,7 @@ import { Droplets, Zap, Flame, Target, Activity, Cpu, HeartPulse } from 'lucide-
 import { getOverview, getFullData, type OverviewResponse, type SustainabilityRow } from '@/lib/sustainabilityApi';
 import WeatherCard from '@/components/WeatherCard';
 import PerformanceMetrics from '@/components/PerformanceMetrics';
+import SocialIntelligenceCard from '@/components/SocialIntelligenceCard';
 
 const BG = '#030508';
 const PANEL = '#0a0f18';
@@ -301,6 +302,7 @@ export default function SustainabilityOverviewPage() {
   const [year, setYear] = useState(2022);
   const [overview, setOverview] = useState<OverviewResponse | null>(null);
   const [trendData, setTrendData] = useState<TrendRow[]>([]);
+  const [socialContext, setSocialContext] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -373,6 +375,14 @@ export default function SustainabilityOverviewPage() {
     };
     load();
   }, [year]);
+
+  // Fetch social context when a zone might be relevant (simplified to a default or first zone for overview)
+  useEffect(() => {
+    fetch(`http://localhost:8000/api/social/context?zone=Central Delhi`)
+      .then(res => res.json())
+      .then(data => setSocialContext(data))
+      .catch(err => console.error(err));
+  }, []);
 
   const zoneChartData = useMemo(() => {
     if (!overview) return [];
@@ -698,7 +708,8 @@ export default function SustainabilityOverviewPage() {
               ))}
             </div>
 
-            <div className="mt-auto">
+            <div className="mt-auto flex flex-col gap-6">
+               {socialContext && <SocialIntelligenceCard context={socialContext} />}
                <PerformanceMetrics />
             </div>
           </motion.aside>

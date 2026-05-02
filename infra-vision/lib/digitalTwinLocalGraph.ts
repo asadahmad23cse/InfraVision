@@ -98,7 +98,9 @@ export async function getLocalTwinGraphExport() {
   };
 }
 
-type LocalNode = ReturnType<typeof nodeExport> & { status: string };
+type LocalNode = Omit<ReturnType<typeof nodeExport>, 'status'> & {
+  status: 'normal' | 'impacted' | 'failed';
+};
 
 /**
  * Flattened response for the UI: nodes/links at top level + failure fields
