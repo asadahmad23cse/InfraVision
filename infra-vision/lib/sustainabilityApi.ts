@@ -134,7 +134,7 @@ export async function getSocialContext(zone: string) {
 }
 
 export async function getSimulationExplainer(inputs: Record<string, number>, result: PolicyResult) {
-  return fetchApi<PolicyExplainerResponse>('/sustainability/simulation-explainer', {
+  return fetchApi<PolicyExplainerResponse>('/simulation-explainer', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ user_inputs: inputs, system_result: result }),
