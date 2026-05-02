@@ -24,6 +24,29 @@ export async function GET() {
     });
   }
 
+  const apiKey = process.env.OPENWEATHER_API_KEY;
+  if (apiKey) {
+    try {
+      const res = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=Delhi&appid=${apiKey}&units=metric`,
+        { cache: 'no-store' },
+      );
+      if (res.ok) {
+        const data = await res.json();
+        return NextResponse.json({
+          temperature_c: data.main?.temp ?? 32,
+          condition: data.weather?.[0]?.main ?? 'Clear',
+          humidity: data.main?.humidity,
+          city: 'Delhi',
+          source: 'openweather',
+          impact: 'High heat increasing energy load by 12%',
+        });
+      }
+    } catch {
+      // Fall through to deterministic fallback.
+    }
+  }
+
   return NextResponse.json({
     temperature_c: 32,
     condition: 'Clear',
