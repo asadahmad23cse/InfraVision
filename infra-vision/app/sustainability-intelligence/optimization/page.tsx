@@ -99,6 +99,21 @@ export default function OptimizationPage() {
         <p className="text-gray-400 text-sm mt-2 max-w-2xl leading-relaxed">
           Translate sustainability targets into exact mathematical allocations using Linear Programming — real-world capital deployment across 6 sectors.
         </p>
+        <div className="flex flex-col md:flex-row gap-4 mt-6">
+          <div className="flex-1 bg-indigo-500/5 border border-indigo-500/10 rounded-2xl p-4">
+            <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-widest mb-1">Mathematical Formulation</p>
+            <ul className="text-xs text-gray-400 space-y-1">
+              <li>• <span className="text-gray-300 font-medium">Objective:</span> Maximize Sustainability Score Lift</li>
+              <li>• <span className="text-gray-300 font-medium">Constraint:</span> Budget ≤ ₹{budget} Cr; Target GHG ≥ {ghgTarget} Mt</li>
+              <li>• <span className="text-gray-300 font-medium">Solver:</span> Linear Programming (PuLP / Simplex)</li>
+            </ul>
+          </div>
+          <div className="flex-1 bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-4 flex items-center">
+            <p className="text-xs text-gray-500 italic">
+              "We use domain-based normalized coefficients for LP optimization, not training data. Values are normalized estimates based on public benchmarks."
+            </p>
+          </div>
+        </div>
       </motion.div>
 
       {/* ── Tabs ── */}
@@ -323,10 +338,21 @@ export default function OptimizationPage() {
                               <p className="text-[10px] text-gray-600">MtCO₂</p>
                             </div>
 
+                            {/* Marginal Return */}
+                            <div className="text-center w-24 shrink-0">
+                              <p className={`text-[11px] font-bold ${funded ? 'text-amber-400' : 'text-gray-600'}`}>{item.marginal_return_per_m?.toFixed(3)}</p>
+                              <p className="text-[9px] text-gray-600 uppercase">Impact / ₹M</p>
+                            </div>
+
                             {/* Badge */}
-                            <span className={`shrink-0 text-[9px] px-2 py-1 rounded-lg border font-bold uppercase tracking-widest ${badge.cls}`}>
-                              {badge.label}
-                            </span>
+                            <div className="flex flex-col items-end gap-1 shrink-0 min-w-[80px]">
+                              <span className={`text-[9px] px-2 py-1 rounded-lg border font-bold uppercase tracking-widest ${badge.cls}`}>
+                                {badge.label}
+                              </span>
+                              {funded && (
+                                <span className="text-[8px] text-emerald-400/60 font-bold">Rank #{item.effectiveness_rank} ROI</span>
+                              )}
+                            </div>
                           </motion.div>
                         );
                       })}

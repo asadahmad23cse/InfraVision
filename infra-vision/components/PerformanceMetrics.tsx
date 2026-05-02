@@ -50,7 +50,7 @@ export default function PerformanceMetrics() {
           </p>
         </div>
         <div className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-2 text-right">
-          <p className="text-[9px] font-bold uppercase tracking-widest text-emerald-200/60">Confidence</p>
+          <p className="text-[9px] font-bold uppercase tracking-widest text-emerald-200/60">Model Reliability (Avg R²)</p>
           <p className="font-mono text-xl font-black text-emerald-300">{data?.confidence_score ?? 92}%</p>
         </div>
       </div>

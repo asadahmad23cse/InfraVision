@@ -4,16 +4,16 @@ import { ShieldCheck, Zap, Cpu, AlertTriangle } from 'lucide-react';
 const ResearchIntelligencePanel = () => {
   const insights = [
     {
-      label: "Confidence Explanation",
-      value: "92% Confidence",
-      detail: "Derived from mean R² across 4 validation sectors.",
+      label: "Model Reliability (Avg R²)",
+      value: "92% Reliability",
+      detail: "Normalized score derived from mean R² across validation sectors.",
       icon: <ShieldCheck className="w-4 h-4 text-emerald-400" />,
       color: "border-emerald-500/20 bg-emerald-500/5 text-emerald-200"
     },
     {
       label: "Causality Insight",
       value: "r = 0.84",
-      detail: "Temp rise correlates with +12% marginal Energy Load.",
+      detail: "Temp rise correlates with benchmark-based load estimates.",
       icon: <Zap className="w-4 h-4 text-amber-400" />,
       color: "border-amber-500/20 bg-amber-500/5 text-amber-200"
     },
