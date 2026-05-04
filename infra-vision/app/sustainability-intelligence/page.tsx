@@ -615,7 +615,7 @@ export default function SustainabilityOverviewPage() {
               </div>
             </div>
 
-            <div className="h-[400px] w-full">
+            <div className="h-[480px] w-full">
               {trendData.length === 0 ? (
                 <div className="flex h-full items-center justify-center text-sm text-white/35">No data available</div>
               ) : (
