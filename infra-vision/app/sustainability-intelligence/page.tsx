@@ -594,7 +594,7 @@ export default function SustainabilityOverviewPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-start">
 
           {/* ── Chart Panel ── */}
           <motion.section
@@ -615,7 +615,7 @@ export default function SustainabilityOverviewPage() {
               </div>
             </div>
 
-            <div className="h-[480px] w-full">
+            <div className="h-[420px] w-full">
               {trendData.length === 0 ? (
                 <div className="flex h-full items-center justify-center text-sm text-white/35">No data available</div>
               ) : (
