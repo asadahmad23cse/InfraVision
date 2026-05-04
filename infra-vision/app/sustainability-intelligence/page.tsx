@@ -597,12 +597,13 @@ export default function SustainabilityOverviewPage() {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 items-start">
 
           {/* ── Chart Panel ── */}
-          <motion.section
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 }}
-            className="lg:col-span-8 rounded-[24px] lg:rounded-[32px] border border-white/[0.12] bg-white/[0.03] p-4 lg:p-8 shadow-[0_8px_40px_rgba(0,0,0,0.25)] backdrop-blur-[64px]"
-          >
+          <div className="lg:col-span-8 flex flex-col gap-8">
+            <motion.section
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 }}
+              className="rounded-[24px] lg:rounded-[32px] border border-white/[0.12] bg-white/[0.03] p-4 lg:p-8 shadow-[0_8px_40px_rgba(0,0,0,0.25)] backdrop-blur-[64px]"
+            >
             <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-xl font-bold tracking-tight text-white/90">Ecosystem Trajectory</h2>
@@ -671,7 +672,13 @@ export default function SustainabilityOverviewPage() {
                 </ResponsiveContainer>
               )}
             </div>
-          </motion.section>
+            </motion.section>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+               {socialContext && <SocialIntelligenceCard context={socialContext} />}
+               <PerformanceMetrics />
+            </div>
+          </div>
 
           {/* ── Zone Matrix Panel ── */}
           <motion.aside
@@ -711,10 +718,6 @@ export default function SustainabilityOverviewPage() {
               ))}
             </div>
 
-            <div className="mt-auto flex flex-col gap-6">
-               {socialContext && <SocialIntelligenceCard context={socialContext} />}
-               <PerformanceMetrics />
-            </div>
           </motion.aside>
         </div>
       </div>
